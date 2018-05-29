@@ -1,0 +1,76 @@
+{% extends "layout.html" %}
+
+{% set title = "OD-Database - Search" %}
+
+{% block body %}
+    <div class="container">
+
+        <div class="card">
+            <div class="card-header">Search</div>
+            <div class="card-body">
+                <form action="/search">
+
+                    <div class="form-group">
+                        <input class="form-control" name="q" id="q" placeholder="Full-text Query" value="{{ q }}">
+                    </div>
+
+                    <input class="btn btn-primary btn-shadow" type="submit" value="Search">
+
+                </form>
+            </div>
+        </div>
+
+        {% if results %}
+            <div class="card">
+                <div class="card-body">
+
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tbody>
+
+                            {% for hit in results %}
+                                {% set path = hit[1] + hit[2] %}
+                                <tr>
+                                    <td>
+                                        {# File name & link #}
+                                        <a href="{{ path + "/" + hit[3] }}" title="{{ hit[3] }}">
+                                            {{ hit[3] | truncate(50, True, "..>") }}
+                                        </a>
+                                        {# File type badge #}
+                                        {% set mime = get_mime(hit[3]) %}
+                                        {% if mime %}
+                                            <span class="badge badge-pill {{ get_color(mime) }}">
+                                                {{ hit[3][hit[3].rfind(".") + 1:] }}
+                                            </span>
+                                        {% endif %}
+                                        {# File path #}
+                                        <div class="text-muted" title="{{ path }}" style="font-size: 10px;">
+                                            <a style="color: #6c757d" title="See files from this website"
+                                               href="/website/{{ hit[4] }}">{{ hit[1] }}</a>{{ truncate_path(hit[2], 60) }}
+                                        </div>
+                                    </td>
+                                    {# File size #}
+                                    <td style="white-space: nowrap; vertical-align: top; text-align: right; font-size: 14px">
+                                        {{ hit[0] | filesizeformat }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <a href="/search?q={{ q }}&p={{ p + 1 }}" class="btn btn-primary" style="float: right">Next</a>
+                    {% if p > 0 %}
+                        <a href="/search?q={{ q }}&p={{ p - 1 }}" class="btn btn-primary">Previous</a>
+                    {% endif %}
+
+                </div>
+            </div>
+        {% else %}
+            <div class="card">
+                <div class="card-body">No results</div>
+            </div>
+        {% endif %}
+    </div>
+
+{% endblock body %}

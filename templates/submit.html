@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+{% set title = "OD-Database - Submit website" %}
+
+{% block body %}
+    <div class="container" >
+        <div class="card">
+            <div class="card-header">Submit a website</div>
+            <div class="card-body">
+                <form action="/enqueue" method="POST">
+                    <div class="form-group">
+                            <input class="form-control" name="url" id="url" placeholder="URL">
+                        </div>
+                    <div class="row">
+                        <div class="col">
+{#                            {{ recaptcha.get_code()|safe }}#}
+                        </div>
+                        <div class="col">
+                            <input class="btn btn-primary" type="submit" value="Submit" title="Submit open directory">
+                        </div>
+                    </div>
+
+                </form>
+
+                <hr>
+
+                <p class="text-muted">
+                    Note: TODO note
+                </p>
+            </div>
+        </div>
+
+
+        <div class="card">
+            <div class="card-header">Queued websites</div>
+            <div class="card-body">
+
+               <table class="table table-striped">
+                   <thead>
+                   <tr>
+                       <th>Url</th>
+                       <th>Date added</th>
+                   </tr>
+                   </thead>
+
+                  <tbody>
+                  {% for w in queue %}
+                      <tr>
+                          <td title="{{ w.url }}">{{ w.url | truncate(70)}}</td>
+                          <td>{{ w.last_modified }} UTC</td>
+                      </tr>
+                  {% endfor %}
+                  </tbody>
+
+               </table>
+
+            </div>
+        </div>
+    </div>
+{% endblock body %}

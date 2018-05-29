@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+{% set title = "OD-Datase - Websites" %}
+
+{% block body %}
+    <div class="container">
+        <div class="card">
+            <div class="card-header">Information for {{ website.url }}</div>
+            <div class="card-body">
+
+                <div id="chart-wrapper" style="margin-bottom: 1em">
+                    <p id="loading-text">Calculating...</p>
+                    <canvas id="typesChart"></canvas>
+                    <script src="/static/js/Chart.min.js"></script>
+                    <script src="/static/js/report.js"></script>
+                </div>
+
+                <table class="table">
+                    <tr>
+                        <th>Base url</th>
+                        <td id="baseUrl"></td>
+                    </tr>
+
+                    <tr>
+                        <th>File count</th>
+                        <td id="fileCount"></td>
+                    </tr>
+
+                    <tr>
+                        <th>Total size</th>
+                        <td id="totalSize"></td>
+                    </tr>
+
+                    <tr>
+                        <th>Last updated</th>
+                        <td id="reportTime"></td>
+                    </tr>
+                </table>
+
+                <hr>
+                <a href="/website/{{ website.id }}/links" class="btn btn-shadow btn-primary">Link list</a>
+                <a href="/website/{{ website.id }}/json_chart" class="btn btn-shadow btn-primary">Summary (JSON)</a>
+            </div>
+        </div>
+    </div>
+{% endblock body %}

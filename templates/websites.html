@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% set title = "OD-Database - Websites" %}
+{% set current_page = "website" %}
+
+
+{% block body %}
+    <div class="container">
+        <div class="card">
+            <div class="card-header">Last updated websites</div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Url</th>
+                        <th>Last crawled</th>
+                    </tr>
+                    </thead>
+
+                    {% for website in websites %}
+                        <tr>
+                            <td><a title="Click for stats & link list" href="/website/{{ website[0] }}">{{ website[1] }}</a></td>
+                            <td>{{ website[2] }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock body %}

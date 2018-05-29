@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% set title = "OD-Database - Home" %}
+
+{% block body %}
+
+    <div class="container">
+        <div class="jumbotron">
+            <h1 class="text-monospace" style="font-size: 3.5rem;">OD-Database</h1>
+
+            {% if stats and stats["file_size"] %}
+                <p class="lead">{{ stats["file_count"] }} files totalling
+                    ~{{ stats["file_size"] | filesizeformat }} in
+                    {{ stats["website_paths"] }} folders from {{ stats["website_count"] }} website(s)</p>
+            {% endif %}
+            {% if current_website %}
+                <p>Currently indexing <code>{{ current_website }}</code><span class="vim-caret">&nbsp;</span> </p>
+            {% endif %}
+            <p></p>
+        </div>
+    </div>
+    <div class="container">
+
+        <div class="card">
+            <div class="card-header">Search</div>
+            <div class="card-body">
+                <form action="/search">
+
+                    <div class="form-group">
+                        <input class="form-control" name="q" id="q" placeholder="Full-text Query">
+                    </div>
+
+                    <input class="btn btn-primary btn-shadow" type="submit" value="Search">
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Full-text Query Syntax</div>
+            <div class="card-body">
+
+                <p>The following query types are allowed (More information
+                    <a href="https://www.sqlite.org/fts5.html#full_text_query_syntax">here</a>):</p>
+                <p>Exact term: <code> "foo"</code></p>
+                <p>Term with prefix: <code> "foo*"</code></p>
+                <p>File names: <code> "name:foo"</code></p>
+                <p>Paths: <code> "path:foo"</code></p>
+                <p>Starts with term: <code> "^foo"</code></p>
+                <p>NEAR group: <code> "NEAR(foo bar, 3)"</code></p>
+            </div>
+        </div>
+
+    </div>
+{% endblock body %}

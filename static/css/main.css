@@ -1,0 +1,75 @@
+.card {
+    margin-top: 1em;
+}
+.jumbotron {
+    margin-top: 1em;
+}
+.list-group {
+    margin-top: 1em;
+}
+.list-group-item {
+    padding-bottom: 0.3rem;
+}
+.table td {
+    padding: .40rem .75rem;
+}
+
+.bg-application {
+    background: #8FB847;
+    color: #FFFFFF;
+}
+
+.bg-audio {
+    background: #009CD8;
+    color: #FFFFFF;
+}
+
+.bg-video {
+    background: #DC7D6C;
+    color: #FFFFFF;
+}
+
+.bg-text {
+    background: #E19A36;
+    color: #FFFFFF;
+}
+
+.bg-image {
+    background: #998AB5;
+    color: #FFFFFF;
+}
+.vim-caret {
+    -webkit-animation: vimCaret 1s linear infinite;
+    -o-animation: vimCaret 1s linear infinite;
+    animation: vimCaret 1s linear infinite; }
+
+@-webkit-keyframes vimCaret {
+    0% {
+        background-color: transparent; }
+    49% {
+        background-color: transparent; }
+    50% {
+        background-color: rgba(255, 255, 255, 0.6); }
+    100% {
+        background-color: rgba(255, 255, 255, 0.6); } }
+
+@-o-keyframes vimCaret {
+    0% {
+        background-color: transparent; }
+    49% {
+        background-color: transparent; }
+    50% {
+        background-color: rgba(255, 255, 255, 0.6); }
+    100% {
+        background-color: rgba(255, 255, 255, 0.6); } }
+
+@keyframes vimCaret {
+    0% {
+        background-color: transparent; }
+    49% {
+        background-color: transparent; }
+    50% {
+        background-color: rgba(255, 255, 255, 0.6); }
+    100% {
+        background-color: rgba(255, 255, 255, 0.6); } }
+

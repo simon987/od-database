@@ -1,0 +1,9 @@
+scrapy
+flask
+requests
+bs4
+validators
+flask_recaptcha
+Flask-Caching
+praw
+humanfriendly
