@@ -9,10 +9,10 @@
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'scrapy_downl_od'
+BOT_NAME = 'scrapy_od-database'
 
-SPIDER_MODULES = ['scrapy_downl_od.spiders']
-NEWSPIDER_MODULE = 'scrapy_downl_od.spiders'
+SPIDER_MODULES = ['scrapy_od-database.spiders']
+NEWSPIDER_MODULE = 'scrapy_od-database.spiders'
 
 LOG_LEVEL = 'ERROR'
 FEED_FORMAT = 'json'

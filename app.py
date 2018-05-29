@@ -11,8 +11,8 @@ from task import TaskManager
 
 app = Flask(__name__)
 recaptcha = ReCaptcha(app=app,
-                      site_key="",
-                      secret_key="")
+                      site_key="6LfpFFsUAAAAADgxNJ9PIE9UVO3SM69MCxjzYyOM",
+                      secret_key="6LfpFFsUAAAAADuzRvXZfq_nguS3RGj3FCA_2cc3")
 app.secret_key = "A very secret key"
 db = Database("db.sqlite3")
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
