@@ -57,6 +57,7 @@ class TaskManager:
         print("Imported in SQLite3")
 
         if post_id:
+            # TODO check should_comment()
             stats = self.db.get_website_stats(website.id)
             comment = self.reddit_bot.get_comment(stats, website.id)
             print(comment)

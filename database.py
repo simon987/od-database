@@ -73,15 +73,15 @@ class Database:
                     cursor.execute("SELECT LAST_INSERT_ROWID()")
                     website_paths[file.path] = cursor.fetchone()[0]
 
-            # Then MimeTypes
+            # Then FileTypes
             mimetypes = dict()
-            cursor.execute("SELECT * FROM MimeType")
+            cursor.execute("SELECT * FROM FileType")
             db_mimetypes = cursor.fetchall()
             for db_mimetype in db_mimetypes:
                 mimetypes[db_mimetype[1]] = db_mimetype[0]
             for file in files:
                 if file.mime not in mimetypes:
-                    cursor.execute("INSERT INTO MimeType (mime) VALUES (?)", (file.mime, ))
+                    cursor.execute("INSERT INTO FileType (mime) VALUES (?)", (file.mime, ))
                     cursor.execute("SELECT LAST_INSERT_ROWID()")
                     mimetypes[file.mime] = cursor.fetchone()[0]
 
@@ -103,7 +103,8 @@ class Database:
 
         with open(json_file, "r") as f:
             try:
-                self.insert_files([File(website_id, x["path"], x["mime"], x["name"], x["size"]) for x in json.load(f)])
+                self.insert_files([File(website_id, x["path"], os.path.splitext(x["name"])[1].lower(), x["name"], x["size"])
+                                   for x in json.load(f)])
             except Exception as e:
                 print(e)
                 print("Couldn't read json file!")
@@ -218,11 +219,11 @@ class Database:
                            "WHERE File.path_id IN (SELECT id FROM WebsitePath WHERE website_id = ?)", (website_id, ))
             file_sum, file_count = cursor.fetchone()
 
-            cursor.execute("SELECT SUM(File.size) as total_size, COUNT(File.id), MimeType.mime FROM File "
-                           "INNER JOIN MimeType ON MimeType.id = File.mime_id "
+            cursor.execute("SELECT SUM(File.size) as total_size, COUNT(File.id), FileType.mime FROM File "
+                           "INNER JOIN FileType ON FileType.id = File.mime_id "
                            "INNER JOIN WebsitePath Path on File.path_id = Path.id "
                            "WHERE Path.website_id = ? "
-                           "GROUP BY MimeType.id ORDER BY total_size DESC", (website_id, ))
+                           "GROUP BY FileType.id ORDER BY total_size DESC", (website_id, ))
             db_mime_stats = cursor.fetchall()
 
             cursor.execute("SELECT Website.url, Website.last_modified FROM Website WHERE id = ?", (website_id, ))
@@ -286,6 +287,17 @@ class Database:
             cursor = conn.cursor()
             cursor.execute("SELECT Website.id FROM Website WHERE last_modified < ?", (date, ))
             return [x[0] for x in cursor.fetchall()]
+
+    def get_websites_smaller(self, size: int):
+        """Get the websites with total size smaller than specified"""
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT Website.id FROM Website "
+                           "INNER JOIN WebsitePath Path on Website.id = Path.website_id "
+                           "INNER JOIN File F on Path.id = F.path_id "
+                           "GROUP BY Website.id HAVING SUM(F.size) < ?", (size, ))
+            return cursor.fetchall()
 
     def delete_website(self, website_id):
 

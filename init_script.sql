@@ -16,7 +16,7 @@ CREATE TABLE WebsitePath (
   FOREIGN KEY (website_id) REFERENCES Website(id)
 );
 
-CREATE TABLE MimeType (
+CREATE TABLE FileType (
   id INTEGER PRIMARY KEY NOT NULL,
   mime TEXT
 );
@@ -29,7 +29,7 @@ CREATE TABLE File (
   size INTEGER,
 
   FOREIGN KEY (path_id) REFERENCES WebsitePath(id),
-  FOREIGN KEY (mime_id) REFERENCES MimeType(id)
+  FOREIGN KEY (mime_id) REFERENCES FileType(id)
 );
 
 CREATE TABLE Queue (
