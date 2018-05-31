@@ -11,7 +11,7 @@ subreddit = reddit.subreddit("opendirectories")
 
 submissions = []
 
-for submission in subreddit.new(limit=3):
+for submission in subreddit.new(limit=1):
     submissions.append(submission)
 
 bot = RedditBot("crawled.txt", reddit)

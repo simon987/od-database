@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# Scrapy settings for scrapy_downl_od project
-#
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
 #
@@ -9,10 +7,10 @@
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'scrapy_od-database'
+BOT_NAME = 'scrapy_od_database'
 
-SPIDER_MODULES = ['scrapy_od-database.spiders']
-NEWSPIDER_MODULE = 'scrapy_od-database.spiders'
+SPIDER_MODULES = ['scrapy_od_database.spiders']
+NEWSPIDER_MODULE = 'scrapy_od_database.spiders'
 
 LOG_LEVEL = 'ERROR'
 FEED_FORMAT = 'json'
@@ -25,9 +23,9 @@ USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Ge
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-CONCURRENT_REQUESTS = 50
-RETRY_TIMES = 4
-DOWNLOAD_TIMEOUT = 40
+CONCURRENT_REQUESTS = 40
+RETRY_TIMES = 5
+DOWNLOAD_TIMEOUT = 50
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay

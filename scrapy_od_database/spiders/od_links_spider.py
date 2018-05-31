@@ -1,7 +1,6 @@
 import scrapy
 from os import path
 from urllib.parse import unquote
-from od_util import has_extension
 
 
 class LinksSpider(scrapy.Spider):
@@ -30,7 +29,7 @@ class LinksSpider(scrapy.Spider):
 
     def should_ask_headers(self, link):
         """Whether or not to send HEAD request"""
-        return link not in self.crawled_links and has_extension(link)
+        return link not in self.crawled_links and not link.rsplit("?", maxsplit=1)[0].endswith("/")
 
     def should_crawl(self, link):
         """Whether or not the link should be followed"""
