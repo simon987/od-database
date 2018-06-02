@@ -139,13 +139,16 @@ class Database:
             else:
                 return None
 
-    def enqueue(self, website_id, reddit_post_id=None, priority=1):
+    def enqueue(self, website_id, reddit_post_id=None, reddit_comment_id=None, priority=1):
 
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-
-            cursor.execute("INSERT OR IGNORE INTO Queue (website_id, reddit_post_id, priority) VALUES (?,?,?)",
-                           (website_id, reddit_post_id, priority))
+            if reddit_post_id:
+                cursor.execute("INSERT OR IGNORE INTO Queue (website_id, reddit_post_id, priority) VALUES (?,?,?)",
+                               (website_id, reddit_post_id, priority))
+            else:
+                cursor.execute("INSERT OR IGNORE INTO Queue (website_id, reddit_comment_id, priority) VALUES (?,?,?)",
+                               (website_id, reddit_comment_id, priority))
             conn.commit()
 
     def dequeue(self):
@@ -153,12 +156,13 @@ class Database:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
 
-            cursor.execute("SELECT website_id, reddit_post_id FROM Queue ORDER BY priority DESC, Queue.id ASC LIMIT 1")
-            website_id = cursor.fetchone()
+            cursor.execute("SELECT website_id, reddit_post_id, reddit_comment_id"
+                           " FROM Queue ORDER BY priority DESC, Queue.id ASC LIMIT 1")
+            website = cursor.fetchone()
 
-            if website_id:
-                cursor.execute("DELETE FROM Queue WHERE website_id=?", (website_id[0],))
-                return website_id[0], website_id[1]
+            if website:
+                cursor.execute("DELETE FROM Queue WHERE website_id=?", (website[0],))
+                return website[0], website[1], website[2]
             else:
                 return None
 
@@ -216,7 +220,8 @@ class Database:
             cursor = conn.cursor()
 
             cursor.execute("SELECT SUM(File.size), COUNT(*) FROM File "
-                           "WHERE File.path_id IN (SELECT id FROM WebsitePath WHERE website_id = ?)", (website_id, ))
+                           "INNER JOIN WebsitePath Path on File.path_id = Path.id "
+                           "WHERE Path.website_id = ?", (website_id, ))
             file_sum, file_count = cursor.fetchone()
 
             cursor.execute("SELECT SUM(File.size) as total_size, COUNT(File.id), FileType.mime FROM File "
@@ -230,8 +235,36 @@ class Database:
             website_url, website_date = cursor.fetchone()
 
             return {
-                "total_size": file_sum,
-                "total_count": file_count,
+                "total_size": file_sum if file_sum else 0,
+                "total_count": file_count if file_count else 0,
+                "base_url": website_url,
+                "report_time": website_date,
+                "mime_stats": db_mime_stats
+            }
+
+    def get_subdir_stats(self, website_id: int, path: str):
+        """Get stats of a sub directory. path must not start with / and must end with /"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT SUM(File.size), COUNT(*) FROM File "
+                           "INNER JOIN WebsitePath Path on File.path_id = Path.id "
+                           "WHERE Path.website_id = ? AND Path.path LIKE ?", (website_id, path + "%"))
+            file_sum, file_count = cursor.fetchone()
+
+            cursor.execute("SELECT SUM(File.size) as total_size, COUNT(File.id), FileType.mime FROM File "
+                           "INNER JOIN FileType ON FileType.id = File.mime_id "
+                           "INNER JOIN WebsitePath Path on File.path_id = Path.id "
+                           "WHERE Path.website_id = ? AND Path.path LIKE ? "
+                           "GROUP BY FileType.id ORDER BY total_size DESC", (website_id, path + "%"))
+            db_mime_stats = cursor.fetchall()
+
+            cursor.execute("SELECT Website.url, Website.last_modified FROM Website WHERE id = ?", (website_id, ))
+            website_url, website_date = cursor.fetchone()
+
+            return {
+                "total_size": file_sum if file_sum else 0,
+                "total_count": file_count if file_count else 0,
                 "base_url": website_url,
                 "report_time": website_date,
                 "mime_stats": db_mime_stats
@@ -266,7 +299,8 @@ class Database:
             cursor = conn.cursor()
 
             cursor.execute("SELECT id FROM Website WHERE url = substr(?, 0, length(url) + 1)", (url, ))
-            return True if cursor.fetchone() else False
+            website_id = cursor.fetchone()
+            return website_id[0] if website_id else None
 
     def clear_website(self, website_id):
         """Remove all files from a website and update its last_updated date"""

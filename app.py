@@ -1,9 +1,9 @@
 from flask import Flask, render_template, redirect, request, flash, abort, Response
+import os
 import json
 from database import Database, Website, InvalidQueryException
 from flask_recaptcha import ReCaptcha
 import od_util
-from urllib.parse import urljoin
 import sqlite3
 from flask_caching import Cache
 from task import TaskManager
@@ -111,7 +111,7 @@ def submit():
 def enqueue():
     if not recaptcha.verify():
 
-        url = urljoin(request.form.get("url"), "")
+        url = os.path.join(request.form.get("url"), "")
 
         website = db.get_website_by_url(url)
 

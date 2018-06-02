@@ -6,6 +6,9 @@ import humanfriendly
 
 class RedditBot:
 
+    bottom_line = "^(Beep boop. I am a bot that calculates the file sizes & count of " \
+                  "open directories posted in /r/opendirectories/)"
+
     def __init__(self, log_file: str, reddit: praw.Reddit):
 
         self.log_file = log_file
@@ -34,45 +37,52 @@ class RedditBot:
             with open(self.log_file, "r") as f:
                 self.crawled = list(filter(None, f.read().split("\n")))
 
-    def reply(self, post_id: str, comment: str):
-
-        submission = self.reddit.submission(id=post_id)
+    def reply(self, reddit_obj, comment: str):
 
         while True:
             try:
-                if not self.has_crawled(submission.id):
-                    submission.reply(comment)
-                    self.log_crawl(submission.id)
+                # Double check has_crawled
+                if not self.has_crawled(reddit_obj.id):
+                    # reddit_obj.reply(comment)
+                    print("Skipping comment " + comment)
+                    self.log_crawl(reddit_obj.id)
                 break
             except Exception as e:
-                print("Waiting 10 minutes: " + str(e))
-                time.sleep(600)
+                print("Waiting 5 minutes: " + str(e))
+                time.sleep(300)
                 continue
 
     @staticmethod
-    def get_comment(stats, website_id):
+    def get_comment(stats: dict, website_id, message: str = ""):
+        comment = message + "    \n" if len(message) > 0 else ""
 
-        comment = "File types | Count | Total Size\n"
-        comment += ":-- | :-- | :--    \n"
-        print(stats["mime_stats"])
+        for stat in stats:
+            comment += stat + "    \n" if len(stat) > 0 else ""
+            comment += RedditBot.format_stats(stats[stat])
+
+        comment += "[Full Report](https://simon987.net/od-database/website/" + str(website_id) + "/)"
+        comment += " | [Link list](https://simon987.net/od-database/website/" + str(website_id) + "/links)    \n"
+        comment += "***    \n"
+        comment += RedditBot.bottom_line
+
+        return comment
+
+    @staticmethod
+    def format_stats(stats):
+
+        result = "    \n"
+        result += "File types | Count | Total Size\n"
+        result += ":-- | :-- | :--    \n"
         counter = 0
         for mime in stats["mime_stats"]:
-            print(mime)
-            comment += mime[2]
-            comment += " | " + str(mime[1]) + "    \n"
-            comment += " | " + str(mime[0]) + "    \n"
+            result += mime[2]
+            result += " | " + str(mime[1])
+            result += " | " + humanfriendly.format_size(mime[0]) + "    \n"
 
             counter += 1
             if counter >= 3:
                 break
 
-        comment += "**Total** | **" + str(stats["total_count"]) + "** | **"
-        comment += humanfriendly.format_size(stats["total_size"]) + "**    \n\n"
-
-        comment += "[Full Report](https://simon987.net/od-database/website/" + str(website_id) + "/)"
-        comment += " | [Link list](https://simon987.net/od-database/website/" + str(website_id) + "/links)    \n"
-        comment += "***    \n^(Beep boop. I am a bot that calculates the file sizes & count of"
-        comment += " open directories posted in /r/opendirectories/)"
-
-        return comment
-
+        result += "**Total** | **" + str(stats["total_count"]) + "** | **"
+        result += humanfriendly.format_size(stats["total_size"]) + "**    \n\n"
+        return result

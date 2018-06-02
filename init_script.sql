@@ -36,6 +36,7 @@ CREATE TABLE Queue (
   id INTEGER PRIMARY KEY NOT NULL,
   website_id INTEGER UNIQUE,
   reddit_post_id TEXT,
+  reddit_comment_id TEXT,
   priority INTEGER
 );
 

@@ -30,10 +30,10 @@ class TaskManager:
             task = self.db.dequeue()
 
             if task:
-                website_id, post_id = task
+                website_id, post_id, comment_id = task
                 website = self.db.get_website_by_id(website_id)
                 self.current_task = Process(target=self.execute_task,
-                                            args=(website, self.busy, post_id))
+                                            args=(website, self.busy, post_id, comment_id))
                 self.current_website = website
                 self.current_task.start()
 
@@ -42,7 +42,7 @@ class TaskManager:
             self.current_task = None
             self.current_website = None
 
-    def execute_task(self, website: Website, busy: Value, post_id: str):
+    def execute_task(self, website: Website, busy: Value, post_id: str, comment_id: str):
         busy.value = 1
         if os.path.exists("data.json"):
             os.remove("data.json")
@@ -57,12 +57,22 @@ class TaskManager:
         print("Imported in SQLite3")
 
         if post_id:
-            # TODO check should_comment()
+            # Reply to post
             stats = self.db.get_website_stats(website.id)
-            comment = self.reddit_bot.get_comment(stats, website.id)
+            comment = self.reddit_bot.get_comment({"": stats}, website.id)
             print(comment)
-            print(self.reddit_bot.reddit.submission(post_id))
+            if "total_size" in stats and stats["total_size"] > 10000000:
+                post = self.reddit_bot.reddit.submission(post_id)
+                self.reddit_bot.reply(post, comment)
+                pass
 
+        elif comment_id:
+            # Reply to comment
+            stats = self.db.get_website_stats(website.id)
+            comment = self.reddit_bot.get_comment({"There you go!": stats}, website.id)
+            print(comment)
+            reddit_comment = self.reddit_bot.reddit.comment(comment_id)
+            self.reddit_bot.reply(reddit_comment, comment)
         busy.value = 0
         print("Done crawling task")
 
