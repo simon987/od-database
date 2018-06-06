@@ -9,8 +9,8 @@ pattern = re.compile("[\[\]\\\()]+")
 reddit = praw.Reddit('opendirectories-bot',
                      user_agent='github.com/simon987/od-database v1.0  (by /u/Hexahedr_n)')
 db = Database("db.sqlite3")
-subreddit = reddit.subreddit("opendirectories")
-# subreddit = reddit.subreddit("test")
+# subreddit = reddit.subreddit("opendirectories")
+subreddit = reddit.subreddit("test")
 bot = RedditBot("crawled.txt", reddit)
 
 submissions = []
@@ -42,7 +42,7 @@ def handle_subdir_repost(website_id, reddit_obj):
 
 
 # Check comments
-for comment in []: #subreddit.comments(limit=50):
+for comment in subreddit.comments(limit=50):
 
     if not bot.has_crawled(comment):
         text = pattern.sub(" ", comment.body).strip()
@@ -56,7 +56,8 @@ for comment in []: #subreddit.comments(limit=50):
 
                 if website and not scanned:
                     # in progress
-                    pass
+                    print("In progress")
+                    continue
 
                 if website and db.website_has_been_scanned(url):
                     bot.log_crawl(comment.id)
@@ -66,7 +67,8 @@ for comment in []: #subreddit.comments(limit=50):
                 website_id = db.website_exists(url)
                 if website_id and not scanned:
                     # IN progress
-                    pass
+                    print("Parent in progress")
+                    continue
                 if website_id and db.website_has_been_scanned(url):
                     bot.log_crawl(comment.id)
                     handle_subdir_repost(website_id, comment)
@@ -75,7 +77,7 @@ for comment in []: #subreddit.comments(limit=50):
                 if not od_util.is_valid_url(url):
                     print("Skipping reddit comment: Invalid url")
                     bot.log_crawl(comment.id)
-                    bot.reply(comment, "Hello, " + comment.author + ". Unfortunately it seems that the link you "
+                    bot.reply(comment, "Hello, " + str(comment.author) + ". Unfortunately it seems that the link you "
                                        "provided: `" + url + "` is not valid. Make sure that you include the"
                                        "'`http(s)://` prefix.    \n")
                     continue
@@ -83,15 +85,16 @@ for comment in []: #subreddit.comments(limit=50):
                 if od_util.is_blacklisted(url):
                     print("Skipping reddit comment: blacklisted")
                     bot.log_crawl(comment.id)
-                    bot.reply(comment, "Hello, " + comment.author + ". Unfortunately my programmer has blacklisted "
-                                       "this website. If you think that this is an error, please "
+                    bot.reply(comment, "Hello, " + str(comment.author) + ". Unfortunately my programmer has "
+                                       "blacklisted this website. If you think that this is an error, please "
                                        "[contact him](https://www.reddit.com/message/compose?to=Hexahedr_n)")
+                    continue
 
                 if not od_util.is_od(url):
                     print("Skipping reddit comment: Not an OD")
                     print(url)
                     bot.log_crawl(comment.id)
-                    bot.reply(comment, "Hello, " + comment.author + ". Unfortunately it seems that the link you "
+                    bot.reply(comment, "Hello, " + str(comment.author) + ". Unfortunately it seems that the link you "
                                        "provided: `" + url + "` does not point to an open directory. This could also"
                                        " mean that the website is not responding (in which case, feel free to retry in "
                                        "a few minutes). If you think that this is an error, please "
@@ -105,7 +108,7 @@ for comment in []: #subreddit.comments(limit=50):
 
 
 # Check posts
-for submission in subreddit.new(limit=500):
+for submission in subreddit.new(limit=3):
     submissions.append(submission)
 
 

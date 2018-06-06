@@ -60,8 +60,8 @@ class RedditBot:
             comment += stat + "    \n" if len(stat) > 0 else ""
             comment += RedditBot.format_stats(stats[stat])
 
-        comment += "[Full Report](https://simon987.net/od-database/website/" + str(website_id) + "/)"
-        comment += " | [Link list](https://simon987.net/od-database/website/" + str(website_id) + "/links)    \n"
+        comment += "[Full Report](https://od-database.simon987.net/website/" + str(website_id) + "/)"
+        comment += " | [Link list](https://od-database.simon987.net/website/" + str(website_id) + "/links)    \n"
         comment += "***    \n"
         comment += RedditBot.bottom_line
 
