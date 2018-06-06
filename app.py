@@ -2,6 +2,7 @@ from flask import Flask, render_template, redirect, request, flash, abort, Respo
 import os
 import json
 import time
+import ssl
 from database import Database, Website, InvalidQueryException
 from flask_recaptcha import ReCaptcha
 import od_util
@@ -181,4 +182,6 @@ def enqueue():
 
 
 if __name__ == '__main__':
+    context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+    context.load_cert_chain('certificates/cert.pem', 'certificates/privkey.pem')
     app.run("0.0.0.0", port=12345)
