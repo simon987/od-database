@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, flash, abort, Response
+from flask import Flask, render_template, redirect, request, flash, abort, Response, send_from_directory
 import os
 import json
 import time
@@ -39,6 +39,14 @@ def downloads():
         export_file_stats = None
 
     return render_template("downloads.html", export_file_stats=export_file_stats)
+
+
+@app.route("/get_export")
+def get_export():
+
+    if os.path.exists("static/out.csv.xz"):
+        return send_from_directory("static", "out.csv.xz", as_attachment=True, mimetype="application/x-xz")
+    return abort(404)
 
 
 @app.route("/website/<int:website_id>/")
