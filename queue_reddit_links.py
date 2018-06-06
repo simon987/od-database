@@ -9,8 +9,8 @@ pattern = re.compile("[\[\]\\\()]+")
 reddit = praw.Reddit('opendirectories-bot',
                      user_agent='github.com/simon987/od-database v1.0  (by /u/Hexahedr_n)')
 db = Database("db.sqlite3")
-# subreddit = reddit.subreddit("opendirectories")
-subreddit = reddit.subreddit("test")
+subreddit = reddit.subreddit("opendirectories")
+# subreddit = reddit.subreddit("test")
 bot = RedditBot("crawled.txt", reddit)
 
 submissions = []
