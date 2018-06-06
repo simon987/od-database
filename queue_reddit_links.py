@@ -36,6 +36,7 @@ def handle_subdir_repost(website_id, reddit_obj):
     subdir_stats = db.get_subdir_stats(website_id, subdir)
     if subdir_stats["total_size"] <= 0:
         message += " but I couldn't calculate the size of this subdirectory."
+    else:
         tables["Subdirectory `/" + subdir + "`:"] = subdir_stats
     comment = bot.get_comment(tables, website_id, message)
     print(comment)
