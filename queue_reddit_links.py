@@ -28,14 +28,16 @@ def handle_exact_repost(website_id, reddit_obj):
 def handle_subdir_repost(website_id, reddit_obj):
 
     website = db.get_website_by_id(website_id)
+    message = "I already scanned a parent directory of this website on " + website.last_modified + " UTC"
+    stats = db.get_website_stats(website_id)
+    tables = {"Parent directory:": stats}
 
     subdir = url[len(website.url):]
-
     subdir_stats = db.get_subdir_stats(website_id, subdir)
-    stats = db.get_website_stats(website_id)
-    comment = bot.get_comment({"Parent directory:": stats, "Subdirectory `/" + subdir + "`:": subdir_stats},
-                              website_id, "I already scanned a parent directory of this website on "
-                              + website.last_modified + " UTC")
+    if subdir_stats["total_size"] <= 0:
+        message += " but I couldn't calculate the size of this subdirectory."
+        tables["Subdirectory `/" + subdir + "`:"] = subdir_stats
+    comment = bot.get_comment(tables, website_id, message)
     print(comment)
     print("Subdir repost!")
     bot.reply(reddit_obj, comment)
