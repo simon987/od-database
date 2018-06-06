@@ -24,7 +24,7 @@
                     {% if export_file_stats %}
                     <tr>
                         <td><a href="/get_export">out.csv.xz</a></td>
-                        <td>{{ export_file_stats.st_size }}</td>
+                        <td>{{ export_file_stats.st_size |filesizeformat }}</td>
                         <td>{{ export_file_stats.st_mtime|datetime_format }}</td>
                     </tr>
                     {% endif %}
