@@ -184,4 +184,4 @@ def enqueue():
 if __name__ == '__main__':
     context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
     context.load_cert_chain('certificates/cert.pem', 'certificates/privkey.pem')
-    app.run("0.0.0.0", port=12345)
+    app.run("0.0.0.0", port=12345, ssl_context=context)
