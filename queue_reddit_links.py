@@ -34,7 +34,7 @@ def handle_subdir_repost(website_id, reddit_obj):
     subdir_stats = db.get_subdir_stats(website_id, subdir)
     stats = db.get_website_stats(website_id)
     comment = bot.get_comment({"Parent directory:": stats, "Subdirectory `/" + subdir + "`:": subdir_stats},
-                              website_id, "I already scanned a parent directory of this website on"
+                              website_id, "I already scanned a parent directory of this website on "
                               + website.last_modified + " UTC")
     print(comment)
     print("Subdir repost!")
