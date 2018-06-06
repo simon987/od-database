@@ -65,6 +65,8 @@ class TaskManager:
                 post = self.reddit_bot.reddit.submission(post_id)
                 self.reddit_bot.reply(post, comment)
                 pass
+            else:
+                self.reddit_bot.log_crawl(post_id)
 
         elif comment_id:
             # Reply to comment
