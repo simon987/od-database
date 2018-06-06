@@ -56,11 +56,11 @@ for comment in subreddit.comments(limit=50):
 
                 if website and not scanned:
                     # in progress
+                    print(url)
                     print("In progress")
                     continue
 
                 if website and db.website_has_been_scanned(url):
-                    bot.log_crawl(comment.id)
                     handle_exact_repost(website.id, comment)
                     continue
 
@@ -70,13 +70,11 @@ for comment in subreddit.comments(limit=50):
                     print("Parent in progress")
                     continue
                 if website_id and db.website_has_been_scanned(url):
-                    bot.log_crawl(comment.id)
                     handle_subdir_repost(website_id, comment)
                     continue
 
                 if not od_util.is_valid_url(url):
                     print("Skipping reddit comment: Invalid url")
-                    bot.log_crawl(comment.id)
                     bot.reply(comment, "Hello, " + str(comment.author) + ". Unfortunately it seems that the link you "
                                        "provided: `" + url + "` is not valid. Make sure that you include the"
                                        "'`http(s)://` prefix.    \n")
@@ -84,24 +82,21 @@ for comment in subreddit.comments(limit=50):
 
                 if od_util.is_blacklisted(url):
                     print("Skipping reddit comment: blacklisted")
-                    bot.log_crawl(comment.id)
                     bot.reply(comment, "Hello, " + str(comment.author) + ". Unfortunately my programmer has "
                                        "blacklisted this website. If you think that this is an error, please "
-                                       "[contact him](https://www.reddit.com/message/compose?to=Hexahedr_n)")
+                                       "[contact him](https://old.reddit.com/message/compose?to=Hexahedr_n)")
                     continue
 
                 if not od_util.is_od(url):
                     print("Skipping reddit comment: Not an OD")
                     print(url)
-                    bot.log_crawl(comment.id)
                     bot.reply(comment, "Hello, " + str(comment.author) + ". Unfortunately it seems that the link you "
                                        "provided: `" + url + "` does not point to an open directory. This could also"
                                        " mean that the website is not responding (in which case, feel free to retry in "
                                        "a few minutes). If you think that this is an error, please "
-                                       "[contact my programmer](https://www.reddit.com/message/compose?to=Hexahedr_n)")
+                                       "[contact my programmer](https://old.reddit.com/message/compose?to=Hexahedr_n)")
                     continue
 
-                bot.log_crawl(comment.id)
                 web_id = db.insert_website(Website(url, "localhost", "reddit_bot"))
                 db.enqueue(web_id, reddit_comment_id=comment.id, priority=2)  # Medium priority for reddit comments
                 print("Queued comment post: " + str(web_id))
@@ -122,7 +117,6 @@ for s in submissions:
             website = db.get_website_by_url(url)
 
             if website:
-                bot.log_crawl(s.id)
                 handle_exact_repost(website.id, s)
 
             website_id = db.website_exists(url)
@@ -146,7 +140,6 @@ for s in submissions:
                 bot.log_crawl(s.id)
                 continue
 
-            bot.log_crawl(s.id)
             web_id = db.insert_website(Website(url, "localhost", "reddit_bot"))
             db.enqueue(web_id, reddit_post_id=s.id, priority=3)  # Higher priority for reddit posts
             print("Queued reddit post: " + str(web_id))

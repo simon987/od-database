@@ -43,9 +43,9 @@ class RedditBot:
             try:
                 # Double check has_crawled
                 if not self.has_crawled(reddit_obj.id):
-                    # reddit_obj.reply(comment)
-                    print("Skipping comment " + comment)
+                    reddit_obj.reply(comment)
                     self.log_crawl(reddit_obj.id)
+                    print("Reply to " + reddit_obj.id)
                 break
             except Exception as e:
                 print("Waiting 5 minutes: " + str(e))
