@@ -130,10 +130,16 @@ def enqueue():
                   "FTP is not supported", "danger")
             return redirect("/submit")
 
+        if od_util.is_blacklisted(url):
+            flash("<strong>Error:</strong> "
+                  "Sorry, this website has been blacklisted. If you think "
+                  "this is an error, please <a href='/contribute'>contact me</a>.", "danger")
+            return redirect("/submit")
+
         if not od_util.is_od(url):
             flash("<strong>Error:</strong>"
                   "The anti-spam algorithm determined that the submitted url is not "
-                  "an open directory or the server is not responding. If you think"
+                  "an open directory or the server is not responding. If you think "
                   "this is an error, please <a href='/contribute'>contact me</a>.", "danger")
 
             return redirect("/submit")

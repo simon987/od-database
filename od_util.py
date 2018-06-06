@@ -61,9 +61,6 @@ def is_external_link(base_url, url: str):
 
 
 def is_od(url):
-    if "?" in url:
-        print("Url has parameter in url!")
-        return False
 
     if not url.endswith("/"):
         print("Url does not end with trailing /")
@@ -97,3 +94,13 @@ def is_od(url):
     except Exception as e:
         print(e)
         return False
+
+
+def is_blacklisted(url):
+
+    with open("blacklist.txt", "r") as f:
+        for line in f.readlines():
+            if url.startswith(line.strip()):
+                return True
+
+    return False

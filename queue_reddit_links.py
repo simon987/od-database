@@ -19,7 +19,7 @@ submissions = []
 def handle_exact_repost(website_id, reddit_obj):
     stats = db.get_website_stats(website_id)
     comment = bot.get_comment({"": stats}, website_id,
-                              f"I already scanned this website on {website.last_modified} UTC")
+                              "I already scanned this website on " + website.last_modified + " UTC")
     print(comment)
     print("Exact repost!")
     bot.reply(reddit_obj, comment)
@@ -33,9 +33,9 @@ def handle_subdir_repost(website_id, reddit_obj):
 
     subdir_stats = db.get_subdir_stats(website_id, subdir)
     stats = db.get_website_stats(website_id)
-    comment = bot.get_comment({"Parent directory:": stats, f"Subdirectory `/{subdir}`:": subdir_stats},
-                              website_id, f"I already scanned a parent directory of this website on"
-                                          f" {website.last_modified} UTC")
+    comment = bot.get_comment({"Parent directory:": stats, "Subdirectory `/" + subdir + "`:": subdir_stats},
+                              website_id, "I already scanned a parent directory of this website on"
+                              + website.last_modified + " UTC")
     print(comment)
     print("Subdir repost!")
     bot.reply(reddit_obj, comment)
@@ -50,16 +50,24 @@ for comment in []: #subreddit.comments(limit=50):
             lines = text.split()
             if len(lines) > 1:
                 url = os.path.join(lines[1], "")  # Add trailing slash
+                scanned = db.website_has_been_scanned(url)
 
                 website = db.get_website_by_url(url)
 
-                if website:
+                if website and not scanned:
+                    # in progress
+                    pass
+
+                if website and db.website_has_been_scanned(url):
                     bot.log_crawl(comment.id)
                     handle_exact_repost(website.id, comment)
                     continue
 
                 website_id = db.website_exists(url)
-                if website_id:
+                if website_id and not scanned:
+                    # IN progress
+                    pass
+                if website_id and db.website_has_been_scanned(url):
                     bot.log_crawl(comment.id)
                     handle_subdir_repost(website_id, comment)
                     continue
@@ -67,19 +75,27 @@ for comment in []: #subreddit.comments(limit=50):
                 if not od_util.is_valid_url(url):
                     print("Skipping reddit comment: Invalid url")
                     bot.log_crawl(comment.id)
-                    bot.reply(comment, f"Hello, {comment.author}. Unfortunately it seems that the link you provided: `"
-                                       f"{url}` is not valid. Make sure that you include the `http(s)://` prefix.    \n")
+                    bot.reply(comment, "Hello, " + comment.author + ". Unfortunately it seems that the link you "
+                                       "provided: `" + url + "` is not valid. Make sure that you include the"
+                                       "'`http(s)://` prefix.    \n")
                     continue
+
+                if od_util.is_blacklisted(url):
+                    print("Skipping reddit comment: blacklisted")
+                    bot.log_crawl(comment.id)
+                    bot.reply(comment, "Hello, " + comment.author + ". Unfortunately my programmer has blacklisted "
+                                       "this website. If you think that this is an error, please "
+                                       "[contact him](https://www.reddit.com/message/compose?to=Hexahedr_n)")
 
                 if not od_util.is_od(url):
                     print("Skipping reddit comment: Not an OD")
                     print(url)
                     bot.log_crawl(comment.id)
-                    bot.reply(comment, f"Hello, {comment.author}. Unfortunately it seems that the link you provided: `"
-                                       f"{url}` does not point to an open directory. This could also mean that the "
-                                       f"website is not responding (in which case, feel free to retry in a few minutes)"
-                                       f" If you think that this is an error, please "
-                                       f"[contact my programmer](https://www.reddit.com/message/compose?to=Hexahedr_n)")
+                    bot.reply(comment, "Hello, " + comment.author + ". Unfortunately it seems that the link you "
+                                       "provided: `" + url + "` does not point to an open directory. This could also"
+                                       " mean that the website is not responding (in which case, feel free to retry in "
+                                       "a few minutes). If you think that this is an error, please "
+                                       "[contact my programmer](https://www.reddit.com/message/compose?to=Hexahedr_n)")
                     continue
 
                 bot.log_crawl(comment.id)
@@ -113,6 +129,11 @@ for s in submissions:
 
             if not od_util.is_valid_url(url):
                 print("Skipping reddit post: Invalid url")
+                bot.log_crawl(s.id)
+                continue
+
+            if od_util.is_blacklisted(url):
+                print("Skipping reddit post: blacklisted")
                 bot.log_crawl(s.id)
                 continue
 

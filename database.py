@@ -87,10 +87,13 @@ class Database:
 
             conn.commit()
             # Then insert files
-            cursor.execute("PRAGMA foreign_keys = OFF")
-            conn.commit()
             cursor.executemany("INSERT INTO File (path_id, name, size, mime_id) VALUES (?,?,?,?)",
                                [(website_paths[x.path], x.name, x.size, mimetypes[x.mime]) for x in files])
+
+            # Update date
+            if len(files) > 0:
+                cursor.execute("UPDATE Website SET last_modified=CURRENT_TIMESTAMP WHERE id = ?",
+                               (files[0].website_id, ))
 
             conn.commit()
 
@@ -301,6 +304,21 @@ class Database:
             cursor.execute("SELECT id FROM Website WHERE url = substr(?, 0, length(url) + 1)", (url, ))
             website_id = cursor.fetchone()
             return website_id[0] if website_id else None
+
+    def website_has_been_scanned(self, url):
+        """Check if a website has at least 1 file"""
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            website_id = self.website_exists(url)
+
+            if website_id:
+                cursor.execute("SELECT COUNT(Path.id) FROM Website "
+                               "INNER JOIN WebsitePath Path on Website.id = Path.website_id "
+                               "WHERE Website.id = ?", (website_id, ))
+                return cursor.fetchone()[0] > 0
+        return None
 
     def clear_website(self, website_id):
         """Remove all files from a website and update its last_updated date"""

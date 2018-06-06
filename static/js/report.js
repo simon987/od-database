@@ -113,7 +113,7 @@ function getRandomColor() {
  */
 function humanFileSize(bytes) {
 
-    if(bytes === 0) {
+    if(bytes <= 0) {
         return "? B"
     }
 
