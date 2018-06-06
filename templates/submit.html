@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% set title = "OD-Database - Submit website" %}
+{% set current_page = "submit" %}
 
 {% block body %}
     <div class="container" >
@@ -12,7 +13,7 @@
                         </div>
                     <div class="row">
                         <div class="col">
-{#                            {{ recaptcha.get_code()|safe }}#}
+                            {{ recaptcha.get_code()|safe }}
                         </div>
                         <div class="col">
                             <input class="btn btn-primary" type="submit" value="Submit" title="Submit open directory">
@@ -23,8 +24,8 @@
 
                 <hr>
 
-                <p class="text-muted">
-                    Note: TODO note
+                <p class="text-muted">By submitting this form you agree that your IP address and User Agent will be
+                    saved (for debugging purposes only).
                 </p>
             </div>
         </div>

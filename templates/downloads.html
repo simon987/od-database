@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% set title = "Downloads - OD-Database" %}
+{% set current_page = "dl" %}
+
+{% block body %}
+    <div class="container">
+        <div class="card">
+            <div class="card-header">Downloads</div>
+            <div class="card-body">
+
+                <p>The entire database is exported to CSV every ±30min</p>
+
+                <table class="table table-striped">
+
+                    <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Size</th>
+                        <th>Date</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    {% if export_file_stats %}
+                    <tr>
+                        <td>out.csv.xz</td>
+                        <td>{{ export_file_stats.st_size }}</td>
+                        <td>{{ export_file_stats.st_mtime|datetime_format }}</td>
+                    </tr>
+                    {% endif %}
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock body %}

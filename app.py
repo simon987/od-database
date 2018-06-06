@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, request, flash, abort, Response
 import os
 import json
+import time
 from database import Database, Website, InvalidQueryException
 from flask_recaptcha import ReCaptcha
 import od_util
@@ -21,6 +22,23 @@ app.jinja_env.globals.update(get_color=od_util.get_color)
 app.jinja_env.globals.update(get_mime=od_util.get_mime)
 
 tm = TaskManager()
+
+
+@app.template_filter("datetime_format")
+def datetime_format(value, format='%Y-%m-%d %H:%M UTC'):
+    return time.strftime(format, time.gmtime(value))
+
+
+@app.route("/dl")
+def downloads():
+
+    try:
+        export_file_stats = os.stat("static/out.csv.xz")
+    except FileNotFoundError:
+        print("No export file")
+        export_file_stats = None
+
+    return render_template("downloads.html", export_file_stats=export_file_stats)
 
 
 @app.route("/website/<int:website_id>/")
@@ -109,7 +127,7 @@ def submit():
 
 @app.route("/enqueue", methods=["POST"])
 def enqueue():
-    if not recaptcha.verify():
+    if recaptcha.verify():
 
         url = os.path.join(request.form.get("url"), "")
 
