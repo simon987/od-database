@@ -96,18 +96,19 @@ def websites():
 def search():
 
     q = request.args.get("q") if "q" in request.args else ""
+    sort_order = request.args.get("sort_order") if "sort_order" in request.args else "score"
     page = int(request.args.get("p")) if "p" in request.args else 0
 
     if q:
         try:
-            hits = db.search(q, 100, page)
+            hits = db.search(q, 100, page, sort_order)
         except InvalidQueryException as e:
             flash("<strong>Invalid query:</strong> " + str(e), "warning")
             return redirect("/search")
     else:
         hits = None
 
-    return render_template("search.html", results=hits, q=q, p=page)
+    return render_template("search.html", results=hits, q=q, p=page, sort_order=sort_order)
 
 
 @app.route("/contribute")
