@@ -15,12 +15,23 @@
                         <div class="form-group col-md-8">
                             <input class="form-control" name="q" id="q" placeholder="Full-text Query" value="{{ q }}">
                         </div>
-                        <div class="form-group col-md-4">
+                        <div class="form-group col-md-2">
                             <select class="form-control" name="sort_order" title="Sort order">
+                                <option disabled>Select sort order</option>
                                 <option value="score" {{ "selected" if sort_order == "score" else "" }}>Relevance</option>
                                 <option value="size_asc" {{ "selected" if sort_order == "size_asc" else "" }}>Size ascending</option>
                                 <option value="size_dsc" {{ "selected" if sort_order == "size_dsc" else "" }}>Size descending</option>
                                 <option value="none" {{ "selected" if sort_order == "none" else "" }}>No order (faster)</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-2">
+                            <select class="form-control" name="per_page" title="Results per page">
+                                <option disabled>Results per page</option>
+                                <option{{ " selected" if per_page == 25 }}>25</option>
+                                <option{{ " selected" if per_page == 50 }}>50</option>
+                                <option{{ " selected" if per_page == 100 }}>100</option>
+                                <option{{ " selected" if per_page == 250 }}>250</option>
+                                <option{{ " selected" if per_page == 1000 }}>1000</option>
                             </select>
                         </div>
                     </div>
@@ -62,7 +73,7 @@
                                     </td>
                                     {# File size #}
                                     <td style="white-space: nowrap; vertical-align: top; text-align: right; font-size: 14px">
-                                        {{ hit[0] | filesizeformat }}
+                                        {{ hit[0] | filesizeformat if hit[0] >= 0 else "?"}}
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -70,9 +81,11 @@
                         </table>
                     </div>
 
-                    <a href="/search?q={{ q }}&p={{ p + 1 }}" class="btn btn-primary" style="float: right">Next</a>
+                    <a href="/search?q={{ q }}&p={{ p + 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}"
+                       class="btn btn-primary" style="float: right">Next</a>
                     {% if p > 0 %}
-                        <a href="/search?q={{ q }}&p={{ p - 1 }}" class="btn btn-primary">Previous</a>
+                        <a href="/search?q={{ q }}&p={{ p - 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}"
+                           class="btn btn-primary">Previous</a>
                     {% endif %}
 
                 </div>

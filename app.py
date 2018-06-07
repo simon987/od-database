@@ -95,20 +95,28 @@ def websites():
 @app.route("/search")
 def search():
 
+    RESULTS_PER_PAGE = (25, 50, 100, 250, 1000)
+
     q = request.args.get("q") if "q" in request.args else ""
     sort_order = request.args.get("sort_order") if "sort_order" in request.args else "score"
-    page = int(request.args.get("p")) if "p" in request.args else 0
+
+    page = request.args.get("p") if "p" in request.args else "0"
+    page = int(page) if page.isdigit() else 0
+
+    per_page = request.args.get("per_page") if "per_page" in request.args else "50"
+    per_page = int(per_page) if per_page.isdigit() else "50"
+    per_page = per_page if per_page in RESULTS_PER_PAGE else 50
 
     if q:
         try:
-            hits = db.search(q, 100, page, sort_order)
+            hits = db.search(q, per_page, page, sort_order)
         except InvalidQueryException as e:
             flash("<strong>Invalid query:</strong> " + str(e), "warning")
             return redirect("/search")
     else:
         hits = None
 
-    return render_template("search.html", results=hits, q=q, p=page, sort_order=sort_order)
+    return render_template("search.html", results=hits, q=q, p=page, sort_order=sort_order, per_page=per_page)
 
 
 @app.route("/contribute")

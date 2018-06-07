@@ -207,14 +207,13 @@ class Database:
 
             return stats
 
-    def search(self, q, limit: int = 25, offset: int = 0, sort_order="score"):
+    def search(self, q, limit: int = 50, offset: int = 0, sort_order="score"):
 
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
 
             try:
                 order_by = Database.SORT_ORDERS.get(sort_order, "")
-                print(order_by)
                 cursor.execute("SELECT size, Website.url, WebsitePath.path, File.name, Website.id FROM File_index "
                                "INNER JOIN File ON File.id = File_index.rowid "
                                "INNER JOIN WebsitePath ON File.path_id = WebsitePath.id "
