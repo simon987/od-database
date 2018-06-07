@@ -95,8 +95,6 @@ def websites():
 @app.route("/search")
 def search():
 
-    RESULTS_PER_PAGE = (25, 50, 100, 250, 1000)
-
     q = request.args.get("q") if "q" in request.args else ""
     sort_order = request.args.get("sort_order") if "sort_order" in request.args else "score"
 
@@ -105,7 +103,7 @@ def search():
 
     per_page = request.args.get("per_page") if "per_page" in request.args else "50"
     per_page = int(per_page) if per_page.isdigit() else "50"
-    per_page = per_page if per_page in RESULTS_PER_PAGE else 50
+    per_page = per_page if per_page in config.RESULTS_PER_PAGE else 50
 
     if q:
         try:
@@ -116,7 +114,9 @@ def search():
     else:
         hits = None
 
-    return render_template("search.html", results=hits, q=q, p=page, sort_order=sort_order, per_page=per_page)
+    return render_template("search.html",
+                           results=hits, q=q, p=page, sort_order=sort_order,
+                           per_page=per_page, results_set=config.RESULTS_PER_PAGE)
 
 
 @app.route("/contribute")

@@ -27,11 +27,9 @@
                         <div class="form-group col-md-2">
                             <select class="form-control" name="per_page" title="Results per page">
                                 <option disabled>Results per page</option>
-                                <option{{ " selected" if per_page == 25 }}>25</option>
-                                <option{{ " selected" if per_page == 50 }}>50</option>
-                                <option{{ " selected" if per_page == 100 }}>100</option>
-                                <option{{ " selected" if per_page == 250 }}>250</option>
-                                <option{{ " selected" if per_page == 1000 }}>1000</option>
+                                {% for results in results_set %}
+                                    <option{{ " selected" if per_page == results }}>{{ results }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                     </div>
