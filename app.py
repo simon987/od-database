@@ -7,15 +7,16 @@ from database import Database, Website, InvalidQueryException
 from flask_recaptcha import ReCaptcha
 import od_util
 import sqlite3
+import config
 from flask_caching import Cache
 from task import TaskManager
 
 
 app = Flask(__name__)
 recaptcha = ReCaptcha(app=app,
-                      site_key="6LfpFFsUAAAAADgxNJ9PIE9UVO3SM69MCxjzYyOM",
-                      secret_key="6LfpFFsUAAAAADuzRvXZfq_nguS3RGj3FCA_2cc3")
-app.secret_key = "A very secret key"
+                      site_key=config.CAPTCHA_SITE_KEY,
+                      secret_key=config.CAPTCHA_SECRET_KEY)
+app.secret_key = config.FLASK_SECRET
 db = Database("db.sqlite3")
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 app.jinja_env.globals.update(truncate_path=od_util.truncate_path)
@@ -182,6 +183,9 @@ def enqueue():
 
 
 if __name__ == '__main__':
-    context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-    context.load_cert_chain('certificates/cert.pem', 'certificates/privkey.pem')
-    app.run("0.0.0.0", port=12345, ssl_context=context)
+    if config.USE_SSL:
+        context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        context.load_cert_chain('certificates/cert.pem', 'certificates/privkey.pem')
+        app.run("0.0.0.0", port=12345, ssl_context=context)
+    else:
+        app.run("0.0.0.0", port=12345)

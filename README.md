@@ -9,6 +9,13 @@ git clone https://github.com/simon987/od-database
 cd od-database
 pip3 install -r requirements.txt
 ```
+Create `/config.py` and fill out the parameters. Empty config:
+```python
+CAPTCHA_SITE_KEY = ""
+CAPTCHA_SECRET_KEY = ""
+FLASK_SECRET = ""
+USE_SSL = True
+```
 
 ## Running
 ```bash
@@ -16,5 +23,4 @@ python3 app.py
 ```
 You should be able to connect with your browser at `https://localhost:12345`
 
-*_Note: For now, you need to have the appropriate SSL certificates (cert.pem & privkey.pem) in /certificates. There will 
-be an option to disable SSL very soon_
+*_Note: To use SSL you have to put the appropriate certificates in /certificates/_

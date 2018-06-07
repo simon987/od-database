@@ -1,3 +1,5 @@
+PRAGMA journal_mode=WAL;
+
 CREATE TABLE Website (
 
   id INTEGER PRIMARY KEY NOT NULL,
