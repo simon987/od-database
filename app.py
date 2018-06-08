@@ -220,6 +220,13 @@ def admin_login():
         return redirect("/admin")
 
 
+@app.route("/logout")
+def admin_logout():
+    session.clear()
+    flash("Logged out", "info")
+    return redirect("/")
+
+
 @app.route("/dashboard")
 def admin_dashboard():
     if "username" in session:
