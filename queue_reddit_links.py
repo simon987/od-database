@@ -57,22 +57,20 @@ for comment in subreddit.comments(limit=50):
 
                 website = db.get_website_by_url(url)
 
-                if website and not scanned:
-                    # in progress
-                    print(url)
-                    print("In progress")
-                    continue
-
-                if website and db.website_has_been_scanned(url):
+                if website:
+                    if not scanned:
+                        # in progress
+                        print(url)
+                        print("In progress")
+                        continue
                     handle_exact_repost(website.id, comment)
                     continue
 
                 website_id = db.website_exists(url)
-                if website_id and not scanned:
-                    # IN progress
-                    print("Parent in progress")
-                    continue
-                if website_id and db.website_has_been_scanned(url):
+                if website_id:
+                    if not scanned:
+                        print("Parent in progress")
+                        continue
                     handle_subdir_repost(website_id, comment)
                     continue
 
@@ -116,16 +114,25 @@ for s in submissions:
         if not bot.has_crawled(s.id):
 
             url = os.path.join(s.url, "")  # add trailing slash
+            scanned = db.website_has_been_scanned(url)
 
             website = db.get_website_by_url(url)
 
             if website:
+                if not scanned:
+                    print(url)
+                    print("In progress")
+                    continue
                 handle_exact_repost(website.id, s)
+                continue
 
             website_id = db.website_exists(url)
             if website_id:
-                bot.log_crawl(s.id)
+                if not scanned:
+                    print("Parent in progress")
+                    continue
                 handle_subdir_repost(website_id, s)
+                continue
 
             if not od_util.is_valid_url(url):
                 print("Skipping reddit post: Invalid url")

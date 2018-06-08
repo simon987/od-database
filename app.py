@@ -144,46 +144,47 @@ def submit():
     return render_template("submit.html", queue=db.queue(), recaptcha=recaptcha)
 
 
+def try_enqueue(url):
+
+    url = os.path.join(url, "")
+    website = db.get_website_by_url(url)
+
+    if website:
+        return "Website already exists", "danger"
+
+    website = db.website_exists(url)
+    if website:
+        return "A parent directory of this url has already been posted", "danger"
+
+    if not od_util.is_valid_url(url):
+        return "<strong>Error:</strong> Invalid url. Make sure to include the http(s):// suffix. " \
+               "FTP is not supported", "danger"
+
+    if od_util.is_blacklisted(url):
+
+        return "<strong>Error:</strong> " \
+              "Sorry, this website has been blacklisted. If you think " \
+              "this is an error, please <a href='/contribute'>contact me</a>.", "danger"
+
+    if not od_util.is_od(url):
+        return "<strong>Error:</strong>" \
+              "The anti-spam algorithm determined that the submitted url is not " \
+              "an open directory or the server is not responding. If you think " \
+              "this is an error, please <a href='/contribute'>contact me</a>.", "danger"
+
+    web_id = db.insert_website(Website(url, str(request.remote_addr), str(request.user_agent)))
+    db.enqueue(web_id)
+
+    return "The website has been added to the queue", "success"
+
+
 @app.route("/enqueue", methods=["POST"])
 def enqueue():
     if recaptcha.verify():
 
         url = os.path.join(request.form.get("url"), "")
-
-        website = db.get_website_by_url(url)
-
-        if website:
-            flash("Website already exists", "danger")
-            return redirect("/submit")
-
-        website = db.website_exists(url)
-        if website:
-            flash("A parent directory of this url has already been posted", "danger")
-            return redirect("/submit")
-
-        if not od_util.is_valid_url(url):
-            flash("<strong>Error:</strong> "
-                  "Invalid url. Make sure to include the http(s):// suffix. "
-                  "FTP is not supported", "danger")
-            return redirect("/submit")
-
-        if od_util.is_blacklisted(url):
-            flash("<strong>Error:</strong> "
-                  "Sorry, this website has been blacklisted. If you think "
-                  "this is an error, please <a href='/contribute'>contact me</a>.", "danger")
-            return redirect("/submit")
-
-        if not od_util.is_od(url):
-            flash("<strong>Error:</strong>"
-                  "The anti-spam algorithm determined that the submitted url is not "
-                  "an open directory or the server is not responding. If you think "
-                  "this is an error, please <a href='/contribute'>contact me</a>.", "danger")
-
-            return redirect("/submit")
-
-        web_id = db.insert_website(Website(url, str(request.remote_addr), str(request.user_agent)))
-        db.enqueue(web_id)
-        flash("The website has been added to the queue", "success")
+        message, msg_type = try_enqueue(url)
+        flash(message, msg_type)
 
         return redirect("/submit")
     else:
