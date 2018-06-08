@@ -2,6 +2,7 @@ import sqlite3
 import datetime
 import json
 import os
+import bcrypt
 
 
 class InvalidQueryException(Exception):
@@ -367,3 +368,29 @@ class Database:
 
             cursor.execute("DELETE FROM Website WHERE id=?", (website_id, ))
             conn.commit()
+
+    def check_login(self, username, password) -> bool:
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT password FROM Admin WHERE username=?", (username, ))
+
+            db_user = cursor.fetchone()
+
+            if db_user:
+                return bcrypt.checkpw(password.encode(), db_user[0])
+            return False
+
+    def generate_login(self, username, password) -> None:
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt(14))
+
+            cursor.execute("INSERT INTO Admin (username, password) VALUES (?,?)", (username, hashed_pw))
+            conn.commit()
+
+
+
+

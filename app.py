@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, flash, abort, Response, send_from_directory
+from flask import Flask, render_template, redirect, request, flash, abort, Response, send_from_directory, session
 import os
 import json
 import time
@@ -190,6 +190,42 @@ def enqueue():
     else:
         flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
         return redirect("/submit")
+
+
+@app.route("/admin")
+def admin_login_form():
+    if "username" in session:
+        return redirect("/dashboard")
+    return render_template("admin.html", recaptcha=recaptcha)
+
+
+@app.route("/login", methods=["POST"])
+def admin_login():
+
+    if recaptcha.verify():
+
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        if db.check_login(username, password):
+            session["username"] = username
+            flash("Logged in", "success")
+            return redirect("/dashboard")
+
+        flash("Invalid username/password combo", "danger")
+        return redirect("/admin")
+
+    else:
+        flash("Invalid captcha", "danger")
+        return redirect("/admin")
+
+
+@app.route("/dashboard")
+def admin_dashboard():
+    if "username" in session:
+        return render_template("dashboard.html")
+    else:
+        return abort(403)
 
 
 if __name__ == '__main__':

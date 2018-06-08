@@ -42,6 +42,11 @@ CREATE TABLE Queue (
   priority INTEGER
 );
 
+CREATE TABLE Admin (
+  username TEXT PRIMARY KEY NOT NULL,
+  password TEXT
+)
+
 -- Full Text Index
 
 CREATE VIRTUAL TABLE File_index USING fts5 (
