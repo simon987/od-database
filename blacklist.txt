@@ -4,3 +4,5 @@ https://mirror.math.princeton.edu
 http://mirror.math.princeton.edu
 https://www.dropbox.com
 https://oss.jfrog.org
+http://skyarchive.info
+https://skyarchive.info
