@@ -3,6 +3,7 @@ import datetime
 import json
 import os
 import bcrypt
+import uuid
 
 
 class InvalidQueryException(Exception):
@@ -27,6 +28,13 @@ class File:
         self.name = name
         self.path = path
         self.website_id = website_id
+
+
+class ApiToken:
+
+    def __init__(self, token, description):
+        self.token = token
+        self.description = description
 
 
 class Database:
@@ -390,6 +398,44 @@ class Database:
 
             cursor.execute("INSERT INTO Admin (username, password) VALUES (?,?)", (username, hashed_pw))
             conn.commit()
+
+    def check_api_token(self, token) -> bool:
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT token FROM ApiToken WHERE token=?", (token, ))
+            return cursor.fetchone() is not None
+
+    def generate_api_token(self, description: str) -> str:
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            token = str(uuid.uuid4())
+            cursor.execute("INSERT INTO ApiToken (token, description) VALUES (?, ?)", (token, description))
+            conn.commit()
+
+            return token
+
+    def get_tokens(self) -> list:
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT * FROM ApiToken")
+
+            return [ApiToken(x[0], x[1]) for x in cursor.fetchall()]
+
+    def delete_token(self, token: str) -> None:
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("DELETE FROM ApiToken WHERE token=?", (token, ))
+            conn.commit()
+
+
 
 
 

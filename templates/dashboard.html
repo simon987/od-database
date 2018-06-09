@@ -3,11 +3,53 @@
 
 {% block body %}
     <div class="container">
-    <div class="card">
-        <div class="card-header">Dashboard</div>
-        <div class="card-body">
-            <a class="btn btn-info" href="/logout">Logout</a>
+        <div class="card">
+            <div class="card-header">Dashboard</div>
+            <div class="card-body">
+
+                <h3>API Keys</h3>
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Key</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    {% for token in api_tokens %}
+                        <tr>
+                            <td>{{ token.description }}</td>
+                            <td><code>{{ token.token }}</code></td>
+                            <td>
+                                <form action="/del_token" method="post">
+                                    <input type="hidden" value="{{ token.token }}" name="token">
+                                    <input type="submit" class="btn btn-danger" value="Delete">
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <form action="/generate_token" method="post">
+                    <div class="form-row">
+                        <div class="col col-md-10">
+                            <input class="form-control" name="description" placeholder="Description">
+                        </div>
+                        <div class="col col-md-2">
+                            <input type="submit" class="form-control btn btn-primary" value="Generate API token">
+                        </div>
+                    </div>
+                </form>
+
+                <h3>Misc actions</h3>
+
+                <p>TODO: </p>
+
+                <hr>
+                <a class="btn btn-info" href="/logout">Logout</a>
+            </div>
         </div>
-    </div>
     </div>
 {% endblock body %}

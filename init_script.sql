@@ -45,7 +45,12 @@ CREATE TABLE Queue (
 CREATE TABLE Admin (
   username TEXT PRIMARY KEY NOT NULL,
   password TEXT
-)
+);
+
+CREATE TABLE ApiToken (
+  token TEXT PRIMARY KEY NOT NULL,
+  description TEXT
+);
 
 -- Full Text Index
 

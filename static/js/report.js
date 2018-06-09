@@ -75,7 +75,7 @@ function fillTable(rData) {
     document.getElementById("baseUrl").innerHTML = rData["base_url"];
     document.getElementById("fileCount").innerHTML = rData["total_count"];
     document.getElementById("totalSize").innerHTML = humanFileSize(rData["total_size"]);
-    document.getElementById("reportTime").innerHTML = rData["report_time"];
+    document.getElementById("reportTime").innerHTML = rData["report_time"] + " UTC";
 
 }
 

@@ -230,7 +230,37 @@ def admin_logout():
 @app.route("/dashboard")
 def admin_dashboard():
     if "username" in session:
-        return render_template("dashboard.html")
+
+        tokens = db.get_tokens()
+
+        return render_template("dashboard.html", api_tokens=tokens)
+    else:
+        return abort(403)
+
+
+@app.route("/generate_token", methods=["POST"])
+def admin_generate_token():
+    if "username" in session:
+
+        description = request.form.get("description")
+
+        db.generate_api_token(description)
+        flash("Generated API token", "success")
+
+        return redirect("/dashboard")
+    else:
+        return abort(403)
+
+
+@app.route("/del_token", methods=["POST"])
+def admin_del_token():
+    if "username" in session:
+
+        token = request.form.get("token")
+
+        db.delete_token(token)
+        flash("Deleted API token", "success")
+        return redirect("/dashboard")
     else:
         return abort(403)
 
