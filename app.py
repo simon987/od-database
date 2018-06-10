@@ -194,7 +194,7 @@ def enqueue():
 
 @app.route("/enqueue_bulk", methods=["POST"])
 def enqueue_bulk():
-    if not recaptcha.verify():
+    if recaptcha.verify():
 
         urls = request.form.get("urls")
         if urls:
