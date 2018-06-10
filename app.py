@@ -192,6 +192,35 @@ def enqueue():
         return redirect("/submit")
 
 
+@app.route("/enqueue_bulk", methods=["POST"])
+def enqueue_bulk():
+    if not recaptcha.verify():
+
+        urls = request.form.get("urls")
+        if urls:
+            urls = urls.split()
+
+            if 0 < len(urls) <= 10:
+
+                for url in urls:
+                    url = os.path.join(url, "")
+                    message, msg_type = try_enqueue(url)
+                    message += ' <span class="badge badge-' + msg_type + '">' + url + '</span>'
+                    flash(message, msg_type)
+                return redirect("/submit")
+
+            else:
+                flash("Too few or too many urls, please submit 1-10 urls", "danger")
+                return redirect("/submit")
+        else:
+            return abort(500)
+
+    else:
+        flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
+        return redirect("/submit")
+
+
+
 @app.route("/admin")
 def admin_login_form():
     if "username" in session:
