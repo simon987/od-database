@@ -1,5 +1,5 @@
 import scrapy
-from os import path
+import os
 from urllib.parse import unquote
 
 
@@ -65,9 +65,12 @@ class LinksSpider(scrapy.Spider):
             # Save file information
             stripped_url = response.url[len(self.base_url) - 1:]
             self.crawled_links.add(response.url)
+
+            path, name = os.path.split(stripped_url)
+
             yield {
-                "path": unquote(path.split(stripped_url)[0]).strip("/"),
-                "name": unquote(path.split(stripped_url)[1]),
+                "path": unquote(path).strip("/"),
+                "name": unquote(name),
                 "size": int(response.headers["Content-Length"].decode("utf-8")) if "Content-Length" in response.headers else -1,
                 "mime": response.headers["Content-Type"].decode("utf-8").split(";", maxsplit=1)[0]
                 if "Content-Type" in response.headers else "?",

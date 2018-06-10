@@ -11,6 +11,7 @@ BOT_NAME = 'scrapy_od_database'
 
 SPIDER_MODULES = ['scrapy_od_database.spiders']
 NEWSPIDER_MODULE = 'scrapy_od_database.spiders'
+DOWNLOAD_HANDLERS = {'ftp': 'scrapy_od_database.handlers.FtpListingHandler'}
 
 LOG_LEVEL = 'ERROR'
 FEED_FORMAT = 'json'

@@ -56,6 +56,7 @@ class TaskManager:
         os.remove("data.json")
         print("Imported in SQLite3")
 
+        # TODO: Extract 'callbacks' for posts and comments in a function
         if post_id:
             # Reply to post
             stats = self.db.get_website_stats(website.id)
@@ -75,6 +76,8 @@ class TaskManager:
             print(comment)
             reddit_comment = self.reddit_bot.reddit.comment(comment_id)
             self.reddit_bot.reply(reddit_comment, comment)
+
         busy.value = 0
         print("Done crawling task")
+
 
