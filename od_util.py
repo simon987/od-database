@@ -5,6 +5,7 @@ import os
 import validators
 import re
 import mimetypes
+from ftplib import FTP
 
 
 def truncate_path(path, max_len):
@@ -42,7 +43,7 @@ def is_valid_url(url):
     if not url.endswith("/"):
         return False
 
-    if not url.startswith(("http://", "https://")):
+    if not url.startswith(("http://", "https://", "ftp://")):
         return False
 
     return validators.url(url)
@@ -67,29 +68,36 @@ def is_od(url):
         return False
 
     try:
-        r = requests.get(url, timeout=15, allow_redirects=False)
-        if r.status_code != 200:
-            print("No redirects allowed!")
-            return False
-        soup = BeautifulSoup(r.text, "lxml")
+        if url.startswith("ftp://"):
+            url = url[6:-1]  # Remove schema and trailing slash
+            ftp = FTP(url)
+            ftp.login()
+            ftp.close()
+            return True
+        else:
+            r = requests.get(url, timeout=15, allow_redirects=False)
+            if r.status_code != 200:
+                print("No redirects allowed!")
+                return False
+            soup = BeautifulSoup(r.text, "lxml")
 
-        external_links = sum(1 if is_external_link(url, a.get("href")) else 0 for a in soup.find_all("a"))
-        link_tags = len(list(soup.find_all("link")))
-        script_tags = len(list(soup.find_all("script")))
+            external_links = sum(1 if is_external_link(url, a.get("href")) else 0 for a in soup.find_all("a"))
+            link_tags = len(list(soup.find_all("link")))
+            script_tags = len(list(soup.find_all("script")))
 
-        if external_links > 11:
-            print("Too many external links!")
-            return False
+            if external_links > 11:
+                print("Too many external links!")
+                return False
 
-        if link_tags > 5:
-            print("Too many link tags!")
-            return False
+            if link_tags > 5:
+                print("Too many link tags!")
+                return False
 
-        if script_tags > 7:
-            print("Too many script tags!")
-            return False
+            if script_tags > 7:
+                print("Too many script tags!")
+                return False
 
-        return True
+            return True
 
     except Exception as e:
         print(e)
