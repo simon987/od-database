@@ -125,8 +125,8 @@ class RemoteDirectoryCrawler:
                         in_q.put(f)
                     else:
                         files_q.put(f)
-            except TooManyConnectionsError as e:
-                print("TOO MANY CONNNS")
+            except TooManyConnectionsError:
+                print("Too many connections")
             except TimeoutError:
                 pass
             finally:

@@ -1,4 +1,4 @@
-from urllib.parse import urlparse, urljoin, unquote
+from urllib.parse import urljoin, unquote
 
 import os
 from lxml import etree
@@ -7,12 +7,20 @@ from crawler.crawler import RemoteDirectory, File
 import requests
 from requests.exceptions import RequestException
 from multiprocessing.pool import ThreadPool
+import config
+
+
+class Link:
+
+    def __init__(self, text: str, url: str):
+        self.text = text
+        self.url = url
 
 
 class HttpDirectory(RemoteDirectory):
 
     SCHEMES = ("http", "https",)
-    HEADERS = {}
+    HEADERS = config.HEADERS
     BLACK_LIST = (
         "?C=N&O=D",
         "?C=M&O=A",
@@ -23,6 +31,7 @@ class HttpDirectory(RemoteDirectory):
         "?C=S;O=A",
         "?C=D;O=A"
     )
+    MAX_RETRIES = 3
 
     def __init__(self, url):
         super().__init__(url)
@@ -34,6 +43,8 @@ class HttpDirectory(RemoteDirectory):
 
         path_url = urljoin(self.base_url, path)
         body = self._fetch_body(path_url)
+        if not body:
+            return []
         links = self._parse_links(body)
 
         urls_to_request = []
@@ -42,11 +53,11 @@ class HttpDirectory(RemoteDirectory):
 
             if self._should_ignore(link):
                 continue
+
             file_url = urljoin(path_url, link[1])
             path, file_name = os.path.split(file_url[len(self.base_url) - 1:])
 
             if self._isdir(link):
-
                 results.append(File(
                     name=file_name,
                     mtime="",
@@ -57,11 +68,27 @@ class HttpDirectory(RemoteDirectory):
             else:
                 urls_to_request.append(file_url)
 
-        pool = ThreadPool(processes=10)
-        files = pool.starmap(HttpDirectory._request_file, zip(repeat(self), urls_to_request))
-        for f in files:
-            if f:
-                results.append(f)
+        results.extend(self.request_files(urls_to_request))
+
+        return results
+
+    def request_files(self, urls_to_request: list) -> list:
+
+        results = []
+
+        if len(urls_to_request) > 3:
+            # Many urls, use multi-threaded solution
+            pool = ThreadPool(processes=10)
+            files = pool.starmap(HttpDirectory._request_file, zip(repeat(self), urls_to_request))
+            for file in files:
+                if file:
+                    results.append(file)
+        else:
+            # Too few urls to create thread pool
+            for url in urls_to_request:
+                file = self._request_file(url)
+                if file:
+                    results.append(file)
 
         return results
 
@@ -71,10 +98,15 @@ class HttpDirectory(RemoteDirectory):
     @staticmethod
     def _fetch_body(url: str):
 
-        # todo timeout
-        print("FETCH " + url)
-        r = requests.get(url, headers=HttpDirectory.HEADERS)
-        return r.text
+        retries = HttpDirectory.MAX_RETRIES
+        while retries > 0:
+            try:
+                r = requests.get(url, headers=HttpDirectory.HEADERS)
+                return r.text
+            except RequestException:
+                retries -= 1
+
+        return None
 
     def _parse_links(self, body: str) -> set:
 
@@ -83,21 +115,19 @@ class HttpDirectory(RemoteDirectory):
         links = tree.findall(".//a/[@href]")
 
         for link in links:
-            result.add((link.text, link.get("href")))
+            result.add(Link(link.text, link.get("href")))
 
         return result
 
     @staticmethod
-    def _isdir(url):
-        return url[1].rsplit("?", maxsplit=1)[0].endswith("/")
+    def _isdir(link: Link):
+        return link.url.rsplit("?", maxsplit=1)[0].endswith("/")
 
     def _request_file(self, url):
 
-        # todo timeout
-        retries = 3
+        retries = HttpDirectory.MAX_RETRIES
         while retries > 0:
             try:
-                print("HEAD " + url)
                 r = requests.head(url, headers=HttpDirectory.HEADERS, allow_redirects=False, timeout=50)
 
                 stripped_url = r.url[len(self.base_url) - 1:]
@@ -116,8 +146,7 @@ class HttpDirectory(RemoteDirectory):
 
         return None
 
-
     @staticmethod
-    def _should_ignore(link):
-        return link[0] == "../" or link[1].endswith(HttpDirectory.BLACK_LIST)
+    def _should_ignore(link: Link):
+        return link.text == "../" or link.url.endswith(HttpDirectory.BLACK_LIST)
 

@@ -16,6 +16,7 @@ CAPTCHA_SECRET_KEY = ""
 FLASK_SECRET = ""
 USE_SSL = True
 RESULTS_PER_PAGE = (25, 50, 100, 250, 500, 1000)
+HEADERS = {}
 ```
 
 ## Running
