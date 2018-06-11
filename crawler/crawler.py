@@ -71,7 +71,7 @@ class RemoteDirectoryCrawler:
 
         try:
             directory = RemoteDirectoryFactory.get_directory(self.url)
-            root_listing = directory.list_dir("/dl2/")  # todo get path
+            root_listing = directory.list_dir("/")
             directory.close()
         except TimeoutError:
             return

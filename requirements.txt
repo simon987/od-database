@@ -1,4 +1,5 @@
 flask
+flask_testing
 requests
 bs4
 validators

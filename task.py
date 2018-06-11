@@ -2,8 +2,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import os
 from database import Website
 from multiprocessing import Value, Process
-from scrapy.crawler import CrawlerProcess
-from scrapy.utils.project import get_project_settings
 from database import Database
 from reddit_bot import RedditBot
 import praw

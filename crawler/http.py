@@ -54,7 +54,7 @@ class HttpDirectory(RemoteDirectory):
             if self._should_ignore(link):
                 continue
 
-            file_url = urljoin(path_url, link[1])
+            file_url = urljoin(path_url, link.url)
             path, file_name = os.path.split(file_url[len(self.base_url) - 1:])
 
             if self._isdir(link):
