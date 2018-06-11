@@ -157,8 +157,7 @@ def try_enqueue(url):
         return "A parent directory of this url has already been posted", "danger"
 
     if not od_util.is_valid_url(url):
-        return "<strong>Error:</strong> Invalid url. Make sure to include the http(s):// suffix. " \
-               "FTP is not supported", "danger"
+        return "<strong>Error:</strong> Invalid url. Make sure to include the appropriate scheme.", "danger"
 
     if od_util.is_blacklisted(url):
 

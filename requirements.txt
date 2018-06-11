@@ -9,4 +9,4 @@ praw
 humanfriendly
 apscheduler
 bcrypt
-twisted
+ftputil
