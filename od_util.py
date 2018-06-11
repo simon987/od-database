@@ -75,7 +75,7 @@ def is_od(url):
             ftp.close()
             return True
         else:
-            r = requests.get(url, timeout=15, allow_redirects=False)
+            r = requests.get(url, timeout=30, allow_redirects=False)
             if r.status_code != 200:
                 print("No redirects allowed!")
                 return False
