@@ -4,7 +4,7 @@ import json
 
 payload = json.dumps({
     "website_id": 123,
-    "url": "https://frenchy.ga/",
+    "url": "http://liminaire.fr/TEXTES/",
     "priority": 2,
     "callback_type": "",
     "callback_args": "{}"

@@ -146,8 +146,8 @@ class RemoteDirectoryCrawler:
             try:
                 path = os.path.join(file.path, file.name, "")
                 if path not in self.crawled_paths:
-                    listing = directory.list_dir(path)
                     self.crawled_paths.add(path)
+                    listing = directory.list_dir(path)
 
                     for f in listing:
                         if f.is_dir:

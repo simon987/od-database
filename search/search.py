@@ -82,7 +82,6 @@ class ElasticSearchEngine(SearchEngine):
     def import_json(self, in_str: str, website_id: int):
         import_every = 1000
 
-        print(in_str)
         docs = []
 
         for line in in_str.splitlines():
