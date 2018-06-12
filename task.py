@@ -26,7 +26,9 @@ class CrawlServer:
     def get_completed_tasks(self) -> list:
 
         r = requests.get(self.url + "/task/completed")
-        return []
+        return [
+            TaskResult(r["status_code"], r["file_count"], r["start_time"], r["end_time"], r["website_id"])
+            for r in json.loads(r.text)]
 
     def get_queued_tasks(self) -> list:
 
@@ -62,7 +64,13 @@ class TaskDispatcher:
         ]
 
     def check_completed_tasks(self):
-        return self._get_available_crawl_server().get_completed_tasks()
+        completed_tasks = []
+
+        for server in self.crawl_servers:
+            completed_tasks.extend(server.get_completed_tasks())
+
+        if completed_tasks:
+            print(str(len(completed_tasks)) + " completed tasks. Will index immediately")
 
     def dispatch_task(self, task: Task):
         self._get_available_crawl_server().queue_task(task)
