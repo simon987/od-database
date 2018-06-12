@@ -1,4 +1,5 @@
 import elasticsearch
+from elasticsearch.exceptions import TransportError
 
 
 class IndexingError(Exception):
@@ -13,7 +14,10 @@ class SearchEngine:
     def import_json(self, in_file: str, website_id: int):
         raise NotImplementedError
 
-    def search(self, query) -> list:
+    def search(self, query) -> {}:
+        raise NotImplementedError
+
+    def scroll(self, scroll_id) -> {}:
         raise NotImplementedError
 
     def reset(self):
@@ -40,26 +44,7 @@ class ElasticSearchEngine(SearchEngine):
         self.es.indices.create(index=self.index_name)
         self.es.indices.close(index=self.index_name)
 
-        # Paths
-        self.es.indices.put_settings(body=
-                                     {"analysis": {
-                                         "tokenizer": {
-                                             "path_tokenizer": {
-                                                 "type": "path_hierarchy"
-                                             }
-                                         }
-                                     }}, index=self.index_name)
-
-        self.es.indices.put_settings(body=
-                                     {"analysis": {
-                                         "analyzer": {
-                                             "path_analyser": {
-                                                 "tokenizer": "path_tokenizer", "filter": ["lowercase"]
-                                             }
-                                         }
-                                     }}, index=self.index_name)
-
-        # File names
+        # File names and paths
         self.es.indices.put_settings(body=
                                      {"analysis": {
                                          "tokenizer": {
@@ -79,7 +64,7 @@ class ElasticSearchEngine(SearchEngine):
 
         # Mappings
         self.es.indices.put_mapping(body={"properties": {
-            "path": {"type": "text", "analyzer": "path_analyser"},
+            "path": {"analyzer": "my_nGram", "type": "text"},
             "name": {"analyzer": "my_nGram", "type": "text"},
             "mtime": {"type": "date", "format": "epoch_millis"},
             "size": {"type": "long"},
@@ -131,5 +116,39 @@ class ElasticSearchEngine(SearchEngine):
             result += action_string + doc[:-1] + website_id_string
         return result
 
-    def search(self, query):
-        pass
+    def search(self, query) -> {}:
+
+        filters = []
+
+        page = self.es.search(body={
+            "query": {
+                "bool": {
+                    "must": {
+                        "multi_match": {
+                            "query": query,
+                            "fields": ["name", "path"],
+                            "operator": "and"
+                        }
+                    },
+                    "filter": filters
+                }
+            },
+            "sort": [
+                "_score"
+            ],
+            "highlight": {
+                "fields": {
+                    "name": {"pre_tags": ["<span class='hl'>"], "post_tags": ["</span>"]},
+                }
+            },
+            "size": 40}, index=self.index_name, scroll="8m")
+
+        # todo get scroll time from config
+        # todo get size from config
+        return page
+
+    def scroll(self, scroll_id) -> {}:
+        try:
+            return self.es.scroll(scroll_id=scroll_id, scroll="3m")  # todo get scroll time from config
+        except TransportError:
+            return None

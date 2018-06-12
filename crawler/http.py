@@ -76,7 +76,7 @@ class HttpDirectory(RemoteDirectory):
 
         results = []
 
-        if len(urls_to_request) > 3:
+        if len(urls_to_request) > 4:
             # Many urls, use multi-threaded solution
             pool = ThreadPool(processes=10)
             files = pool.starmap(HttpDirectory._request_file, zip(repeat(self), urls_to_request))

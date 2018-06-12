@@ -12,3 +12,4 @@ bcrypt
 ftputil
 lxml
 elasticsearch
+python-dateutil
