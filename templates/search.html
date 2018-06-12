@@ -18,10 +18,17 @@
                         <div class="form-group col-md-2">
                             <select class="form-control" name="sort_order" title="Sort order">
                                 <option disabled>Select sort order</option>
-                                <option value="score" {{ "selected" if sort_order == "score" else "" }}>Relevance</option>
-                                <option value="size_asc" {{ "selected" if sort_order == "size_asc" else "" }}>Size ascending</option>
-                                <option value="size_dsc" {{ "selected" if sort_order == "size_dsc" else "" }}>Size descending</option>
-                                <option value="none" {{ "selected" if sort_order == "none" else "" }}>No order (faster)</option>
+                                <option value="score" {{ "selected" if sort_order == "score" else "" }}>Relevance
+                                </option>
+                                <option value="size_asc" {{ "selected" if sort_order == "size_asc" else "" }}>Size
+                                    ascending
+                                </option>
+                                <option value="size_dsc" {{ "selected" if sort_order == "size_dsc" else "" }}>Size
+                                    descending
+                                </option>
+                                <option value="none" {{ "selected" if sort_order == "none" else "" }}>No order
+                                    (faster)
+                                </option>
                             </select>
                         </div>
                         <div class="form-group col-md-2">
@@ -40,7 +47,7 @@
             </div>
         </div>
 
-        {% if results %}
+        {% if results["hits"]["total"] > 0 %}
             <div class="card">
                 <div class="card-body">
 
@@ -48,39 +55,46 @@
                         <table class="table">
                             <tbody>
 
-                            {% for hit in results %}
-                                {% set path = hit[1] + hit[2] %}
+                            {% for hit in results["hits"]["hits"] %}
+                                {% set src = hit["_source"] %}
+                                {% set hl_name = hit["highlight"]["name"][0] if "name" in hit["highlight"] else src["name"] %}
+                                {% set hl_path = hit["highlight"]["path"][0] if "path" in hit["highlight"] else src["path"] %}
+
+                                {# TODO: website url + path #}
+                                {% set path = src["path"] %}
                                 <tr>
                                     <td>
                                         {# File name & link #}
-                                        <a href="{{ path + "/" + hit[3] }}" title="{{ hit[3] }}">
-                                            {{ hit[3] | truncate(50, True, "..>") }}
+                                        <a href="{{ path + "/" + src["name"] }}" title="{{ src["name"] }}">
+                                            {{ hl_name |safe }}
                                         </a>
                                         {# File type badge #}
-                                        {% set mime = get_mime(hit[3]) %}
+                                        {% set mime = get_mime(src["path"]) %}
                                         {% if mime %}
                                             <span class="badge badge-pill {{ get_color(mime) }}">
-                                                {{ hit[3][hit[3].rfind(".") + 1:] }}
+                                                {{ src["path"][src["path"].rfind(".") + 1:] }}
                                             </span>
                                         {% endif %}
                                         {# File path #}
                                         <div class="text-muted" title="{{ path }}" style="font-size: 10px;">
                                             <a style="color: #6c757d" title="See files from this website"
-                                               href="/website/{{ hit[4] }}">{{ hit[1] }}</a>{{ truncate_path(hit[2], 60) }}
+                                                    {# todo: website url #}
+                                               href="/website/{{ src["website_id"] }}">{{ hl_path | safe }}</a>{{ truncate_path(src["path"], 60) }}
                                         </div>
                                     </td>
                                     {# File size #}
                                     <td style="white-space: nowrap; vertical-align: top; text-align: right; font-size: 14px">
-                                        {{ hit[0] | filesizeformat if hit[0] >= 0 else "?"}}
+                                        {{ src["size"] | filesizeformat if src["size"] >= 0 else "?" }}
                                     </td>
                                 </tr>
                             {% endfor %}
                             </tbody>
                         </table>
                     </div>
-
-                    <a href="/search?q={{ q }}&p={{ p + 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}"
-                       class="btn btn-primary" style="float: right">Next</a>
+                    {% if results["hits"]["total"] > (p + 1) * per_page %}
+                        <a href="/search?q={{ q }}&p={{ p + 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}"
+                           class="btn btn-primary" style="float: right">Next</a>
+                    {% endif %}
                     {% if p > 0 %}
                         <a href="/search?q={{ q }}&p={{ p - 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}"
                            class="btn btn-primary">Previous</a>

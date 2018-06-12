@@ -8,6 +8,7 @@ import od_util
 import config
 from flask_caching import Cache
 from task import TaskDispatcher, Task
+from search.search import ElasticSearchEngine
 
 app = Flask(__name__)
 recaptcha = ReCaptcha(app=app,
@@ -21,6 +22,7 @@ app.jinja_env.globals.update(get_color=od_util.get_color)
 app.jinja_env.globals.update(get_mime=od_util.get_mime)
 
 taskDispatcher = TaskDispatcher()
+searchEngine = ElasticSearchEngine("od-database")
 
 
 @app.template_filter("datetime_format")
@@ -108,13 +110,14 @@ def search():
     if q:
         try:
             # hits = sea.search(q, per_page, page, sort_order)
-            print("FIXME: Search")
-            hits = []
+            hits = searchEngine.search(q, page, per_page)
         except InvalidQueryException as e:
             flash("<strong>Invalid query:</strong> " + str(e), "warning")
             return redirect("/search")
     else:
         hits = None
+
+    print(hits)
 
     return render_template("search.html",
                            results=hits, q=q, p=page, sort_order=sort_order,

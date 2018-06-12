@@ -109,9 +109,10 @@ class ElasticSearchEngine(SearchEngine):
 
         return "\n".join("".join([action_string, doc[:-1], website_id_string]) for doc in docs)
 
-    def search(self, query) -> {}:
+    def search(self, query, page, per_page) -> {}:
 
         filters = []
+        sort_by = ["_score"]
 
         page = self.es.search(body={
             "query": {
@@ -126,22 +127,15 @@ class ElasticSearchEngine(SearchEngine):
                     "filter": filters
                 }
             },
-            "sort": [
-                "_score"
-            ],
+            "sort": sort_by,
             "highlight": {
                 "fields": {
                     "name": {"pre_tags": ["<span class='hl'>"], "post_tags": ["</span>"]},
+                    "path": {"pre_tags": ["<span class='hl'>"], "post_tags": ["</span>"]}
                 }
             },
-            "size": 40}, index=self.index_name, scroll="8m")
+            "size": per_page, "from": page * per_page}, index=self.index_name)
 
         # todo get scroll time from config
         # todo get size from config
         return page
-
-    def scroll(self, scroll_id) -> {}:
-        try:
-            return self.es.scroll(scroll_id=scroll_id, scroll="3m")  # todo get scroll time from config
-        except TransportError:
-            return None
