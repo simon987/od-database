@@ -1,4 +1,6 @@
 import elasticsearch
+import os
+import json
 from elasticsearch.exceptions import TransportError
 
 
@@ -14,10 +16,7 @@ class SearchEngine:
     def import_json(self, in_str: str, website_id: int):
         raise NotImplementedError
 
-    def search(self, query) -> {}:
-        raise NotImplementedError
-
-    def scroll(self, scroll_id) -> {}:
+    def search(self, query, page, per_page, sort_order) -> {}:
         raise NotImplementedError
 
     def reset(self):
@@ -28,6 +27,15 @@ class SearchEngine:
 
 
 class ElasticSearchEngine(SearchEngine):
+
+    SORT_ORDERS = {
+        "score": ["_score"],
+        "size_asc": [{"size": {"order": "asc"}}],
+        "size_dsc": [{"size": {"order": "desc"}}],
+        "date_asc": [{"mtime": {"order": "asc"}}],
+        "date_desc": [{"mtime": {"order": "desc"}}],
+        "none": []
+    }
 
     def __init__(self, index_name):
         super().__init__()
@@ -68,7 +76,8 @@ class ElasticSearchEngine(SearchEngine):
             "name": {"analyzer": "my_nGram", "type": "text"},
             "mtime": {"type": "date", "format": "epoch_millis"},
             "size": {"type": "long"},
-            "website_id": {"type": "integer"}
+            "website_id": {"type": "integer"},
+            "ext": {"type": "keyword"}
         }}, doc_type="file", index=self.index_name)
 
         self.es.indices.open(index=self.index_name)
@@ -85,16 +94,21 @@ class ElasticSearchEngine(SearchEngine):
         docs = []
 
         for line in in_str.splitlines():
-            docs.append(line)
+            doc = json.loads(line)
+            name, ext = os.path.splitext(doc["name"])
+            doc["ext"] = ext if ext else ""
+            doc["name"] = name
+            doc["website_id"] = website_id
+            docs.append(doc)
 
             if len(docs) >= import_every:
-                self._index(docs, website_id)
+                self._index(docs)
                 docs.clear()
-        self._index(docs, website_id)
+        self._index(docs)
 
-    def _index(self, docs, website_id):
+    def _index(self, docs):
         print("Indexing " + str(len(docs)) + " docs")
-        bulk_string = ElasticSearchEngine.create_bulk_index_string(docs, website_id)
+        bulk_string = ElasticSearchEngine.create_bulk_index_string(docs)
         result = self.es.bulk(body=bulk_string, index=self.index_name, doc_type="file")
 
         if result["errors"]:
@@ -102,17 +116,15 @@ class ElasticSearchEngine(SearchEngine):
             raise IndexingError
 
     @staticmethod
-    def create_bulk_index_string(docs: list, website_id: int):
+    def create_bulk_index_string(docs: list):
 
         action_string = '{"index":{}}\n'
-        website_id_string = ',"website_id":' + str(website_id) + '}\n'  # Add website_id param to each doc
+        return "\n".join("".join([action_string, json.dumps(doc)]) for doc in docs)
 
-        return "\n".join("".join([action_string, doc[:-1], website_id_string]) for doc in docs)
-
-    def search(self, query, page, per_page) -> {}:
+    def search(self, query, page, per_page, sort_order) -> {}:
 
         filters = []
-        sort_by = ["_score"]
+        sort_by = ElasticSearchEngine.SORT_ORDERS.get(sort_order, [])
 
         page = self.es.search(body={
             "query": {

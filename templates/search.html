@@ -18,17 +18,12 @@
                         <div class="form-group col-md-2">
                             <select class="form-control" name="sort_order" title="Sort order">
                                 <option disabled>Select sort order</option>
-                                <option value="score" {{ "selected" if sort_order == "score" else "" }}>Relevance
-                                </option>
-                                <option value="size_asc" {{ "selected" if sort_order == "size_asc" else "" }}>Size
-                                    ascending
-                                </option>
-                                <option value="size_dsc" {{ "selected" if sort_order == "size_dsc" else "" }}>Size
-                                    descending
-                                </option>
-                                <option value="none" {{ "selected" if sort_order == "none" else "" }}>No order
-                                    (faster)
-                                </option>
+                                <option value="score" {{ "selected" if sort_order == "score" else "" }}>Relevance </option>
+                                <option value="size_asc" {{ "selected" if sort_order == "size_asc" else "" }}>Size ascending </option>
+                                <option value="size_dsc" {{ "selected" if sort_order == "size_dsc" else "" }}>Size descending</option>
+                                <option value="date_asc" {{ "selected" if sort_order == "date_asc" else "" }}>Date ascending</option>
+                                <option value="date_dsc" {{ "selected" if sort_order == "date_dsc" else "" }}>Date descending</option>
+                                <option value="none" {{ "selected" if sort_order == "none" else "" }}>No order (faster)</option>
                             </select>
                         </div>
                         <div class="form-group col-md-2">
@@ -47,7 +42,7 @@
             </div>
         </div>
 
-        {% if results["hits"]["total"] > 0 %}
+        {% if results and results["hits"]["total"] > 0 %}
             <div class="card">
                 <div class="card-body">
 
@@ -60,13 +55,11 @@
                                 {% set hl_name = hit["highlight"]["name"][0] if "name" in hit["highlight"] else src["name"] %}
                                 {% set hl_path = hit["highlight"]["path"][0] if "path" in hit["highlight"] else src["path"] %}
 
-                                {# TODO: website url + path #}
-                                {% set path = src["path"] %}
                                 <tr>
                                     <td>
                                         {# File name & link #}
-                                        <a href="{{ path + "/" + src["name"] }}" title="{{ src["name"] }}">
-                                            {{ hl_name |safe }}
+                                        <a href="{{ src["website_url"] + src["path"] + "/" + src["name"] + src["ext"] }}" title="{{ src["name"] + src["ext"] }}">
+                                            {{ hl_name |safe }}{{ src["ext"] }}
                                         </a>
                                         {# File type badge #}
                                         {% set mime = get_mime(src["path"]) %}
@@ -78,13 +71,13 @@
                                         {# File path #}
                                         <div class="text-muted" title="{{ path }}" style="font-size: 10px;">
                                             <a style="color: #6c757d" title="See files from this website"
-                                                    {# todo: website url #}
-                                               href="/website/{{ src["website_id"] }}">{{ hl_path | safe }}</a>{{ truncate_path(src["path"], 60) }}
+                                               href="/website/{{ src["website_id"] }}">{{ src["website_url"] }}</a>{{ hl_path|safe }}
                                         </div>
                                     </td>
-                                    {# File size #}
+                                    {# File size & date #}
                                     <td style="white-space: nowrap; vertical-align: top; text-align: right; font-size: 14px">
-                                        {{ src["size"] | filesizeformat if src["size"] >= 0 else "?" }}
+                                        <div>{{ src["size"] | filesizeformat if src["size"] >= 0 else "?" }}</div>
+                                        <code>{{ src["mtime"] | datetime_format }}</code>
                                     </td>
                                 </tr>
                             {% endfor %}

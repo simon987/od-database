@@ -191,6 +191,31 @@ class Database:
             cursor.execute("DELETE FROM ApiToken WHERE token=?", (token, ))
             conn.commit()
 
+    def _get_websites(self) -> dict:
+
+        # todo: mem cache that
+        with sqlite3.connect(self.db_path) as conn:
+
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT id, url FROM Website")
+
+            result = {}
+
+            for db_website in cursor.fetchall():
+                result[db_website[0]] = db_website[1]
+            return result
+
+    def join_search_result(self, page: dict) -> dict:
+
+        websites = self._get_websites()
+
+        for hit in page["hits"]["hits"]:
+            hit["_source"]["website_url"] = websites[hit["_source"]["website_id"]]
+
+        return page
+
+
 
 
 

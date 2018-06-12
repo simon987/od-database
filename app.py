@@ -26,7 +26,7 @@ searchEngine = ElasticSearchEngine("od-database")
 
 
 @app.template_filter("datetime_format")
-def datetime_format(value, format='%Y-%m-%d %H:%M UTC'):
+def datetime_format(value, format='%Y-%m-%d'):
     return time.strftime(format, time.gmtime(value))
 
 
@@ -107,17 +107,15 @@ def search():
     per_page = int(per_page) if per_page.isdigit() else "50"
     per_page = per_page if per_page in config.RESULTS_PER_PAGE else 50
 
-    if q:
+    if len(q) >= 3:
         try:
-            # hits = sea.search(q, per_page, page, sort_order)
-            hits = searchEngine.search(q, page, per_page)
+            hits = searchEngine.search(q, page, per_page, sort_order)
+            hits = db.join_search_result(hits)
         except InvalidQueryException as e:
             flash("<strong>Invalid query:</strong> " + str(e), "warning")
             return redirect("/search")
     else:
         hits = None
-
-    print(hits)
 
     return render_template("search.html",
                            results=hits, q=q, p=page, sort_order=sort_order,

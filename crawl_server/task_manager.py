@@ -1,5 +1,5 @@
 from crawl_server.database import TaskManagerDatabase, Task, TaskResult
-from multiprocessing import Pool
+from concurrent.futures import ProcessPoolExecutor
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 from crawl_server.crawler import RemoteDirectoryCrawler
@@ -10,7 +10,7 @@ class TaskManager:
     def __init__(self, db_path, max_processes=8):
         self.db_path = db_path
         self.db = TaskManagerDatabase(db_path)
-        self.pool = Pool(processes=max_processes)
+        self.pool = ProcessPoolExecutor(max_workers=max_processes)
 
         self.current_tasks = []
 
@@ -39,12 +39,10 @@ class TaskManager:
 
             print("pooled " + task.url)
 
-            self.pool.apply_async(
+            self.pool.submit(
                 TaskManager.run_task,
-                args=(task, self.db_path),
-                callback=TaskManager.task_complete,
-                error_callback=TaskManager.task_error
-            )
+                task, self.db_path
+            ).add_done_callback(TaskManager.task_complete)
 
     @staticmethod
     def run_task(task, db_path):
@@ -63,19 +61,20 @@ class TaskManager:
         result.end_time = datetime.utcnow()
         print("End task " + task.url)
 
-        return dict(result=result, db_path=db_path)
+        return result, db_path
 
     @staticmethod
-    def task_complete(kwargs):
-        result = kwargs["result"]
-        db_path = kwargs["db_path"]
-        print(result.status_code)
-        print(result.file_count)
-        print(result.start_time)
-        print(result.end_time)
+    def task_complete(result):
+
+        task_result, db_path = result.result()
+
+        print(task_result.status_code)
+        print(task_result.file_count)
+        print(task_result.start_time)
+        print(task_result.end_time)
 
         db = TaskManagerDatabase(db_path)
-        db.log_result(result)
+        db.log_result(task_result)
         print("Logged result to DB")
 
     @staticmethod
