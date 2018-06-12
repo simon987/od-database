@@ -71,15 +71,17 @@
                    <thead>
                    <tr>
                        <th>Url</th>
-                       <th>Date added</th>
+                       <th>Priority</th>
+                       <th>Task type</th>
                    </tr>
                    </thead>
 
                   <tbody>
-                  {% for w in queue %}
+                  {% for task in queue %}
                       <tr>
-                          <td title="{{ w.url }}">{{ w.url | truncate(70)}}</td>
-                          <td>{{ w.last_modified }} UTC</td>
+                          <td title="{{ task.url }}">{{ task.url | truncate(70)}}</td>
+                          <td>{{ task.priority }}</td>
+                          <td>{{ task.callback_type if task.callback_type else "NORMAL" }}</td>
                       </tr>
                   {% endfor %}
                   </tbody>

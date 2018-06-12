@@ -1,14 +1,9 @@
 from flask import Flask, request, abort, Response
 import json
-from crawl_server.task_manager import TaskManager, Task
+from crawl_server.task_manager import TaskManager, Task, TaskResult
 app = Flask(__name__)
 
 tm = TaskManager("tm_db.sqlite3")
-
-
-@app.route("/")
-def hello():
-    return "Hello World!"
 
 
 @app.route("/task/")
@@ -37,5 +32,18 @@ def task_put():
     return abort(400)
 
 
+@app.route("/task/completed", methods=["GET"])
+def get_completed_tasks():
+    json_str = json.dumps([result.to_json() for result in tm.get_non_indexed_results()])
+    return json_str
+
+
+@app.route("/task/current", methods=["GET"])
+def get_current_tasks():
+
+    current_tasks = tm.get_current_tasks()
+    return current_tasks
+
+
 if __name__ == "__main__":
-    app.run()
+    app.run(port=5001)

@@ -5,12 +5,21 @@ import sqlite3
 
 class TaskResult:
 
-    def __init__(self):
-        self.status_code: str = None
-        self.file_count = 0
-        self.start_time = None
-        self.end_time = None
-        self.website_id = None
+    def __init__(self, status_code=None, file_count=0, start_time=0, end_time=0, website_id=0):
+        self.status_code = status_code
+        self.file_count = file_count
+        self.start_time = start_time
+        self.end_time = end_time
+        self.website_id = website_id
+
+    def to_json(self):
+        return {
+            "status_code": self.status_code,
+            "file_count": self.file_count,
+            "start_time": self.start_time,
+            "end_time": self.end_time,
+            "website_id": self.website_id
+        }
 
 
 class Task:
@@ -24,13 +33,16 @@ class Task:
         self.callback_args = json.loads(callback_args) if callback_args else {}
 
     def to_json(self):
-        return ({
+        return {
             "website_id": self.website_id,
             "url": self.url,
             "priority": self.priority,
             "callback_type": self.callback_type,
             "callback_args": json.dumps(self.callback_args)
-        })
+        }
+
+    def __repr__(self):
+        return json.dumps(self.to_json())
 
 
 class TaskManagerDatabase:
@@ -96,3 +108,17 @@ class TaskManagerDatabase:
                            "VALUES (?,?,?,?,?)", (result.website_id, result.status_code, result.file_count,
                                                   result.start_time, result.end_time))
             conn.commit()
+
+    def get_non_indexed_results(self):
+        """Get a list of new TaskResults since the last call of this method"""
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT status_code, file_count, start_time, end_time, website_id"
+                           " FROM TaskResult WHERE indexed_time != NULL")
+            db_result = cursor.fetchall()
+
+            cursor.execute("UPDATE TaskResult SET indexed_time = CURRENT_TIMESTAMP")
+
+            return [TaskResult(r[0], r[1], r[2], r[3], r[4]) for r in db_result]

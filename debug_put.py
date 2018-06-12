@@ -4,12 +4,12 @@ import json
 
 payload = json.dumps({
     "website_id": 123,
-    "url": "http://124.158.108.137/ebooks/",
+    "url": "https://frenchy.ga/",
     "priority": 2,
     "callback_type": "",
     "callback_args": "{}"
 })
 
-r = requests.post("http://localhost:5000/task/put",
+r = requests.post("http://localhost:5001/task/put",
                   headers={"Content-Type": "application/json"},
                   data=payload)

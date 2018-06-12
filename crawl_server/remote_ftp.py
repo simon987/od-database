@@ -8,7 +8,7 @@ import ftputil.error
 from ftputil.session import session_factory
 import random
 import timeout_decorator
-from crawler.crawler import RemoteDirectory, File, TooManyConnectionsError
+from crawl_server.crawler import RemoteDirectory, File, TooManyConnectionsError
 
 
 class FtpDirectory(RemoteDirectory):

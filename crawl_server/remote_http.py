@@ -3,7 +3,7 @@ from urllib.parse import urljoin, unquote
 import os
 from lxml import etree
 from itertools import repeat
-from crawler.crawler import RemoteDirectory, File
+from crawl_server.crawler import RemoteDirectory, File
 import requests
 from requests.exceptions import RequestException
 from multiprocessing.pool import ThreadPool

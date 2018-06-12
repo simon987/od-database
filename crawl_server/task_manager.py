@@ -2,7 +2,7 @@ from crawl_server.database import TaskManagerDatabase, Task, TaskResult
 from multiprocessing import Pool
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
-from crawler.crawler import RemoteDirectoryCrawler
+from crawl_server.crawler import RemoteDirectoryCrawler
 
 
 class TaskManager:
@@ -12,8 +12,10 @@ class TaskManager:
         self.db = TaskManagerDatabase(db_path)
         self.pool = Pool(processes=max_processes)
 
+        self.current_tasks = []
+
         scheduler = BackgroundScheduler()
-        scheduler.add_job(self.execute_queued_task, "interval", seconds=1)
+        scheduler.add_job(self.execute_queued_task, "interval", seconds=5)
         scheduler.start()
 
     def put_task(self, task: Task):
@@ -22,11 +24,21 @@ class TaskManager:
     def get_tasks(self):
         return self.db.get_tasks()
 
+    def get_current_tasks(self):
+        return self.current_tasks
+
+    def get_non_indexed_results(self):
+        return self.db.get_non_indexed_results()
+
     def execute_queued_task(self):
 
         task = self.db.pop_task()
         if task:
+
+            self.current_tasks.append(task)
+
             print("pooled " + task.url)
+
             self.pool.apply_async(
                 TaskManager.run_task,
                 args=(task, self.db_path),
@@ -68,8 +80,9 @@ class TaskManager:
 
     @staticmethod
     def task_error(err):
-        print("ERROR")
+        print("FIXME: Task failed (This should not happen)")
         print(err)
+        raise err
 
 
 

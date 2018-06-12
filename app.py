@@ -1,16 +1,13 @@
 from flask import Flask, render_template, redirect, request, flash, abort, Response, send_from_directory, session
 import os
-import json
 import time
 import ssl
 from database import Database, Website, InvalidQueryException
 from flask_recaptcha import ReCaptcha
 import od_util
-import sqlite3
 import config
 from flask_caching import Cache
-from task import TaskManager
-
+from task import TaskDispatcher, Task
 
 app = Flask(__name__)
 recaptcha = ReCaptcha(app=app,
@@ -23,7 +20,7 @@ app.jinja_env.globals.update(truncate_path=od_util.truncate_path)
 app.jinja_env.globals.update(get_color=od_util.get_color)
 app.jinja_env.globals.update(get_mime=od_util.get_mime)
 
-tm = TaskManager()
+taskDispatcher = TaskDispatcher()
 
 
 @app.template_filter("datetime_format")
@@ -68,8 +65,9 @@ def website_json_chart(website_id):
 
     website = db.get_website_by_id(website_id)
 
+    print("FIXME: website_json_chart")
     if website:
-        stats = Response(json.dumps(db.get_website_stats(website_id)), mimetype="application/json")
+        stats = {}
         return stats
     else:
         abort(404)
@@ -81,7 +79,9 @@ def website_links(website_id):
     website = db.get_website_by_id(website_id)
 
     if website:
-        return Response("\n".join(db.get_website_links(website_id)), mimetype="text/plain")
+        print("FIXME: website_links")
+        links = []
+        return Response("\n".join(links), mimetype="text/plain")
     else:
         abort(404)
 
@@ -107,7 +107,9 @@ def search():
 
     if q:
         try:
-            hits = db.search(q, per_page, page, sort_order)
+            # hits = sea.search(q, per_page, page, sort_order)
+            print("FIXME: Search")
+            hits = []
         except InvalidQueryException as e:
             flash("<strong>Invalid query:</strong> " + str(e), "warning")
             return redirect("/search")
@@ -127,21 +129,16 @@ def contribute():
 @app.route("/")
 def home():
 
-    if tm.busy.value == 1:
-        current_website = tm.current_website.url
-    else:
-        current_website = None
-
-    try:
-        stats = db.get_stats()
-    except sqlite3.OperationalError:
-        stats = None
+    # TODO get stats
+    stats = {}
+    current_website = "TODO"
     return render_template("home.html", stats=stats, current_website=current_website)
 
 
 @app.route("/submit")
 def submit():
-    return render_template("submit.html", queue=db.queue(), recaptcha=recaptcha)
+    queued_websites = taskDispatcher.get_queued_tasks()
+    return render_template("submit.html", queue=queued_websites, recaptcha=recaptcha)
 
 
 def try_enqueue(url):
@@ -172,7 +169,9 @@ def try_enqueue(url):
               "this is an error, please <a href='/contribute'>contact me</a>.", "danger"
 
     web_id = db.insert_website(Website(url, str(request.remote_addr), str(request.user_agent)))
-    db.enqueue(web_id)
+
+    task = Task(web_id, url, priority=1)
+    taskDispatcher.dispatch_task(task)
 
     return "The website has been added to the queue", "success"
 
@@ -217,7 +216,6 @@ def enqueue_bulk():
     else:
         flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
         return redirect("/submit")
-
 
 
 @app.route("/admin")

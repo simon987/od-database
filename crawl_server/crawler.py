@@ -47,8 +47,8 @@ class RemoteDirectory:
 
 class RemoteDirectoryFactory:
 
-    from crawler.ftp import FtpDirectory
-    from crawler.http import HttpDirectory
+    from crawl_server.remote_ftp import FtpDirectory
+    from crawl_server.remote_http import HttpDirectory
     DIR_ENGINES = (FtpDirectory, HttpDirectory)
 
     @staticmethod

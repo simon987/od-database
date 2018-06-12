@@ -14,5 +14,6 @@ CREATE TABLE TaskResult (
   status_code TEXT,
   file_count INT,
   start_time INT,
-  end_time INT
+  end_time INT,
+  indexed_time INT DEFAULT NULL
 );
