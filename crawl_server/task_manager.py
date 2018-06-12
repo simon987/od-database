@@ -1,20 +1,14 @@
 from crawl_server.database import TaskManagerDatabase, Task
 from multiprocessing import Pool
 from apscheduler.schedulers.background import BackgroundScheduler
-from enum import Enum
 from datetime import datetime
 from crawler.crawler import RemoteDirectoryCrawler
-
-
-class TaskResultStatus(Enum):
-    SUCCESS = 0
-    FAILURE = 1
 
 
 class TaskResult:
 
     def __init__(self):
-        self.status_code: TaskResultStatus = None
+        self.status_code: str = None
         self.file_count = 0
         self.start_time = None
         self.end_time = None
@@ -56,7 +50,10 @@ class TaskManager:
         print("Starting task " + task.url)
 
         crawler = RemoteDirectoryCrawler(task.url, 10)
-        crawler.crawl_directory()
+        crawl_result = crawler.crawl_directory("12345.json")
+
+        result.file_count = crawl_result.file_count
+        result.status_code = crawl_result.status_code
 
         print("End task " + task.url)
 
@@ -67,6 +64,10 @@ class TaskManager:
     @staticmethod
     def task_complete(result: TaskResult):
         print("Task done " + str(result))
+        print(result.status_code)
+        print(result.file_count)
+        print(result.start_time)
+        print(result.end_time)
         # todo save in db
 
 

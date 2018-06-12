@@ -61,20 +61,46 @@ class RemoteDirectoryFactory:
                 return dir_engine(url)
 
 
+def export_to_json(q: Queue, out_file: str) -> int:
+
+    counter = 0
+
+    with open(out_file, "w") as f:
+        while True:
+            try:
+                next_file: File = q.get_nowait()
+                f.write(next_file.to_json())
+                f.write("\n")
+                counter += 1
+            except Empty:
+                break
+
+    return counter
+
+
+class CrawlResult:
+
+    def __init__(self, file_count: int, status_code: str):
+        self.file_count = file_count
+        self.status_code = status_code
+
+
 class RemoteDirectoryCrawler:
 
     def __init__(self, url, max_threads: int):
         self.url = url
         self.max_threads = max_threads
+        self.crawled_paths = set()
 
-    def crawl_directory(self):
+    def crawl_directory(self, out_file: str) -> CrawlResult:
 
         try:
             directory = RemoteDirectoryFactory.get_directory(self.url)
-            root_listing = directory.list_dir("/")
+            root_listing = directory.list_dir("")
+            self.crawled_paths.add("")
             directory.close()
         except TimeoutError:
-            return
+            return CrawlResult(0, "timeout")
 
         in_q = Queue(maxsize=0)
         files_q = Queue(maxsize=0)
@@ -86,12 +112,15 @@ class RemoteDirectoryCrawler:
 
         threads = []
         for i in range(self.max_threads):
-            worker = Thread(target=RemoteDirectoryCrawler._process_listings, args=(self.url, in_q, files_q))
+            worker = Thread(target=RemoteDirectoryCrawler._process_listings, args=(self, self.url, in_q, files_q))
             threads.append(worker)
             worker.start()
 
         in_q.join()
-        print("DONE")
+        print("Done")
+
+        exported_count = export_to_json(files_q, out_file)
+        print("exported to " + out_file)
 
         # Kill threads
         for _ in threads:
@@ -99,11 +128,9 @@ class RemoteDirectoryCrawler:
         for t in threads:
             t.join()
 
-        print(files_q.qsize())
-        return []
+        return CrawlResult(exported_count, "success")
 
-    @staticmethod
-    def _process_listings(url: str, in_q: Queue, files_q: Queue):
+    def _process_listings(self, url: str, in_q: Queue, files_q: Queue):
 
         directory = RemoteDirectoryFactory.get_directory(url)
 
@@ -118,16 +145,21 @@ class RemoteDirectoryCrawler:
                 break
 
             try:
-                listing = directory.list_dir(os.path.join(file.path, file.name, ""))
+                path = os.path.join(file.path, file.name, "")
+                if path not in self.crawled_paths:
+                    listing = directory.list_dir(path)
+                    self.crawled_paths.add(path)
 
-                for f in listing:
-                    if f.is_dir:
-                        in_q.put(f)
-                    else:
-                        files_q.put(f)
+                    for f in listing:
+                        if f.is_dir:
+                            in_q.put(f)
+                        else:
+                            files_q.put(f)
             except TooManyConnectionsError:
                 print("Too many connections")
             except TimeoutError:
                 pass
             finally:
                 in_q.task_done()
+
+

@@ -38,10 +38,9 @@ class HttpDirectory(RemoteDirectory):
         self.parser = etree.HTMLParser(collect_ids=False)
 
     def list_dir(self, path) -> list:
-
         results = []
 
-        path_url = urljoin(self.base_url, path)
+        path_url = os.path.join(self.base_url, path.strip("/"), "")
         body = self._fetch_body(path_url)
         if not body:
             return []
@@ -130,7 +129,7 @@ class HttpDirectory(RemoteDirectory):
             try:
                 r = requests.head(url, headers=HttpDirectory.HEADERS, allow_redirects=False, timeout=50)
 
-                stripped_url = r.url[len(self.base_url) - 1:]
+                stripped_url = url[len(self.base_url) - 1:]
 
                 path, name = os.path.split(stripped_url)
 
