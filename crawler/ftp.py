@@ -61,7 +61,7 @@ class FtpDirectory(RemoteDirectory):
 
                     results.append(File(
                         name=file_name,
-                        mtime=stat.st_mtime,
+                        mtime=stat.st_mtime,  # TODO: check
                         size=-1 if is_dir else stat.st_size,
                         is_dir=is_dir,
                         path=path

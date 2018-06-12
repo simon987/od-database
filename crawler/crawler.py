@@ -12,7 +12,7 @@ class TooManyConnectionsError(Exception):
 
 class File:
 
-    def __init__(self, name: str, size: int, mtime: str, path: str, is_dir: bool):
+    def __init__(self, name: str, size: int, mtime: int, path: str, is_dir: bool):
         self.name = name
         self.size = size
         self.mtime = mtime
@@ -69,8 +69,7 @@ def export_to_json(q: Queue, out_file: str) -> int:
         while True:
             try:
                 next_file: File = q.get_nowait()
-                f.write(next_file.to_json())
-                f.write("\n")
+                f.write(next_file.to_json() + "\n")
                 counter += 1
             except Empty:
                 break

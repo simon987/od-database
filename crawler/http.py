@@ -8,6 +8,7 @@ import requests
 from requests.exceptions import RequestException
 from multiprocessing.pool import ThreadPool
 import config
+from dateutil.parser import parse as parse_date
 
 
 class Link:
@@ -59,7 +60,7 @@ class HttpDirectory(RemoteDirectory):
             if self._isdir(link):
                 results.append(File(
                     name=file_name,
-                    mtime="",
+                    mtime=0,
                     size=-1,
                     is_dir=True,
                     path=path
@@ -79,6 +80,7 @@ class HttpDirectory(RemoteDirectory):
             # Many urls, use multi-threaded solution
             pool = ThreadPool(processes=10)
             files = pool.starmap(HttpDirectory._request_file, zip(repeat(self), urls_to_request))
+            pool.close()
             for file in files:
                 if file:
                     results.append(file)
@@ -132,12 +134,12 @@ class HttpDirectory(RemoteDirectory):
                 stripped_url = url[len(self.base_url) - 1:]
 
                 path, name = os.path.split(stripped_url)
-
+                date = r.headers["Date"] if "Date" in r.headers else "1970-01-01"
                 return File(
                     path=unquote(path).strip("/"),
                     name=unquote(name),
                     size=int(r.headers["Content-Length"]) if "Content-Length" in r.headers else -1,
-                    mtime=r.headers["Date"] if "Date" in r.headers else "?",
+                    mtime=int(parse_date(date).timestamp()),
                     is_dir=False
                 )
             except RequestException:

@@ -49,7 +49,7 @@ class TaskManager:
 
         print("Starting task " + task.url)
 
-        crawler = RemoteDirectoryCrawler(task.url, 10)
+        crawler = RemoteDirectoryCrawler(task.url, 100)
         crawl_result = crawler.crawl_directory("12345.json")
 
         result.file_count = crawl_result.file_count
@@ -63,7 +63,6 @@ class TaskManager:
 
     @staticmethod
     def task_complete(result: TaskResult):
-        print("Task done " + str(result))
         print(result.status_code)
         print(result.file_count)
         print(result.start_time)

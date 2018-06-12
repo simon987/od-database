@@ -11,3 +11,4 @@ apscheduler
 bcrypt
 ftputil
 lxml
+elasticsearch

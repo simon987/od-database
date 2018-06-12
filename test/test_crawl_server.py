@@ -1,9 +1,7 @@
 from flask_testing import LiveServerTestCase
-import os
 import json
 import requests
 from crawl_server.server import app
-from crawl_server.task_manager import TaskManager
 
 
 class CrawlServerTest(LiveServerTestCase):
@@ -20,15 +18,6 @@ class CrawlServerTest(LiveServerTestCase):
         app.config['LIVESERVER_PORT'] = 9999
         return app
 
-    def test_put_only_accepts_json(self):
-
-        payload = json.dumps({"url": "", "priority": 1, "callback_type": "", "callback_args": "{}"})
-        r = requests.post(self.HOST + "/task/put", data=payload)
-        self.assertEqual(400, r.status_code)
-
-        r2 = requests.post(self.HOST + "/task/put", headers=self.headers, data=payload)
-        self.assertEqual(200, r2.status_code)
-
     def test_put_task(self):
 
         payload = json.dumps({
@@ -43,11 +32,15 @@ class CrawlServerTest(LiveServerTestCase):
         r = requests.get(self.HOST + "/task")
         self.assertEqual(200, r.status_code)
 
-        print(r.text)
         result = json.loads(r.text)[0]
         self.assertEqual(result["url"], "a")
         self.assertEqual(result["priority"], 2)
         self.assertEqual(result["callback_type"], "c")
         self.assertEqual(result["callback_args"], '{"d": 4}')
 
+        payload = json.dumps({"url": "", "priority": 1, "callback_type": "", "callback_args": "{}"})
+        r = requests.post(self.HOST + "/task/put", data=payload)
+        self.assertEqual(400, r.status_code)
 
+        r2 = requests.post(self.HOST + "/task/put", headers=self.headers, data=payload)
+        self.assertEqual(200, r2.status_code)
