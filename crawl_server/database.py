@@ -118,9 +118,8 @@ class TaskManagerDatabase:
             cursor.execute("SELECT status_code, file_count, start_time, end_time, website_id"
                            " FROM TaskResult WHERE indexed_time IS NULL")
             db_result = cursor.fetchall()
-            print(len(db_result))
 
-            cursor.execute("UPDATE TaskResult SET indexed_time = CURRENT_TIMESTAMP WHERE indexed_time IS NULL")
+            cursor.execute("UPDATE TaskResult SET indexed_time=CURRENT_TIMESTAMP WHERE indexed_time IS NULL")
             conn.commit()
 
         return [TaskResult(r[0], r[1], r[2], r[3], r[4]) for r in db_result]

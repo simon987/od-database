@@ -55,14 +55,13 @@ class TaskManager:
         print("Starting task " + task.url)
 
         crawler = RemoteDirectoryCrawler(task.url, 100)
-        crawl_result = crawler.crawl_directory("crawled/" + str(task.website_id) + ".json")
+        crawl_result = crawler.crawl_directory("./crawled/" + str(task.website_id) + ".json")
 
         result.file_count = crawl_result.file_count
         result.status_code = crawl_result.status_code
 
-        print("End task " + task.url)
-
         result.end_time = datetime.utcnow()
+        print("End task " + task.url)
 
         return dict(result=result, db_path=db_path)
 
@@ -77,6 +76,7 @@ class TaskManager:
 
         db = TaskManagerDatabase(db_path)
         db.log_result(result)
+        print("Logged result to DB")
 
     @staticmethod
     def task_error(err):

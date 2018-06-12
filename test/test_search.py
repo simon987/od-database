@@ -24,11 +24,11 @@ class SearchTest(TestCase):
             {"name": "Dead Racer", "size": 1000, "path": "Speed Machine [FLAC]", "mtime": 12345}
         ]
 
-        with open("tmp.json", "w") as f:
-            for file in files:
-                f.write(json.dumps(file) + "\n")
+        in_str = ""
+        for file in files:
+            in_str += json.dumps(file) + "\n"
 
-        self.search.import_json("tmp.json", 123)
+        self.search.import_json(in_str, 123)
         time.sleep(2)
         self.assertEqual(4, self.search.es.count(self.search.index_name, "file")["count"])
 
@@ -50,8 +50,6 @@ class SearchTest(TestCase):
         page = self.search.search("10'000")
         self.assertEqual(1, page["hits"]["total"])
 
-        os.remove("tmp.json")
-
     def test_scroll(self):
 
         files = [
@@ -61,11 +59,11 @@ class SearchTest(TestCase):
             {"name": "Dead Racer", "size": 1000, "path": "Speed Machine [FLAC]", "mtime": 12345}
         ]
 
-        with open("tmp.json", "w") as f:
-            for file in files:
-                f.write(json.dumps(file) + "\n")
+        in_str = ""
+        for file in files:
+            in_str += json.dumps(file) + "\n"
 
-        self.search.import_json("tmp.json", 123)
+        self.search.import_json(in_str, 123)
         time.sleep(2)
 
         page = self.search.search("")

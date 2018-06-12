@@ -11,7 +11,7 @@ class SearchEngine:
     def __init__(self):
         pass
 
-    def import_json(self, in_file: str, website_id: int):
+    def import_json(self, in_str: str, website_id: int):
         raise NotImplementedError
 
     def search(self, query) -> {}:
@@ -79,21 +79,19 @@ class ElasticSearchEngine(SearchEngine):
     def ping(self):
         return self.es.ping()
 
-    def import_json(self, in_file: str, website_id: int):
+    def import_json(self, in_str: str, website_id: int):
         import_every = 1000
 
-        with open(in_file, "r") as f:
-            docs = []
+        print(in_str)
+        docs = []
 
-            line = f.readline()
-            while line:
-                docs.append(line[:-1])  # Remove trailing new line
+        for line in in_str.splitlines():
+            docs.append(line)
 
-                if len(docs) >= import_every:
-                    self._index(docs, website_id)
-                    docs.clear()
-                line = f.readline()
-            self._index(docs, website_id)
+            if len(docs) >= import_every:
+                self._index(docs, website_id)
+                docs.clear()
+        self._index(docs, website_id)
 
     def _index(self, docs, website_id):
         print("Indexing " + str(len(docs)) + " docs")
@@ -107,14 +105,10 @@ class ElasticSearchEngine(SearchEngine):
     @staticmethod
     def create_bulk_index_string(docs: list, website_id: int):
 
-        result = ""
-
         action_string = '{"index":{}}\n'
         website_id_string = ',"website_id":' + str(website_id) + '}\n'  # Add website_id param to each doc
 
-        for doc in docs:
-            result += action_string + doc[:-1] + website_id_string
-        return result
+        return "\n".join("".join([action_string, doc[:-1], website_id_string]) for doc in docs)
 
     def search(self, query) -> {}:
 

@@ -1,4 +1,5 @@
 from apscheduler.schedulers.background import BackgroundScheduler
+from search.search import ElasticSearchEngine
 from crawl_server.database import Task, TaskResult
 import requests
 import json
@@ -46,6 +47,11 @@ class CrawlServer:
             for t in json.loads(r.text)
         ]
 
+    def get_file_list(self, website_id) -> str:
+
+        r = requests.get(self.url + "/file_list/" + str(website_id) + "/")
+        return r.text
+
 
 class TaskDispatcher:
 
@@ -58,19 +64,20 @@ class TaskDispatcher:
         scheduler.add_job(self.check_completed_tasks, "interval", seconds=1)
         scheduler.start()
 
+        self.search = ElasticSearchEngine("od-database")
+
         # TODO load from config
         self.crawl_servers = [
             CrawlServer("http://localhost:5001"),
         ]
 
     def check_completed_tasks(self):
-        completed_tasks = []
 
         for server in self.crawl_servers:
-            completed_tasks.extend(server.get_completed_tasks())
-
-        if completed_tasks:
-            print(str(len(completed_tasks)) + " completed tasks. Will index immediately")
+            for task in server.get_completed_tasks():
+                print("Completed task")
+                file_list = server.get_file_list(task.website_id)
+                self.search.import_json(file_list, task.website_id)
 
     def dispatch_task(self, task: Task):
         self._get_available_crawl_server().queue_task(task)

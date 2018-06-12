@@ -1,4 +1,4 @@
-from flask import Flask, request, abort, Response
+from flask import Flask, request, abort, Response, send_from_directory
 import json
 from crawl_server.task_manager import TaskManager, Task, TaskResult
 app = Flask(__name__)
@@ -43,6 +43,11 @@ def get_current_tasks():
 
     current_tasks = tm.get_current_tasks()
     return current_tasks
+
+
+@app.route("/file_list/<int:website_id>/")
+def get_file_list(website_id):
+    return send_from_directory(directory="./crawled/", filename=str(website_id) + ".json")
 
 
 if __name__ == "__main__":
