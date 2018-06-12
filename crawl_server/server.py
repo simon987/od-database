@@ -22,6 +22,7 @@ def task_put():
 
     if request.json:
         try:
+            website_id = request.json["website_id"]
             url = request.json["url"]
             priority = request.json["priority"]
             callback_type = request.json["callback_type"]
@@ -29,7 +30,7 @@ def task_put():
         except KeyError:
             return abort(400)
 
-        task = Task(url, priority, callback_type, callback_args)
+        task = Task(website_id, url, priority, callback_type, callback_args)
         tm.put_task(task)
         return '{"ok": "true"}'
 

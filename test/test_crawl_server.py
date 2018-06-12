@@ -21,6 +21,7 @@ class CrawlServerTest(LiveServerTestCase):
     def test_put_task(self):
 
         payload = json.dumps({
+            "website_id": 123,
             "url": "a",
             "priority": 2,
             "callback_type": "c",
@@ -33,12 +34,13 @@ class CrawlServerTest(LiveServerTestCase):
         self.assertEqual(200, r.status_code)
 
         result = json.loads(r.text)[0]
+        self.assertEqual(result["website_id"], 123)
         self.assertEqual(result["url"], "a")
         self.assertEqual(result["priority"], 2)
         self.assertEqual(result["callback_type"], "c")
         self.assertEqual(result["callback_args"], '{"d": 4}')
 
-        payload = json.dumps({"url": "", "priority": 1, "callback_type": "", "callback_args": "{}"})
+        payload = json.dumps({"website_id": 1, "url": "", "priority": 1, "callback_type": "", "callback_args": "{}"})
         r = requests.post(self.HOST + "/task/put", data=payload)
         self.assertEqual(400, r.status_code)
 

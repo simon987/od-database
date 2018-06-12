@@ -3,7 +3,8 @@ import json
 
 
 payload = json.dumps({
-    "url": "http://138.197.215.189/",
+    "website_id": 123,
+    "url": "http://124.158.108.137/ebooks/",
     "priority": 2,
     "callback_type": "",
     "callback_args": "{}"

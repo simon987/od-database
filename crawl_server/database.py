@@ -3,9 +3,21 @@ import json
 import sqlite3
 
 
+class TaskResult:
+
+    def __init__(self):
+        self.status_code: str = None
+        self.file_count = 0
+        self.start_time = None
+        self.end_time = None
+        self.website_id = None
+
+
 class Task:
 
-    def __init__(self, url: str, priority: int = 1, callback_type: str = None, callback_args: str = None):
+    def __init__(self, website_id: int, url: str, priority: int = 1,
+                 callback_type: str = None, callback_args: str = None):
+        self.website_id = website_id
         self.url = url
         self.priority = priority
         self.callback_type = callback_type
@@ -13,6 +25,7 @@ class Task:
 
     def to_json(self):
         return ({
+            "website_id": self.website_id,
             "url": self.url,
             "priority": self.priority,
             "callback_type": self.callback_type,
@@ -42,14 +55,14 @@ class TaskManagerDatabase:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
 
-            cursor.execute("SELECT id, url, priority, callback_type, callback_args"
+            cursor.execute("SELECT id, website_id, url, priority, callback_type, callback_args"
                            " FROM Queue ORDER BY priority DESC, Queue.id ASC LIMIT 1")
             task = cursor.fetchone()
 
             if task:
                 cursor.execute("DELETE FROM Queue WHERE id=?", (task[0],))
                 conn.commit()
-                return Task(task[1], task[2], task[3], task[4])
+                return Task(task[1], task[2], task[3], task[4], task[5])
             else:
                 return None
 
@@ -58,8 +71,10 @@ class TaskManagerDatabase:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
 
-            cursor.execute("INSERT INTO Queue (url, priority, callback_type, callback_args) VALUES (?,?,?,?)",
-                           (task.url, task.priority, task.callback_type, json.dumps(task.callback_args)))
+            cursor.execute("INSERT INTO Queue (website_id, url, priority, callback_type, callback_args) "
+                           "VALUES (?,?,?,?,?)",
+                           (task.website_id, task.url, task.priority,
+                            task.callback_type, json.dumps(task.callback_args)))
             conn.commit()
 
     def get_tasks(self):
@@ -67,7 +82,17 @@ class TaskManagerDatabase:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
 
-            cursor.execute("SELECT * FROM Queue")
+            cursor.execute("SELECT website_id, url, priority, callback_type, callback_args FROM Queue")
             tasks = cursor.fetchall()
 
-            return [Task(t[1], t[2], t[3], t[4]) for t in tasks]
+            return [Task(t[0], t[1], t[2], t[3], t[4]) for t in tasks]
+
+    def log_result(self, result: TaskResult):
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("INSERT INTO TaskResult (website_id, status_code, file_count, start_time, end_time) "
+                           "VALUES (?,?,?,?,?)", (result.website_id, result.status_code, result.file_count,
+                                                  result.start_time, result.end_time))
+            conn.commit()
