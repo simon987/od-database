@@ -222,10 +222,15 @@ class ElasticSearchEngine(SearchEngine):
             },
             "aggs": {
                 "total_size": {
-                    "extended_stats": {"field": "size"}
+                    "sum": {"field": "size"}
                 }
             },
             "size": 0
-        })
+        }, index=self.index_name)
 
-        print(result)
+        stats = dict()
+        stats["file_count"] = result["hits"]["total"]
+        stats["file_size"] = result["aggregations"]["total_size"]["value"]
+
+        return stats
+

@@ -10,8 +10,7 @@
 
             {% if stats and stats["file_size"] %}
                 <p class="lead">{{ stats["file_count"] }} files totalling
-                    ~{{ stats["file_size"] | filesizeformat }} in
-                    {{ stats["website_paths"] }} folders from {{ stats["website_count"] }} website(s)</p>
+                    ~{{ stats["file_size"] | filesizeformat }} from {{ stats["website_count"] }} website(s)</p>
             {% endif %}
             {% if current_websites %}
                 <p>Currently indexing <code>{{ current_websites }}</code><span class="vim-caret">&nbsp;</span> </p>

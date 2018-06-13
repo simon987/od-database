@@ -133,8 +133,8 @@ def contribute():
 @app.route("/")
 def home():
 
-    stats = {}
     stats = searchEngine.get_global_stats()
+    stats["website_count"] = len(db.get_all_websites())
     current_websites = ", ".join(task.url for task in taskDispatcher.get_current_tasks())
     return render_template("home.html", stats=stats, current_websites=current_websites)
 
