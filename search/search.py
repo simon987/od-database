@@ -1,4 +1,5 @@
 import elasticsearch
+from elasticsearch import helpers
 import os
 import json
 
@@ -54,22 +55,22 @@ class ElasticSearchEngine(SearchEngine):
         self.es.indices.close(index=self.index_name)
 
         # File names and paths
-        self.es.indices.put_settings(body=
-        {"analysis": {
-            "tokenizer": {
-                "my_nGram_tokenizer": {
-                    "type": "nGram", "min_gram": 3, "max_gram": 3}
-            }
-        }}, index=self.index_name)
-        self.es.indices.put_settings(body=
-        {"analysis": {
-            "analyzer": {
-                "my_nGram": {
-                    "tokenizer": "my_nGram_tokenizer",
-                    "filter": ["lowercase", "asciifolding"]
+        self.es.indices.put_settings(body={
+            "analysis": {
+                "tokenizer": {
+                    "my_nGram_tokenizer": {
+                        "type": "nGram", "min_gram": 3, "max_gram": 3}
                 }
-            }
-        }}, index=self.index_name)
+            }}, index=self.index_name)
+        self.es.indices.put_settings(body={
+            "analysis": {
+                "analyzer": {
+                    "my_nGram": {
+                        "tokenizer": "my_nGram_tokenizer",
+                        "filter": ["lowercase", "asciifolding"]
+                    }
+                }
+            }}, index=self.index_name)
 
         # Mappings
         self.es.indices.put_mapping(body={"properties": {
@@ -90,6 +91,10 @@ class ElasticSearchEngine(SearchEngine):
         return self.es.ping()
 
     def import_json(self, in_str: str, website_id: int):
+
+        if not in_str:
+            return
+
         import_every = 1000
 
         docs = []
@@ -97,7 +102,7 @@ class ElasticSearchEngine(SearchEngine):
         for line in in_str.splitlines():
             doc = json.loads(line)
             name, ext = os.path.splitext(doc["name"])
-            doc["ext"] = ext[1:] if ext and len(ext) > 1 else ""
+            doc["ext"] = ext[1:].lower() if ext and len(ext) > 1 else ""
             doc["name"] = name
             doc["website_id"] = website_id
             docs.append(doc)
@@ -149,13 +154,10 @@ class ElasticSearchEngine(SearchEngine):
             },
             "size": per_page, "from": page * per_page}, index=self.index_name)
 
-        # todo get scroll time from config
-        # todo get size from config
         return page
 
     def get_stats(self, website_id: int, subdir: str = None):
 
-        stats = {}
         result = self.es.search(body={
             "query": {
                 "constant_score": {
@@ -186,9 +188,28 @@ class ElasticSearchEngine(SearchEngine):
             "size": 0
         })
 
+        stats = dict()
         stats["total_size"] = result["aggregations"]["total_size"]["value"]
         stats["total_count"] = result["hits"]["total"]
         stats["ext_stats"] = [(b["size"]["value"], b["doc_count"], b["key"])
                               for b in result["aggregations"]["ext_group"]["buckets"]]
 
         return stats
+
+    def get_link_list(self, website_id, base_url):
+
+        hits = helpers.scan(client=self.es,
+                            query={
+                                "_source": {
+                                    "includes": ["path", "name", "ext"]
+                                },
+                                "query": {
+                                    "term": {
+                                        "website_id": website_id}
+                                }
+                            },
+                            index=self.index_name)
+        for hit in hits:
+            src = hit["_source"]
+            yield base_url + src["path"] + ("/" if src["path"] != "" else "") + src["name"] + \
+                  ("." if src["ext"] != "" else "") + src["ext"]
