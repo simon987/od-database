@@ -41,39 +41,58 @@ class FtpDirectory(RemoteDirectory):
                     break
 
                 self.failed_attempts += 1
-                print("Connection error; reconnecting...")
+                print("Connection error; reconnecting..." + e.strerror + " " + str(e.errno))
                 time.sleep(2 * random.uniform(0.5, 1.5))
                 self.stop_when_connected()
 
-    @timeout_decorator.timeout(15, use_signals=False)
+    @timeout_decorator.timeout(60, use_signals=False)
     def list_dir(self, path) -> list:
         if not self.ftp:
-            print("Conn closed")
-            return []
+            # No connection - assuming that connection was dropped because too many
+            raise TooManyConnectionsError()
+        print("LIST " + path)
         results = []
         try:
-            self.ftp.chdir(path)
             file_names = self.ftp.listdir(path)
 
             for file_name in file_names:
-                    stat = self.ftp.stat(file_name)
+                    stat = self.try_stat(os.path.join(path, file_name))
                     is_dir = self.ftp.path.isdir(os.path.join(path, file_name))
 
                     results.append(File(
                         name=file_name,
-                        mtime=stat.st_mtime,  # TODO: check
+                        mtime=stat.st_mtime,
                         size=-1 if is_dir else stat.st_size,
                         is_dir=is_dir,
                         path=path
                     ))
+        except ftputil.error.ParserError as e:
+            print("TODO: fix parsing error: " + e.strerror + " @ " + e.file_name)
+
         except ftputil.error.FTPError as e:
             if e.errno == 530:
                 raise TooManyConnectionsError()
-            pass
+            print(e.strerror)
+
+        except Exception as e:
+            # TODO remove that debug info
+            print("ERROR:" + str(e))
+            print(type(e))
+            raise e
 
         return results
+
+    def try_stat(self, path):
+
+        try:
+            return self.ftp.stat(path)
+        except ftputil.error.ParserError as e:
+            # TODO: Try to parse it ourselves?
+            print("Could not parse " + path + " " + e.strerror)
+            return None
 
     def close(self):
         if self.ftp:
             self.ftp.close()
+            self.ftp = None
 

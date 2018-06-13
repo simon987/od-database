@@ -4,7 +4,7 @@ import json
 
 payload = json.dumps({
     "website_id": 123,
-    "url": "http://liminaire.fr/TEXTES/",
+    "url": "ftp://ien11-3-88-183-194-246.fbx.proxad.net/",
     "priority": 2,
     "callback_type": "",
     "callback_args": "{}"

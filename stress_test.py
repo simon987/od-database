@@ -52,5 +52,5 @@ def random_searches(count=10000000, max_workers=1000):
 
 
 # dump_local_filesystem("/mnt/")
-# index_file_list("local_filesystem.json", 10)
+index_file_list("crawl_server/crawled/123.json", 10)
 # random_searches(100000)

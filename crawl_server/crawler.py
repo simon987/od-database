@@ -86,6 +86,8 @@ class CrawlResult:
 
 class RemoteDirectoryCrawler:
 
+    MAX_TIMEOUT_RETRIES = 3
+
     def __init__(self, url, max_threads: int):
         self.url = url
         self.max_threads = max_threads
@@ -132,6 +134,7 @@ class RemoteDirectoryCrawler:
     def _process_listings(self, url: str, in_q: Queue, files_q: Queue):
 
         directory = RemoteDirectoryFactory.get_directory(url)
+        timeout_retries = RemoteDirectoryCrawler.MAX_TIMEOUT_RETRIES
 
         while directory:
 
@@ -148,6 +151,7 @@ class RemoteDirectoryCrawler:
                 if path not in self.crawled_paths:
                     self.crawled_paths.add(path)
                     listing = directory.list_dir(path)
+                    timeout_retries = RemoteDirectoryCrawler.MAX_TIMEOUT_RETRIES
 
                     for f in listing:
                         if f.is_dir:
@@ -156,8 +160,18 @@ class RemoteDirectoryCrawler:
                             files_q.put(f)
             except TooManyConnectionsError:
                 print("Too many connections")
+                # Kill worker and resubmit listing task
+                directory.close()
+                in_q.put(file)
+                break
             except TimeoutError:
-                pass
+                if timeout_retries > 0:
+                    timeout_retries -= 1
+                    # TODO: Remove debug info
+                    print("TIMEOUT, " + str(timeout_retries) + " retries left")
+                    in_q.put(file)
+                else:
+                    print("Dropping listing for " + os.path.join(file.path, file.name, ""))
             finally:
                 in_q.task_done()
 
