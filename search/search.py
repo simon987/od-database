@@ -74,8 +74,8 @@ class ElasticSearchEngine(SearchEngine):
 
         # Mappings
         self.es.indices.put_mapping(body={"properties": {
-            "path": {"analyzer": "my_nGram", "type": "text"},
-            "name": {"analyzer": "my_nGram", "type": "text"},
+            "path": {"analyzer": "standard", "type": "text"},
+            "name": {"analyzer": "standard", "type": "text", "fields": {"nGram": {"type": "text", "analyzer": "my_nGram"}}},
             "mtime": {"type": "date", "format": "epoch_millis"},
             "size": {"type": "long"},
             "website_id": {"type": "integer"},
@@ -95,7 +95,7 @@ class ElasticSearchEngine(SearchEngine):
         if not in_str:
             return
 
-        import_every = 1000
+        import_every = 5000
 
         docs = []
 
@@ -138,8 +138,8 @@ class ElasticSearchEngine(SearchEngine):
                     "must": {
                         "multi_match": {
                             "query": query,
-                            "fields": ["name", "path"],
-                            "operator": "and"
+                            "fields": ["name^5", "name.nGram^2", "path"],
+                            "operator": "or"
                         }
                     },
                     "filter": filters

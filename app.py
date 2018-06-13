@@ -113,7 +113,7 @@ def search():
     if len(q) >= 3:
         try:
             hits = searchEngine.search(q, page, per_page, sort_order)
-            hits = db.join_search_result(hits)
+            hits = db.join_website_on_search_result(hits)
         except InvalidQueryException as e:
             flash("<strong>Invalid query:</strong> " + str(e), "warning")
             return redirect("/search")
@@ -299,6 +299,6 @@ if __name__ == '__main__':
     if config.USE_SSL:
         context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
         context.load_cert_chain('certificates/cert.pem', 'certificates/privkey.pem')
-        app.run("0.0.0.0", port=12345, ssl_context=context)
+        app.run("0.0.0.0", port=12345, ssl_context=context, threaded=True)
     else:
-        app.run("0.0.0.0", port=12345)
+        app.run("0.0.0.0", port=12345, threaded=True)

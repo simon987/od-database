@@ -58,8 +58,8 @@
                                 <tr>
                                     <td>
                                         {# File name & link #}
-                                        <a href="{{ src["website_url"] + src["path"] + "/" + src["name"] + src["ext"] }}" title="{{ src["name"] + src["ext"] }}">
-                                            {{ hl_name |safe }}{{ src["ext"] }}
+                                        <a href="{{ src["website_url"] + src["path"] + "/" + src["name"] + ("." if src["ext"] != "" else "") + src["ext"] }}" title="{{ src["name"] + src["ext"] }}">
+                                            {{ hl_name |safe }}{{ ("." if src["ext"] != "" else "") + src["ext"] }}
                                         </a>
                                         {# File type badge #}
                                         {% set mime = get_mime(src["path"]) %}

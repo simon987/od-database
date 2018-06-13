@@ -206,12 +206,15 @@ class Database:
                 result[db_website[0]] = db_website[1]
             return result
 
-    def join_search_result(self, page: dict) -> dict:
+    def join_website_on_search_result(self, page: dict) -> dict:
 
         websites = self.get_all_websites()
 
         for hit in page["hits"]["hits"]:
-            hit["_source"]["website_url"] = websites[hit["_source"]["website_id"]]
+            if hit["_source"]["website_id"] in websites:
+                hit["_source"]["website_url"] = websites[hit["_source"]["website_id"]]
+            else:
+                hit["_source"]["website_url"] = "NONE"
 
         return page
 

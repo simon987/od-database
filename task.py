@@ -28,7 +28,7 @@ class CrawlServer:
         except ConnectionError:
             return False
 
-    def get_completed_tasks(self) -> list:
+    def fetch_completed_tasks(self) -> list:
 
         try:
             r = requests.get(self.url + "/task/completed")
@@ -36,9 +36,10 @@ class CrawlServer:
                 TaskResult(r["status_code"], r["file_count"], r["start_time"], r["end_time"], r["website_id"])
                 for r in json.loads(r.text)]
         except ConnectionError:
+            print("Crawl server cannot be reached " + self.url)
             return []
 
-    def get_queued_tasks(self) -> list:
+    def fetch_queued_tasks(self) -> list:
 
         try:
             r = requests.get(self.url + "/task/")
@@ -49,7 +50,7 @@ class CrawlServer:
         except ConnectionError:
             return []
 
-    def get_current_tasks(self):
+    def fetch_current_tasks(self):
 
         try:
             r = requests.get(self.url + "/task/current")
@@ -58,14 +59,13 @@ class CrawlServer:
                 for t in json.loads(r.text)
             ]
         except ConnectionError:
-            print("Server cannot be reached " + self.url)
             return []
 
-    def get_file_list(self, website_id) -> str:
+    def fetch_website_files(self, website_id) -> str:
 
         try:
             r = requests.get(self.url + "/file_list/" + str(website_id) + "/")
-            return r.text
+            return r.text if r.status_code == 200 else ""
         except ConnectionError:
             return ""
 
@@ -73,6 +73,7 @@ class CrawlServer:
 class TaskDispatcher:
 
     def __init__(self):
+        # TODO: remove reddit
         reddit = praw.Reddit('opendirectories-bot',
                              user_agent='github.com/simon987/od-database v1.0  (by /u/Hexahedr_n)')
         self.reddit_bot = RedditBot("crawled.txt", reddit)
@@ -91,9 +92,9 @@ class TaskDispatcher:
     def check_completed_tasks(self):
 
         for server in self.crawl_servers:
-            for task in server.get_completed_tasks():
+            for task in server.fetch_completed_tasks():
                 print("Completed task")
-                file_list = server.get_file_list(task.website_id)
+                file_list = server.fetch_website_files(task.website_id)
                 self.search.import_json(file_list, task.website_id)
 
     def dispatch_task(self, task: Task):
@@ -108,7 +109,7 @@ class TaskDispatcher:
         queued_tasks = []
 
         for server in self.crawl_servers:
-            queued_tasks.extend(server.get_queued_tasks())
+            queued_tasks.extend(server.fetch_queued_tasks())
 
         return queued_tasks
 
@@ -117,7 +118,7 @@ class TaskDispatcher:
 
         current_tasks = []
         for server in self.crawl_servers:
-            current_tasks.extend(server.get_current_tasks())
+            current_tasks.extend(server.fetch_current_tasks())
 
         return current_tasks
 
