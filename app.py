@@ -134,6 +134,7 @@ def contribute():
 def home():
 
     stats = {}
+    stats = searchEngine.get_global_stats()
     current_websites = ", ".join(task.url for task in taskDispatcher.get_current_tasks())
     return render_template("home.html", stats=stats, current_websites=current_websites)
 
@@ -195,7 +196,7 @@ def enqueue():
 
 @app.route("/enqueue_bulk", methods=["POST"])
 def enqueue_bulk():
-    if recaptcha.verify():
+    # if recaptcha.verify():
 
         urls = request.form.get("urls")
         if urls:
@@ -216,9 +217,9 @@ def enqueue_bulk():
         else:
             return abort(500)
 
-    else:
-        flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
-        return redirect("/submit")
+    # else:
+    #     flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
+    #     return redirect("/submit")
 
 
 @app.route("/admin")

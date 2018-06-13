@@ -213,3 +213,19 @@ class ElasticSearchEngine(SearchEngine):
             src = hit["_source"]
             yield base_url + src["path"] + ("/" if src["path"] != "" else "") + src["name"] + \
                   ("." if src["ext"] != "" else "") + src["ext"]
+
+    def get_global_stats(self):
+
+        result = self.es.search(body={
+            "query": {
+                "match_all": {}
+            },
+            "aggs": {
+                "total_size": {
+                    "extended_stats": {"field": "size"}
+                }
+            },
+            "size": 0
+        })
+
+        print(result)

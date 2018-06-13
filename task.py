@@ -2,6 +2,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from search.search import ElasticSearchEngine
 from crawl_server.database import Task, TaskResult
 import requests
+from requests.exceptions import ConnectionError
 import json
 from reddit_bot import RedditBot
 import praw
@@ -19,38 +20,54 @@ class CrawlServer:
     def queue_task(self, task: Task) -> bool:
 
         print("Sending task to crawl server " + self.url)
-        payload = json.dumps(task.to_json())
-        r = requests.post(self.url + "/task/put", headers=CrawlServer.headers, data=payload)
-        print(r)
-        return r.status_code == 200
+        try:
+            payload = json.dumps(task.to_json())
+            r = requests.post(self.url + "/task/put", headers=CrawlServer.headers, data=payload)
+            print(r)
+            return r.status_code == 200
+        except ConnectionError:
+            return False
 
     def get_completed_tasks(self) -> list:
 
-        r = requests.get(self.url + "/task/completed")
-        return [
-            TaskResult(r["status_code"], r["file_count"], r["start_time"], r["end_time"], r["website_id"])
-            for r in json.loads(r.text)]
+        try:
+            r = requests.get(self.url + "/task/completed")
+            return [
+                TaskResult(r["status_code"], r["file_count"], r["start_time"], r["end_time"], r["website_id"])
+                for r in json.loads(r.text)]
+        except ConnectionError:
+            return []
 
     def get_queued_tasks(self) -> list:
 
-        r = requests.get(self.url + "/task/")
-        return [
-            Task(t["website_id"], t["url"], t["priority"], t["callback_type"], t["callback_args"])
-            for t in json.loads(r.text)
-        ]
+        try:
+            r = requests.get(self.url + "/task/")
+            return [
+                Task(t["website_id"], t["url"], t["priority"], t["callback_type"], t["callback_args"])
+                for t in json.loads(r.text)
+            ]
+        except ConnectionError:
+            return []
 
     def get_current_tasks(self):
 
-        r = requests.get(self.url + "/task/current")
-        return [
-            Task(t["website_id"], t["url"], t["priority"], t["callback_type"], t["callback_args"])
-            for t in json.loads(r.text)
-        ]
+        try:
+            r = requests.get(self.url + "/task/current")
+            return [
+                Task(t["website_id"], t["url"], t["priority"], t["callback_type"], t["callback_args"])
+                for t in json.loads(r.text)
+            ]
+        except ConnectionError:
+            print("Server cannot be reached " + self.url)
+            return []
 
     def get_file_list(self, website_id) -> str:
 
-        r = requests.get(self.url + "/file_list/" + str(website_id) + "/")
-        return r.text
+        try:
+            r = requests.get(self.url + "/file_list/" + str(website_id) + "/")
+            return r.text
+        except ConnectionError:
+            return ""
 
 
 class TaskDispatcher:

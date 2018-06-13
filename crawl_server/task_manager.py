@@ -8,15 +8,16 @@ from crawl_server.crawler import RemoteDirectoryCrawler
 
 class TaskManager:
 
-    def __init__(self, db_path, max_processes=8):
+    def __init__(self, db_path, max_processes=4):
         self.db_path = db_path
         self.db = TaskManagerDatabase(db_path)
         self.pool = ProcessPoolExecutor(max_workers=max_processes)
+        self.max_processes = max_processes
         manager = Manager()
         self.current_tasks = manager.list()
 
         scheduler = BackgroundScheduler()
-        scheduler.add_job(self.execute_queued_task, "interval", seconds=5)
+        scheduler.add_job(self.execute_queued_task, "interval", seconds=1)
         scheduler.start()
 
     def put_task(self, task: Task):
@@ -33,15 +34,16 @@ class TaskManager:
 
     def execute_queued_task(self):
 
-        task = self.db.pop_task()
-        if task:
+        if len(self.current_tasks) <= self.max_processes:
+            task = self.db.pop_task()
+            if task:
+                print("pooled " + task.url)
+                self.current_tasks.append(task)
 
-            print("pooled " + task.url)
-
-            self.pool.submit(
-                TaskManager.run_task,
-                task, self.db_path, self.current_tasks
-            ).add_done_callback(TaskManager.task_complete)
+                self.pool.submit(
+                    TaskManager.run_task,
+                    task, self.db_path, self.current_tasks
+                ).add_done_callback(TaskManager.task_complete)
 
     @staticmethod
     def run_task(task, db_path, current_tasks):
@@ -50,8 +52,6 @@ class TaskManager:
         result.website_id = task.website_id
 
         print("Starting task " + task.url)
-
-        current_tasks.append(task)
 
         crawler = RemoteDirectoryCrawler(task.url, 100)
         crawl_result = crawler.crawl_directory("./crawled/" + str(task.website_id) + ".json")
@@ -78,7 +78,7 @@ class TaskManager:
         db.log_result(task_result)
         print("Logged result to DB")
 
-        for task in current_tasks:
+        for i, task in enumerate(current_tasks):
             if task.website_id == task_result.website_id:
-                current_tasks.remove(current_tasks)
+                del current_tasks[i]
 

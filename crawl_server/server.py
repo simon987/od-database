@@ -4,7 +4,7 @@ from crawl_server.task_manager import TaskManager, Task, TaskResult
 import os
 app = Flask(__name__)
 
-tm = TaskManager("tm_db.sqlite3")
+tm = TaskManager("tm_db.sqlite3", 2)
 
 
 @app.route("/task/")
