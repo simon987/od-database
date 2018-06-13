@@ -1,7 +1,6 @@
 import elasticsearch
 import os
 import json
-from elasticsearch.exceptions import TransportError
 
 
 class IndexingError(Exception):
@@ -25,9 +24,11 @@ class SearchEngine:
     def ping(self):
         raise NotImplementedError
 
+    def get_stats(self, website_id: int, subdir: str = None):
+        raise NotImplementedError
+
 
 class ElasticSearchEngine(SearchEngine):
-
     SORT_ORDERS = {
         "score": ["_score"],
         "size_asc": [{"size": {"order": "asc"}}],
@@ -54,21 +55,21 @@ class ElasticSearchEngine(SearchEngine):
 
         # File names and paths
         self.es.indices.put_settings(body=
-                                     {"analysis": {
-                                         "tokenizer": {
-                                             "my_nGram_tokenizer": {
-                                                 "type": "nGram", "min_gram": 3, "max_gram": 3}
-                                         }
-                                     }}, index=self.index_name)
+        {"analysis": {
+            "tokenizer": {
+                "my_nGram_tokenizer": {
+                    "type": "nGram", "min_gram": 3, "max_gram": 3}
+            }
+        }}, index=self.index_name)
         self.es.indices.put_settings(body=
-                                     {"analysis": {
-                                         "analyzer": {
-                                             "my_nGram": {
-                                                 "tokenizer": "my_nGram_tokenizer",
-                                                 "filter": ["lowercase", "asciifolding"]
-                                             }
-                                         }
-                                     }}, index=self.index_name)
+        {"analysis": {
+            "analyzer": {
+                "my_nGram": {
+                    "tokenizer": "my_nGram_tokenizer",
+                    "filter": ["lowercase", "asciifolding"]
+                }
+            }
+        }}, index=self.index_name)
 
         # Mappings
         self.es.indices.put_mapping(body={"properties": {
@@ -96,7 +97,7 @@ class ElasticSearchEngine(SearchEngine):
         for line in in_str.splitlines():
             doc = json.loads(line)
             name, ext = os.path.splitext(doc["name"])
-            doc["ext"] = ext if ext else ""
+            doc["ext"] = ext[1:] if ext and len(ext) > 1 else ""
             doc["name"] = name
             doc["website_id"] = website_id
             docs.append(doc)
@@ -151,3 +152,43 @@ class ElasticSearchEngine(SearchEngine):
         # todo get scroll time from config
         # todo get size from config
         return page
+
+    def get_stats(self, website_id: int, subdir: str = None):
+
+        stats = {}
+        result = self.es.search(body={
+            "query": {
+                "constant_score": {
+                    "filter": {
+                        "term": {"website_id": website_id}
+                    }
+                }
+            },
+            "aggs": {
+                "ext_group": {
+                    "terms": {
+                        "field": "ext"
+                    },
+                    "aggs": {
+                        "size": {
+                            "sum": {
+                                "field": "size"
+                            }
+                        }
+                    }
+                },
+                "total_size": {
+                    "sum_bucket": {
+                        "buckets_path": "ext_group>size"
+                    }
+                }
+            },
+            "size": 0
+        })
+
+        stats["total_size"] = result["aggregations"]["total_size"]["value"]
+        stats["total_count"] = result["hits"]["total"]
+        stats["ext_stats"] = [(b["size"]["value"], b["doc_count"], b["key"])
+                              for b in result["aggregations"]["ext_group"]["buckets"]]
+
+        return stats

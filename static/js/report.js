@@ -26,17 +26,17 @@ function drawChart(rData) {
     var otherSize = 0;
     var otherCount = 0;
 
-    for(var ext in rData["mime_stats"]) {
+    for(var ext in rData["ext_stats"]) {
         //Ignore file sizes below 0.5%
         if (!isRelevant(rData, ext)) {
 
-            otherSize += rData["mime_stats"][ext][0];
-            otherCount += rData["mime_stats"][ext][1];
+            otherSize += rData["ext_stats"][ext][0];
+            otherCount += rData["ext_stats"][ext][1];
 
         } else {
-            dataSetSize.push(rData["mime_stats"][ext][0]);
-            dataSetCount.push(rData["mime_stats"][ext][1]);
-            labels.push(rData["mime_stats"][ext][2] + " x" + rData["mime_stats"][ext][1] + " (" + humanFileSize(rData["mime_stats"][ext][0]) + ")");
+            dataSetSize.push(rData["ext_stats"][ext][0]);
+            dataSetCount.push(rData["ext_stats"][ext][1]);
+            labels.push(rData["ext_stats"][ext][2] + " x" + rData["ext_stats"][ext][1] + " (" + humanFileSize(rData["ext_stats"][ext][0]) + ")");
             colors.push(getRandomColor())
         }
     }
@@ -82,15 +82,15 @@ function fillTable(rData) {
 
 function isRelevant(rData, ext) {
 
-    // console.log("Checking + " + rData["mime_stats"][ext][2]);
+    // console.log("Checking + " + rData["ext_stats"][ext][2]);
     // console.log("total + " + rData["total_size"]);
-    // console.log("size + " + rData["mime_stats"][ext][0]);
+    // console.log("size + " + rData["ext_stats"][ext][0]);
     // console.log("min + " + 0.03 * rData["total_count"]);
 
     if(rData["total_size"] < 100000) {
-        return rData["mime_stats"][ext][1] > 0.03 * rData["total_count"]
+        return rData["ext_stats"][ext][1] > 0.03 * rData["total_count"]
     } else {
-        return rData["mime_stats"][ext][0] > 0.005 * rData["total_size"]
+        return rData["ext_stats"][ext][0] > 0.005 * rData["total_size"]
     }
 
 

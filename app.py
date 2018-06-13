@@ -1,4 +1,5 @@
 from flask import Flask, render_template, redirect, request, flash, abort, Response, send_from_directory, session
+import json
 import os
 import time
 import ssl
@@ -69,8 +70,10 @@ def website_json_chart(website_id):
 
     print("FIXME: website_json_chart")
     if website:
-        stats = {}
-        return stats
+        stats = searchEngine.get_stats(website_id)
+        stats["base_url"] = website.url
+        stats["report_time"] = website.last_modified
+        return json.dumps(stats)
     else:
         abort(404)
 

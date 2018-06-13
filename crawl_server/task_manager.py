@@ -77,11 +77,3 @@ class TaskManager:
         db.log_result(task_result)
         print("Logged result to DB")
 
-    @staticmethod
-    def task_error(err):
-        print("FIXME: Task failed (This should not happen)")
-        print(err)
-        raise err
-
-
-

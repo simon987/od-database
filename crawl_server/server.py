@@ -1,6 +1,7 @@
 from flask import Flask, request, abort, Response, send_from_directory
 import json
 from crawl_server.task_manager import TaskManager, Task, TaskResult
+import os
 app = Flask(__name__)
 
 tm = TaskManager("tm_db.sqlite3")
@@ -47,7 +48,17 @@ def get_current_tasks():
 
 @app.route("/file_list/<int:website_id>/")
 def get_file_list(website_id):
-    return send_from_directory(directory="./crawled/", filename=str(website_id) + ".json")
+
+    file_name = "./crawled/" + str(website_id) + ".json"
+    if os.path.exists(file_name):
+        with open(file_name, "r") as f:
+            file_list = f.read()
+
+        os.remove(file_name)
+
+        return file_list
+    else:
+        return abort(404)
 
 
 if __name__ == "__main__":
