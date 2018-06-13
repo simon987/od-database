@@ -1,5 +1,6 @@
 from crawl_server.database import TaskManagerDatabase, Task, TaskResult
 from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import Manager
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 from crawl_server.crawler import RemoteDirectoryCrawler
@@ -11,8 +12,8 @@ class TaskManager:
         self.db_path = db_path
         self.db = TaskManagerDatabase(db_path)
         self.pool = ProcessPoolExecutor(max_workers=max_processes)
-
-        self.current_tasks = []
+        manager = Manager()
+        self.current_tasks = manager.list()
 
         scheduler = BackgroundScheduler()
         scheduler.add_job(self.execute_queued_task, "interval", seconds=5)
@@ -35,22 +36,22 @@ class TaskManager:
         task = self.db.pop_task()
         if task:
 
-            self.current_tasks.append(task)
-
             print("pooled " + task.url)
 
             self.pool.submit(
                 TaskManager.run_task,
-                task, self.db_path
+                task, self.db_path, self.current_tasks
             ).add_done_callback(TaskManager.task_complete)
 
     @staticmethod
-    def run_task(task, db_path):
+    def run_task(task, db_path, current_tasks):
         result = TaskResult()
         result.start_time = datetime.utcnow()
         result.website_id = task.website_id
 
         print("Starting task " + task.url)
+
+        current_tasks.append(task)
 
         crawler = RemoteDirectoryCrawler(task.url, 100)
         crawl_result = crawler.crawl_directory("./crawled/" + str(task.website_id) + ".json")
@@ -61,12 +62,12 @@ class TaskManager:
         result.end_time = datetime.utcnow()
         print("End task " + task.url)
 
-        return result, db_path
+        return result, db_path, current_tasks
 
     @staticmethod
     def task_complete(result):
 
-        task_result, db_path = result.result()
+        task_result, db_path, current_tasks = result.result()
 
         print(task_result.status_code)
         print(task_result.file_count)
@@ -76,4 +77,8 @@ class TaskManager:
         db = TaskManagerDatabase(db_path)
         db.log_result(task_result)
         print("Logged result to DB")
+
+        for task in current_tasks:
+            if task.website_id == task_result.website_id:
+                current_tasks.remove(current_tasks)
 

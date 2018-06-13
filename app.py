@@ -133,10 +133,9 @@ def contribute():
 @app.route("/")
 def home():
 
-    # TODO get stats
     stats = {}
-    current_website = "TODO"
-    return render_template("home.html", stats=stats, current_website=current_website)
+    current_websites = ", ".join(task.url for task in taskDispatcher.get_current_tasks())
+    return render_template("home.html", stats=stats, current_websites=current_websites)
 
 
 @app.route("/submit")
@@ -182,16 +181,16 @@ def try_enqueue(url):
 
 @app.route("/enqueue", methods=["POST"])
 def enqueue():
-    if recaptcha.verify():
+    # if recaptcha.verify():
 
         url = os.path.join(request.form.get("url"), "")
         message, msg_type = try_enqueue(url)
         flash(message, msg_type)
 
         return redirect("/submit")
-    else:
-        flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
-        return redirect("/submit")
+    # else:
+    #     flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
+    #     return redirect("/submit")
 
 
 @app.route("/enqueue_bulk", methods=["POST"])

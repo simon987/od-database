@@ -96,6 +96,7 @@ class TaskDispatcher:
         return queued_tasks
 
     def get_current_tasks(self) -> list:
+        # TODO mem cache this
 
         current_tasks = []
         for server in self.crawl_servers:

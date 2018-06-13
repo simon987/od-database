@@ -43,7 +43,7 @@ def get_completed_tasks():
 def get_current_tasks():
 
     current_tasks = tm.get_current_tasks()
-    return current_tasks
+    return json.dumps([t.to_json() for t in current_tasks])
 
 
 @app.route("/file_list/<int:website_id>/")
