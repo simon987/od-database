@@ -14,3 +14,4 @@ lxml
 elasticsearch
 python-dateutil
 flask_httpauth
+ujson

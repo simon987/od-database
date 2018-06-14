@@ -68,7 +68,7 @@ def export_to_json(q: Queue, out_file: str) -> int:
     with open(out_file, "w") as f:
         while True:
             try:
-                next_file: File = q.get_nowait()
+                next_file = q.get_nowait()
                 f.write(next_file.to_json() + "\n")
                 counter += 1
             except Empty:
