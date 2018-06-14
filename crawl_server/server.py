@@ -1,4 +1,4 @@
-from flask import Flask, request, abort, Response
+from flask import Flask, request, abort, Response, send_file
 from flask_httpauth import HTTPTokenAuth
 import json
 from crawl_server.task_manager import TaskManager, Task
@@ -14,7 +14,6 @@ tm = TaskManager("tm_db.sqlite3", 8)
 
 @auth.verify_token
 def verify_token(token):
-    print(token)
     if token in tokens:
         return True
 
@@ -68,15 +67,10 @@ def get_file_list(website_id):
 
     file_name = "./crawled/" + str(website_id) + ".json"
     if os.path.exists(file_name):
-        with open(file_name, "r") as f:
-            file_list = f.read()
-
-        os.remove(file_name)
-
-        return file_list
+        return send_file(file_name)
     else:
         return abort(404)
 
 
 if __name__ == "__main__":
-    app.run(port=5002)
+    app.run(port=5001)

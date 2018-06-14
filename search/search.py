@@ -1,7 +1,7 @@
 import elasticsearch
 from elasticsearch import helpers
 import os
-import json
+import ujson
 
 
 class IndexingError(Exception):
@@ -90,17 +90,14 @@ class ElasticSearchEngine(SearchEngine):
     def ping(self):
         return self.es.ping()
 
-    def import_json(self, in_str: str, website_id: int):
+    def import_json(self, in_lines, website_id: int):
 
-        if not in_str:
-            return
-
-        import_every = 5000
+        import_every = 25000
 
         docs = []
 
-        for line in in_str.splitlines():
-            doc = json.loads(line)
+        for line in in_lines:
+            doc = ujson.loads(line)
             name, ext = os.path.splitext(doc["name"])
             doc["ext"] = ext[1:].lower() if ext and len(ext) > 1 else ""
             doc["name"] = name
@@ -125,7 +122,7 @@ class ElasticSearchEngine(SearchEngine):
     def create_bulk_index_string(docs: list):
 
         action_string = '{"index":{}}\n'
-        return "\n".join("".join([action_string, json.dumps(doc)]) for doc in docs)
+        return "\n".join("".join([action_string, ujson.dumps(doc)]) for doc in docs)
 
     def search(self, query, page, per_page, sort_order) -> {}:
 

@@ -31,7 +31,7 @@ class CrawlServer:
     def fetch_completed_tasks(self) -> list:
 
         try:
-            r = requests.get(self.url + "/task/completed")
+            r = requests.get(self.url + "/task/completed", headers=CrawlServer.headers)
             return [
                 TaskResult(r["status_code"], r["file_count"], r["start_time"], r["end_time"], r["website_id"])
                 for r in json.loads(r.text)]
@@ -42,7 +42,7 @@ class CrawlServer:
     def fetch_queued_tasks(self) -> list:
 
         try:
-            r = requests.get(self.url + "/task/")
+            r = requests.get(self.url + "/task/", headers=CrawlServer.headers)
             return [
                 Task(t["website_id"], t["url"], t["priority"], t["callback_type"], t["callback_args"])
                 for t in json.loads(r.text)
@@ -53,7 +53,7 @@ class CrawlServer:
     def fetch_current_tasks(self):
 
         try:
-            r = requests.get(self.url + "/task/current")
+            r = requests.get(self.url + "/task/current", headers=CrawlServer.headers)
             return [
                 Task(t["website_id"], t["url"], t["priority"], t["callback_type"], t["callback_args"])
                 for t in json.loads(r.text)
@@ -64,8 +64,9 @@ class CrawlServer:
     def fetch_website_files(self, website_id) -> str:
 
         try:
-            r = requests.get(self.url + "/file_list/" + str(website_id) + "/")
-            return r.text if r.status_code == 200 else ""
+            r = requests.get(self.url + "/file_list/" + str(website_id) + "/", stream=True, headers=CrawlServer.headers)
+            for line in r.iter_lines(chunk_size=1024 * 256):
+                yield line
         except ConnectionError:
             return ""
 
@@ -74,7 +75,7 @@ class TaskDispatcher:
 
     def __init__(self):
         scheduler = BackgroundScheduler()
-        scheduler.add_job(self.check_completed_tasks, "interval", seconds=1)
+        scheduler.add_job(self.check_completed_tasks, "interval", seconds=10)
         scheduler.start()
 
         self.search = ElasticSearchEngine("od-database")

@@ -51,8 +51,8 @@ def get_random_file():
     doc = dict()
     doc["name"] = random_file_name()
     doc["path"] = random_path()
-    doc["mtime"] = random.randint(0, 10000000)
-    doc["size"] = random.randint(-1, 100000000000000)
+    doc["mtime"] = random.randint(0, 1000000000000)
+    doc["size"] = random.randint(-1, 1000000000)
 
     return doc
 
@@ -80,8 +80,7 @@ def random_searches(count=10000000, max_workers=1000):
     pool.map(search, random.choices(terms, k=count))
 
 
-
 # dump_local_filesystem("/mnt/")
-# index_file_list("crawl_server/crawled/123.json", 10)
+# index_file_list("random_dump.json", 1000)
 # random_searches(100000)
-dump_random_files(20000 * 100000)
+# dump_random_files(20000 * 100000)
