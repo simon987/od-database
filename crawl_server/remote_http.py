@@ -36,7 +36,7 @@ class HttpDirectory(RemoteDirectory):
 
     def __init__(self, url):
         super().__init__(url)
-        self.parser = etree.HTMLParser(collect_ids=False)
+        self.parser = etree.HTMLParser(collect_ids=False, encoding="utf-8")
 
     def list_dir(self, path) -> list:
         results = []

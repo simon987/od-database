@@ -1,19 +1,33 @@
-from flask import Flask, request, abort, Response, send_from_directory
+from flask import Flask, request, abort, Response
+from flask_httpauth import HTTPTokenAuth
 import json
-from crawl_server.task_manager import TaskManager, Task, TaskResult
+from crawl_server.task_manager import TaskManager, Task
 import os
+import config
 app = Flask(__name__)
+auth = HTTPTokenAuth(scheme="Token")
 
-tm = TaskManager("tm_db.sqlite3", 2)
+tokens = [config.CRAWL_SERVER_TOKEN]
+
+tm = TaskManager("tm_db.sqlite3", 8)
+
+
+@auth.verify_token
+def verify_token(token):
+    print(token)
+    if token in tokens:
+        return True
 
 
 @app.route("/task/")
+@auth.login_required
 def get_tasks():
     json_str = json.dumps([task.to_json() for task in tm.get_tasks()])
     return Response(json_str, mimetype="application/json")
 
 
 @app.route("/task/put", methods=["POST"])
+@auth.login_required
 def task_put():
 
     if request.json:
@@ -34,12 +48,14 @@ def task_put():
 
 
 @app.route("/task/completed", methods=["GET"])
+@auth.login_required
 def get_completed_tasks():
     json_str = json.dumps([result.to_json() for result in tm.get_non_indexed_results()])
     return json_str
 
 
 @app.route("/task/current", methods=["GET"])
+@auth.login_required
 def get_current_tasks():
 
     current_tasks = tm.get_current_tasks()
@@ -47,6 +63,7 @@ def get_current_tasks():
 
 
 @app.route("/file_list/<int:website_id>/")
+@auth.login_required
 def get_file_list(website_id):
 
     file_name = "./crawled/" + str(website_id) + ".json"
@@ -62,4 +79,4 @@ def get_file_list(website_id):
 
 
 if __name__ == "__main__":
-    app.run(port=5001)
+    app.run(port=5002)

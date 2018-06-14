@@ -202,7 +202,7 @@ def enqueue_bulk():
         if urls:
             urls = urls.split()
 
-            if 0 < len(urls) <= 10:
+            if 0 < len(urls) <= 1000000000000:
 
                 for url in urls:
                     url = os.path.join(url, "")

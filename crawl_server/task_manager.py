@@ -4,11 +4,12 @@ from multiprocessing import Manager
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 from crawl_server.crawler import RemoteDirectoryCrawler
+from crawl_server.callbacks import PostCrawlCallbackFactory
 
 
 class TaskManager:
 
-    def __init__(self, db_path, max_processes=4):
+    def __init__(self, db_path, max_processes=2):
         self.db_path = db_path
         self.db = TaskManagerDatabase(db_path)
         self.pool = ProcessPoolExecutor(max_workers=max_processes)
@@ -53,7 +54,7 @@ class TaskManager:
 
         print("Starting task " + task.url)
 
-        crawler = RemoteDirectoryCrawler(task.url, 30)
+        crawler = RemoteDirectoryCrawler(task.url, 100)
         crawl_result = crawler.crawl_directory("./crawled/" + str(task.website_id) + ".json")
 
         result.file_count = crawl_result.file_count
@@ -61,6 +62,11 @@ class TaskManager:
 
         result.end_time = datetime.utcnow()
         print("End task " + task.url)
+
+        callback = PostCrawlCallbackFactory.get_callback(task)
+        if callback:
+            callback.run()
+            print("Executed callback")
 
         return result, db_path, current_tasks
 

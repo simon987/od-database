@@ -4,14 +4,14 @@ from crawl_server.database import Task, TaskResult
 import requests
 from requests.exceptions import ConnectionError
 import json
-from reddit_bot import RedditBot
-import praw
+import config
 
 
 class CrawlServer:
 
     headers = {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Authorization": "Token " + config.CRAWL_SERVER_TOKEN,
     }
 
     def __init__(self, url):
@@ -73,11 +73,6 @@ class CrawlServer:
 class TaskDispatcher:
 
     def __init__(self):
-        # TODO: remove reddit
-        reddit = praw.Reddit('opendirectories-bot',
-                             user_agent='github.com/simon987/od-database v1.0  (by /u/Hexahedr_n)')
-        self.reddit_bot = RedditBot("crawled.txt", reddit)
-
         scheduler = BackgroundScheduler()
         scheduler.add_job(self.check_completed_tasks, "interval", seconds=1)
         scheduler.start()

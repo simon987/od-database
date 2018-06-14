@@ -1,14 +1,16 @@
 import praw
-from reddit_bot import RedditBot
+from crawl_server.reddit_bot import RedditBot
+from search.search import ElasticSearchEngine
 from database import Database, Website
 import od_util
 import os
 import re
 
-pattern = re.compile("[\[\]\\\()]+")
+chars_to_remove_from_comment = re.compile("[\[\]\\\()]+")
 reddit = praw.Reddit('opendirectories-bot',
                      user_agent='github.com/simon987/od-database v1.0  (by /u/Hexahedr_n)')
 db = Database("db.sqlite3")
+search = ElasticSearchEngine("od-database")
 subreddit = reddit.subreddit("opendirectories")
 # subreddit = reddit.subreddit("test")
 bot = RedditBot("crawled.txt", reddit)
@@ -17,7 +19,7 @@ submissions = []
 
 
 def handle_exact_repost(website_id, reddit_obj):
-    stats = db.get_website_stats(website_id)
+    stats = search.get_stats(website_id)
     comment = bot.get_comment({"": stats}, website_id,
                               "I already scanned this website on " + website.last_modified + " UTC")
     print(comment)
@@ -48,7 +50,7 @@ def handle_subdir_repost(website_id, reddit_obj):
 for comment in subreddit.comments(limit=50):
 
     if not bot.has_crawled(comment):
-        text = pattern.sub(" ", comment.body).strip()
+        text = chars_to_remove_from_comment.sub(" ", comment.body).strip()
         if text.startswith("u/opendirectories-bot") or text.startswith("/u/opendirectories-bot"):
             lines = text.split()
             if len(lines) > 1:
