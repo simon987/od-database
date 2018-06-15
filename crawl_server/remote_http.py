@@ -36,7 +36,7 @@ class HttpDirectory(RemoteDirectory):
 
     def __init__(self, url):
         super().__init__(url)
-        self.parser = etree.HTMLParser(collect_ids=False)
+        self.parser = etree.HTMLParser(collect_ids=False, encoding='utf-8')
 
     def list_dir(self, path) -> list:
         results = []
@@ -103,7 +103,7 @@ class HttpDirectory(RemoteDirectory):
         while retries > 0:
             try:
                 r = requests.get(url, headers=HttpDirectory.HEADERS)
-                return r.content
+                return r.text
             except RequestException:
                 retries -= 1
 

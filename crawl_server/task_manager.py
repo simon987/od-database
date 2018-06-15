@@ -73,7 +73,10 @@ class TaskManager:
     @staticmethod
     def task_complete(result):
 
-        task_result, db_path, current_tasks = result.result()
+        try:
+            task_result, db_path, current_tasks = result.result()
+        except Exception as e:
+            print("Exception during task " + str(e))
 
         print(task_result.status_code)
         print(task_result.file_count)

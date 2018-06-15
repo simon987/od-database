@@ -1,5 +1,7 @@
 import os
-import json
+import logging
+import ujson
+import logging
 from urllib.parse import urlparse
 from timeout_decorator.timeout_decorator import TimeoutError
 from threading import Thread
@@ -23,7 +25,7 @@ class File:
         return ("DIR " if self.is_dir else "FILE ") + self.path + "/" + self.name
 
     def to_json(self):
-        return json.dumps({
+        return ujson.dumps({
             "name": self.name,
             "size": self.size,
             "mtime": self.mtime,
@@ -117,19 +119,23 @@ class RemoteDirectoryCrawler:
             threads.append(worker)
             worker.start()
 
-        in_q.join()
-        print("Done")
+        files_written = []  # Pass array to worker to get result
+        file_writer_thread = Thread(target=RemoteDirectoryCrawler._log_to_file, args=(files_q, out_file, files_written))
+        file_writer_thread.start()
 
-        exported_count = export_to_json(files_q, out_file)
-        print("exported to " + out_file)
+        in_q.join()
+        files_q.join()
+        print("Done")
 
         # Kill threads
         for _ in threads:
             in_q.put(None)
         for t in threads:
             t.join()
+        files_q.put(None)
+        file_writer_thread.join()
 
-        return CrawlResult(exported_count, "success")
+        return CrawlResult(files_written[0], "success")
 
     def _process_listings(self, url: str, in_q: Queue, files_q: Queue):
 
@@ -174,5 +180,28 @@ class RemoteDirectoryCrawler:
                     print("Dropping listing for " + os.path.join(file.path, file.name, ""))
             finally:
                 in_q.task_done()
+
+    @staticmethod
+    def _log_to_file(files_q: Queue, out_file: str, files_written: list):
+
+        counter = 0
+
+        with open(out_file, "w") as f:
+            while True:
+
+                try:
+                    file = files_q.get(timeout=30)
+                except Empty:
+                    break
+
+                if file is None:
+                    break
+
+                f.write(file.to_json() + "\n")
+                counter += 1
+                files_q.task_done()
+
+        files_written.append(counter)
+
 
 

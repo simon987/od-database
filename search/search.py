@@ -107,7 +107,8 @@ class ElasticSearchEngine(SearchEngine):
             if len(docs) >= import_every:
                 self._index(docs)
                 docs.clear()
-        self._index(docs)
+        if docs:
+            self._index(docs)
 
     def _index(self, docs):
         print("Indexing " + str(len(docs)) + " docs")
