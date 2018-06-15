@@ -36,7 +36,7 @@ class HttpDirectory(RemoteDirectory):
 
     def __init__(self, url):
         super().__init__(url)
-        self.parser = etree.HTMLParser(collect_ids=False, encoding="utf-8")
+        self.parser = etree.HTMLParser(collect_ids=False)
 
     def list_dir(self, path) -> list:
         results = []
@@ -103,17 +103,21 @@ class HttpDirectory(RemoteDirectory):
         while retries > 0:
             try:
                 r = requests.get(url, headers=HttpDirectory.HEADERS)
-                return r.text
+                return r.content
             except RequestException:
                 retries -= 1
 
         return None
 
-    def _parse_links(self, body: str) -> set:
+    def _parse_links(self, body: bytes) -> set:
 
         result = set()
         tree = etree.HTML(body, parser=self.parser)
-        links = tree.findall(".//a/[@href]")
+        links = []
+        try:
+            links = tree.findall(".//a/[@href]")
+        except AttributeError:
+            pass
 
         for link in links:
             result.add(Link(link.text, link.get("href")))

@@ -91,7 +91,8 @@ class TaskDispatcher:
             for task in server.fetch_completed_tasks():
                 print("Completed task")
                 file_list = server.fetch_website_files(task.website_id)
-                self.search.import_json(file_list, task.website_id)
+                if file_list:
+                    self.search.import_json(file_list, task.website_id)
 
     def dispatch_task(self, task: Task):
         self._get_available_crawl_server().queue_task(task)

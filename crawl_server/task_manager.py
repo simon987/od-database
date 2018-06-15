@@ -54,7 +54,7 @@ class TaskManager:
 
         print("Starting task " + task.url)
 
-        crawler = RemoteDirectoryCrawler(task.url, 100)
+        crawler = RemoteDirectoryCrawler(task.url, 10)
         crawl_result = crawler.crawl_directory("./crawled/" + str(task.website_id) + ".json")
 
         result.file_count = crawl_result.file_count
