@@ -92,7 +92,7 @@ class ElasticSearchEngine(SearchEngine):
 
     def import_json(self, in_lines, website_id: int):
 
-        import_every = 25000
+        import_every = 5000
 
         docs = []
 
@@ -112,7 +112,7 @@ class ElasticSearchEngine(SearchEngine):
     def _index(self, docs):
         print("Indexing " + str(len(docs)) + " docs")
         bulk_string = ElasticSearchEngine.create_bulk_index_string(docs)
-        result = self.es.bulk(body=bulk_string, index=self.index_name, doc_type="file")
+        result = self.es.bulk(body=bulk_string, index=self.index_name, doc_type="file", request_timeout=30)
 
         if result["errors"]:
             print(result)
