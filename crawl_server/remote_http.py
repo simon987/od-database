@@ -113,7 +113,7 @@ class HttpDirectory(RemoteDirectory):
             for link in links:
                 result.append((link.text, link.get("href")))
         except UnicodeDecodeError:
-            tree = etree.HTML(body.decode("utf-8", errors="ignore"), parser=self.parser)
+            tree = etree.HTML(body.decode("utf-8", errors="ignore").encode("utf-8"), parser=self.parser)
             links = []
             try:
                 links = tree.findall(".//a/[@href]")
