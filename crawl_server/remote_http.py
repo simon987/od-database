@@ -102,15 +102,26 @@ class HttpDirectory(RemoteDirectory):
     def _parse_links(self, body: bytes) -> list:
 
         result = list()
-        tree = etree.HTML(body, parser=self.parser)
-        links = []
         try:
-            links = tree.findall(".//a/[@href]")
-        except AttributeError:
-            pass
+            tree = etree.HTML(body, parser=self.parser)
+            links = []
+            try:
+                links = tree.findall(".//a/[@href]")
+            except AttributeError:
+                pass
 
-        for link in links:
-            result.append((link.text, link.get("href")))
+            for link in links:
+                result.append((link.text, link.get("href")))
+        except UnicodeDecodeError:
+            tree = etree.HTML(body.decode("utf-8", errors="ignore"), parser=self.parser)
+            links = []
+            try:
+                links = tree.findall(".//a/[@href]")
+            except AttributeError:
+                pass
+
+            for link in links:
+                result.append((link.text, link.get("href")))
 
         return result
 
