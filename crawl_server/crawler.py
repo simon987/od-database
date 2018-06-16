@@ -1,7 +1,5 @@
 import os
-import logging
 import ujson
-import logging
 from urllib.parse import urlparse
 from timeout_decorator.timeout_decorator import TimeoutError
 from threading import Thread
@@ -93,14 +91,14 @@ class RemoteDirectoryCrawler:
     def __init__(self, url, max_threads: int):
         self.url = url
         self.max_threads = max_threads
-        self.crawled_paths = set()
+        self.crawled_paths = list()
 
     def crawl_directory(self, out_file: str) -> CrawlResult:
 
         try:
             directory = RemoteDirectoryFactory.get_directory(self.url)
             root_listing = directory.list_dir("")
-            self.crawled_paths.add("")
+            self.crawled_paths.append("")
             directory.close()
         except TimeoutError:
             return CrawlResult(0, "timeout")
@@ -109,7 +107,7 @@ class RemoteDirectoryCrawler:
         files_q = Queue(maxsize=0)
         for f in root_listing:
             if f.is_dir:
-                in_q.put(f)
+                in_q.put(os.path.join(f.path, f.name, ""))
             else:
                 files_q.put(f)
 
@@ -143,41 +141,41 @@ class RemoteDirectoryCrawler:
         timeout_retries = RemoteDirectoryCrawler.MAX_TIMEOUT_RETRIES
 
         while directory:
-
             try:
-                file = in_q.get(timeout=60)
+                path = in_q.get(timeout=60)
             except Empty:
+                directory.close()
                 break
 
-            if file is None:
+            if path is None:
                 break
 
             try:
-                path = os.path.join(file.path, file.name, "")
                 if path not in self.crawled_paths:
-                    self.crawled_paths.add(path)
+                    self.crawled_paths.append(path)
                     listing = directory.list_dir(path)
                     timeout_retries = RemoteDirectoryCrawler.MAX_TIMEOUT_RETRIES
 
                     for f in listing:
                         if f.is_dir:
-                            in_q.put(f)
+                            in_q.put(os.path.join(f.path, f.name, ""))
                         else:
                             files_q.put(f)
+                    print("LISTED " + repr(path) + "dirs:" + str(in_q.qsize()))
             except TooManyConnectionsError:
                 print("Too many connections")
                 # Kill worker and resubmit listing task
                 directory.close()
-                in_q.put(file)
+                in_q.put(path)
                 break
             except TimeoutError:
                 if timeout_retries > 0:
                     timeout_retries -= 1
                     # TODO: Remove debug info
                     print("TIMEOUT, " + str(timeout_retries) + " retries left")
-                    in_q.put(file)
+                    in_q.put(path)
                 else:
-                    print("Dropping listing for " + os.path.join(file.path, file.name, ""))
+                    print("Dropping listing for " + path)
             finally:
                 in_q.task_done()
 
@@ -190,7 +188,7 @@ class RemoteDirectoryCrawler:
             while True:
 
                 try:
-                    file = files_q.get(timeout=30)
+                    file = files_q.get(timeout=240)
                 except Empty:
                     break
 
@@ -202,6 +200,7 @@ class RemoteDirectoryCrawler:
                 files_q.task_done()
 
         files_written.append(counter)
+        print("File writer done")
 
 
 

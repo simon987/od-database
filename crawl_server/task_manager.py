@@ -77,6 +77,7 @@ class TaskManager:
             task_result, db_path, current_tasks = result.result()
         except Exception as e:
             print("Exception during task " + str(e))
+            return
 
         print(task_result.status_code)
         print(task_result.file_count)
