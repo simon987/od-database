@@ -142,7 +142,7 @@ class RemoteDirectoryCrawler:
 
         while directory:
             try:
-                path = in_q.get(timeout=60)
+                path = in_q.get(timeout=300)
             except Empty:
                 directory.close()
                 break
@@ -188,7 +188,7 @@ class RemoteDirectoryCrawler:
             while True:
 
                 try:
-                    file = files_q.get(timeout=240)
+                    file = files_q.get(timeout=800)
                 except Empty:
                     break
 
