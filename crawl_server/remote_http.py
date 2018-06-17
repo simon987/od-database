@@ -92,7 +92,7 @@ class HttpDirectory(RemoteDirectory):
         retries = HttpDirectory.MAX_RETRIES
         while retries > 0:
             try:
-                r = self.session.get(url)
+                r = self.session.get(url, timeout=40)
                 return r.content, r.encoding
             except RequestException:
                 retries -= 1
@@ -134,7 +134,7 @@ class HttpDirectory(RemoteDirectory):
         retries = HttpDirectory.MAX_RETRIES
         while retries > 0:
             try:
-                r = self.session.head(url, allow_redirects=False, timeout=50)
+                r = self.session.head(url, allow_redirects=False, timeout=40)
 
                 stripped_url = url[len(self.base_url) - 1:]
 
