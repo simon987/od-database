@@ -83,9 +83,7 @@ def website_links(website_id):
     website = db.get_website_by_id(website_id)
 
     if website:
-        print("FIXME: website_links")
         links = searchEngine.get_link_list(website_id, website.url)
-        print(links)
         return Response("\n".join(links), mimetype="text/plain")
     else:
         abort(404)

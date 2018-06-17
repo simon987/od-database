@@ -4,12 +4,14 @@ import json
 
 payload = json.dumps({
     "website_id": 123,
-    "url": "ftp://ien11-3-88-183-194-246.fbx.proxad.net/",
+    "url": "http://alphamediazone.com/data/Movies1/",
+    # "url": "http://localhost:8000/",
     "priority": 2,
     "callback_type": "",
     "callback_args": "{}"
 })
 
 r = requests.post("http://localhost:5001/task/put",
-                  headers={"Content-Type": "application/json"},
+                  headers={"Content-Type": "application/json",
+                           "Authorization": "Token abc"},
                   data=payload)

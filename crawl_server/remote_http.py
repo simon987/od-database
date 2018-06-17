@@ -37,10 +37,10 @@ class HttpDirectory(RemoteDirectory):
         results = []
 
         path_url = os.path.join(self.base_url, path.strip("/"), "")
-        body = self._fetch_body(path_url)
+        body, encoding = self._fetch_body(path_url)
         if not body:
             return []
-        links = self._parse_links(body)
+        links = self._parse_links(body, encoding)
 
         urls_to_request = []
 
@@ -93,13 +93,13 @@ class HttpDirectory(RemoteDirectory):
         while retries > 0:
             try:
                 r = self.session.get(url)
-                return r.content
+                return r.content, r.encoding
             except RequestException:
                 retries -= 1
 
         return None
 
-    def _parse_links(self, body: bytes) -> list:
+    def _parse_links(self, body: bytes, encoding) -> list:
 
         result = list()
         try:
@@ -113,7 +113,7 @@ class HttpDirectory(RemoteDirectory):
             for link in links:
                 result.append((link.text, link.get("href")))
         except UnicodeDecodeError:
-            tree = etree.HTML(body.decode("utf-8", errors="ignore").encode("utf-8"), parser=self.parser)
+            tree = etree.HTML(body.decode(encoding, errors="ignore").encode("utf-8"), parser=self.parser)
             links = []
             try:
                 links = tree.findall(".//a/[@href]")
