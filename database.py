@@ -214,7 +214,7 @@ class Database:
             if hit["_source"]["website_id"] in websites:
                 hit["_source"]["website_url"] = websites[hit["_source"]["website_id"]]
             else:
-                hit["_source"]["website_url"] = "NONE"
+                hit["_source"]["website_url"] = "[DELETED]"
 
         return page
 

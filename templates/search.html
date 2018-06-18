@@ -62,10 +62,10 @@
                                             {{ hl_name |safe }}{{ ("." if src["ext"] != "" else "") + src["ext"] }}
                                         </a>
                                         {# File type badge #}
-                                        {% set mime = get_mime(src["path"]) %}
+                                        {% set mime = get_mime(src["ext"]) %}
                                         {% if mime %}
                                             <span class="badge badge-pill {{ get_color(mime) }}">
-                                                {{ src["path"][src["path"].rfind(".") + 1:] }}
+                                                {{ src["ext"] }}
                                             </span>
                                         {% endif %}
                                         {# File path #}

@@ -20,7 +20,7 @@ db = Database("db.sqlite3")
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 app.jinja_env.globals.update(truncate_path=od_util.truncate_path)
 app.jinja_env.globals.update(get_color=od_util.get_color)
-app.jinja_env.globals.update(get_mime=od_util.get_mime)
+app.jinja_env.globals.update(get_mime=od_util.get_category)
 
 taskDispatcher = TaskDispatcher()
 searchEngine = ElasticSearchEngine("od-database")
