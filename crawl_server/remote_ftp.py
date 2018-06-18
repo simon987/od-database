@@ -7,7 +7,6 @@ import ftputil
 import ftputil.error
 from ftputil.session import session_factory
 import random
-import timeout_decorator
 from crawl_server.crawler import RemoteDirectory, File, TooManyConnectionsError
 
 
@@ -16,10 +15,10 @@ class FtpDirectory(RemoteDirectory):
     SCHEMES = ("ftp", )
 
     def __init__(self, url):
+
         host = urlparse(url).netloc
         super().__init__(host)
-        self.failed_attempts = 0
-        self.max_attempts = 2
+        self.max_attempts = 3
         self.ftp = None
         self.stop_when_connected()
 
@@ -27,12 +26,13 @@ class FtpDirectory(RemoteDirectory):
         self.ftp = ftputil.FTPHost(self.base_url, "anonymous", "od-database", session_factory=session_factory(
             use_passive_mode=False
         ))
+        self.ftp._session.timeout = 40
 
     def stop_when_connected(self):
-        while self.failed_attempts < self.max_attempts:
+        failed_attempts = 0
+        while failed_attempts < self.max_attempts:
             try:
                 self._connect()
-                self.failed_attempts = 0
                 break
             except ftputil.error.FTPError as e:
 
@@ -40,47 +40,50 @@ class FtpDirectory(RemoteDirectory):
                     print("Cancel connection - too many connections")
                     break
 
-                self.failed_attempts += 1
+                failed_attempts += 1
                 print("Connection error; reconnecting..." + e.strerror + " " + str(e.errno))
                 time.sleep(2 * random.uniform(0.5, 1.5))
                 self.stop_when_connected()
 
-    @timeout_decorator.timeout(60, use_signals=False)
     def list_dir(self, path) -> list:
         if not self.ftp:
             # No connection - assuming that connection was dropped because too many
             raise TooManyConnectionsError()
-        print("LIST " + path)
         results = []
-        try:
-            file_names = self.ftp.listdir(path)
+        failed_attempts = 0
+        while failed_attempts < self.max_attempts:
+            try:
+                file_names = self.ftp.listdir(path)
 
-            for file_name in file_names:
-                    stat = self.try_stat(os.path.join(path, file_name))
-                    is_dir = self.ftp.path.isdir(os.path.join(path, file_name))
+                for file_name in file_names:
+                        stat = self.try_stat(os.path.join(path, file_name))
+                        is_dir = self.ftp.path.isdir(os.path.join(path, file_name))
 
-                    results.append(File(
-                        name=file_name,
-                        mtime=stat.st_mtime,
-                        size=-1 if is_dir else stat.st_size,
-                        is_dir=is_dir,
-                        path=path
-                    ))
-        except ftputil.error.ParserError as e:
-            print("TODO: fix parsing error: " + e.strerror + " @ " + e.file_name)
+                        results.append(File(
+                            name=file_name,
+                            mtime=stat.st_mtime,
+                            size=-1 if is_dir else stat.st_size,
+                            is_dir=is_dir,
+                            path=path
+                        ))
+                return results
+            except ftputil.error.ParserError as e:
+                print("TODO: fix parsing error: " + e.strerror + " @ " + str(e.file_name))
+                break
+            except ftputil.error.FTPOSError as e:
+                if e.strerror == "timed out":
+                    failed_attempts += 1
+                    continue
+            except ftputil.error.FTPError as e:
+                if e.errno == 530:
+                    raise TooManyConnectionsError()
+            except Exception as e:
+                # TODO remove that debug info
+                print("ERROR:" + str(e))
+                print(type(e))
+                raise e
 
-        except ftputil.error.FTPError as e:
-            if e.errno == 530:
-                raise TooManyConnectionsError()
-            print(e.strerror)
-
-        except Exception as e:
-            # TODO remove that debug info
-            print("ERROR:" + str(e))
-            print(type(e))
-            raise e
-
-        return results
+        return []
 
     def try_stat(self, path):
 
