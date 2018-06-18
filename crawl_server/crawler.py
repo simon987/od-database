@@ -11,6 +11,7 @@ class TooManyConnectionsError(Exception):
 
 
 class File:
+    __slots__ = "name", "size", "mtime", "path", "is_dir"
 
     def __init__(self, name: str, size: int, mtime: int, path: str, is_dir: bool):
         self.name = name
@@ -61,22 +62,6 @@ class RemoteDirectoryFactory:
                 return dir_engine(url)
 
 
-def export_to_json(q: Queue, out_file: str) -> int:
-
-    counter = 0
-
-    with open(out_file, "w") as f:
-        while True:
-            try:
-                next_file = q.get_nowait()
-                f.write(next_file.to_json() + "\n")
-                counter += 1
-            except Empty:
-                break
-
-    return counter
-
-
 class CrawlResult:
 
     def __init__(self, file_count: int, status_code: str):
@@ -95,6 +80,8 @@ class RemoteDirectoryCrawler:
 
     def crawl_directory(self, out_file: str) -> CrawlResult:
 
+        import gc
+        gc.set_debug(gc.DEBUG_LEAK)
         try:
             directory = RemoteDirectoryFactory.get_directory(self.url)
             root_listing = directory.list_dir("")
@@ -133,6 +120,7 @@ class RemoteDirectoryCrawler:
         files_q.put(None)
         file_writer_thread.join()
 
+
         return CrawlResult(files_written[0], "success")
 
     def _process_listings(self, url: str, in_q: Queue, files_q: Queue):
@@ -161,6 +149,7 @@ class RemoteDirectoryCrawler:
                             in_q.put(os.path.join(f.path, f.name, ""))
                         else:
                             files_q.put(f)
+                    import sys
                     print("LISTED " + repr(path) + "dirs:" + str(in_q.qsize()))
             except TooManyConnectionsError:
                 print("Too many connections")

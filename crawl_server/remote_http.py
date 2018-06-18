@@ -1,7 +1,7 @@
-from urllib.parse import urljoin, unquote
+from urllib.parse import urljoin, unquote, quote
 
 import os
-from lxml import etree
+from html.parser import HTMLParser
 from itertools import repeat
 from crawl_server.crawler import RemoteDirectory, File
 import requests
@@ -9,6 +9,45 @@ from requests.exceptions import RequestException
 from multiprocessing.pool import ThreadPool
 import config
 from dateutil.parser import parse as parse_date
+
+
+class Anchor:
+    def __init__(self):
+        self.text = None
+        self.href = None
+
+
+class HTMLAnchorParser(HTMLParser):
+
+    def __init__(self):
+        super().__init__()
+        self.anchors = []
+        self.current_anchor = None
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "a":
+            for attr in attrs:
+                if attr[0] == "href":
+                    self.current_anchor = Anchor()
+                    self.current_anchor.href = attr[1]
+                    break
+
+    def handle_data(self, data):
+        if self.current_anchor:
+            self.current_anchor.text = data
+
+    def handle_endtag(self, tag):
+        if tag == "a":
+            if self.current_anchor:
+                self.anchors.append(self.current_anchor)
+                self.current_anchor = None
+
+    def error(self, message):
+        pass
+
+    def feed(self, data):
+        self.anchors.clear()
+        super().feed(data)
 
 
 class HttpDirectory(RemoteDirectory):
@@ -29,42 +68,39 @@ class HttpDirectory(RemoteDirectory):
 
     def __init__(self, url):
         super().__init__(url)
-        self.parser = etree.HTMLParser(collect_ids=False, encoding='utf-8')
         self.session = requests.Session()
         self.session.headers = HttpDirectory.HEADERS
+        self.session.verify = False
+        self.session.max_redirects = 1
 
-    def list_dir(self, path) -> list:
-        results = []
+    def list_dir(self, path):
 
-        path_url = os.path.join(self.base_url, path.strip("/"), "")
-        body, encoding = self._fetch_body(path_url)
+        path_url = self.base_url + path.strip("/") + "/"
+        body = self._stream_body(path_url)
         if not body:
-            return []
-        links = self._parse_links(body, encoding)
+            return None
+        anchors = self._parse_links(body)
 
         urls_to_request = []
 
-        for link in links:
-            if self._should_ignore(self.base_url, link):
+        for anchor in anchors:
+            if self._should_ignore(self.base_url, anchor):
                 continue
 
-            file_url = urljoin(path_url, link[1])
-            path, file_name = os.path.split(file_url[len(self.base_url) - 1:])
-
-            if self._isdir(link):
-                results.append(File(
-                    name=file_name,
+            if self._isdir(anchor):
+                yield File(
+                    name=anchor.href,
                     mtime=None,
                     size=None,
                     path=path,
                     is_dir=True
-                ))
+                )
             else:
-                urls_to_request.append(file_url)
+                pass
+                urls_to_request.append(path_url + anchor.href)
 
-        results.extend(self.request_files(urls_to_request))
-
-        return results
+        for file in self.request_files(urls_to_request):
+            yield file
 
     def request_files(self, urls_to_request: list) -> list:
 
@@ -73,61 +109,13 @@ class HttpDirectory(RemoteDirectory):
             pool = ThreadPool(processes=10)
             files = pool.starmap(HttpDirectory._request_file, zip(repeat(self), urls_to_request))
             pool.close()
-            return [f for f in files if f]
+            return (f for f in files if f)
         else:
             # Too few urls to create thread pool
-            results = []
             for url in urls_to_request:
                 file = self._request_file(url)
                 if file:
-                    results.append(file)
-
-            return results
-
-    def _get_url(self, path: str):
-        return urljoin(self.base_url, path)
-
-    def _fetch_body(self, url: str):
-
-        retries = HttpDirectory.MAX_RETRIES
-        while retries > 0:
-            try:
-                r = self.session.get(url, timeout=40)
-                return r.content, r.encoding
-            except RequestException:
-                retries -= 1
-
-        return None
-
-    def _parse_links(self, body: bytes, encoding) -> list:
-
-        result = list()
-        try:
-            tree = etree.HTML(body, parser=self.parser)
-            links = []
-            try:
-                links = tree.findall(".//a/[@href]")
-            except AttributeError:
-                pass
-
-            for link in links:
-                result.append((link.text, link.get("href")))
-        except UnicodeDecodeError:
-            tree = etree.HTML(body.decode(encoding, errors="ignore").encode("utf-8"), parser=self.parser)
-            links = []
-            try:
-                links = tree.findall(".//a/[@href]")
-            except AttributeError:
-                pass
-
-            for link in links:
-                result.append((link.text, link.get("href")))
-
-        return result
-
-    @staticmethod
-    def _isdir(link: tuple):
-        return link[1].rsplit("?", maxsplit=1)[0].endswith("/")
+                    yield file
 
     def _request_file(self, url):
 
@@ -148,19 +136,52 @@ class HttpDirectory(RemoteDirectory):
                     is_dir=False
                 )
             except RequestException:
+                self.session.close()
+                retries -= 1
+
+        return None
+
+    def _stream_body(self, url: str):
+
+        retries = HttpDirectory.MAX_RETRIES
+        while retries > 0:
+            try:
+                r = self.session.get(url, stream=True, timeout=40)
+                for chunk in r.iter_content(chunk_size=4096):
+                    yield chunk
+                r.close()
+                del r
+                break
+            except RequestException:
+                self.session.close()
                 retries -= 1
 
         return None
 
     @staticmethod
-    def _should_ignore(base_url, link: tuple):
-        if link[0] == "../" or link[1].endswith(HttpDirectory.BLACK_LIST):
+    def _parse_links(body):
+
+        parser = HTMLAnchorParser()
+
+        for chunk in body:
+            parser.feed(chunk.decode("utf-8"))
+            for anchor in parser.anchors:
+                yield anchor
+
+    @staticmethod
+    def _isdir(link: Anchor):
+        return link.href.endswith("/")
+
+    @staticmethod
+    def _should_ignore(base_url, link: Anchor):
+        if link.text == "../" or link.href.endswith(HttpDirectory.BLACK_LIST):
             return True
 
         # Ignore external links
-        if link[1].startswith("http") and not link[1].startswith(base_url):
+        if link.href.startswith("http") and not link.href.startswith(base_url):
             return True
 
     def close(self):
         self.session.close()
+
 

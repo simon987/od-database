@@ -1,6 +1,5 @@
 from crawl_server.database import TaskManagerDatabase, Task, TaskResult
-from concurrent.futures import ProcessPoolExecutor
-from multiprocessing import Manager
+from multiprocessing import Manager, Pool
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 from crawl_server.crawler import RemoteDirectoryCrawler
@@ -12,7 +11,7 @@ class TaskManager:
     def __init__(self, db_path, max_processes=2):
         self.db_path = db_path
         self.db = TaskManagerDatabase(db_path)
-        self.pool = ProcessPoolExecutor(max_workers=max_processes)
+        self.pool = Pool(maxtasksperchild=1, processes=max_processes)
         self.max_processes = max_processes
         manager = Manager()
         self.current_tasks = manager.list()
@@ -41,21 +40,28 @@ class TaskManager:
                 print("pooled " + task.url)
                 self.current_tasks.append(task)
 
-                self.pool.submit(
+                self.pool.apply_async(
                     TaskManager.run_task,
-                    task, self.db_path, self.current_tasks
-                ).add_done_callback(TaskManager.task_complete)
+                    args=(task, self.db_path, self.current_tasks),
+                    callback=TaskManager.task_complete,
+                    error_callback=TaskManager.task_error
+                )
 
     @staticmethod
     def run_task(task, db_path, current_tasks):
+
+        # import gc
+        # gc.set_debug(gc.DEBUG_LEAK)
+
         result = TaskResult()
         result.start_time = datetime.utcnow()
         result.website_id = task.website_id
 
         print("Starting task " + task.url)
 
-        crawler = RemoteDirectoryCrawler(task.url, 10)
+        crawler = RemoteDirectoryCrawler(task.url, 20)
         crawl_result = crawler.crawl_directory("./crawled/" + str(task.website_id) + ".json")
+        del crawler
 
         result.file_count = crawl_result.file_count
         result.status_code = crawl_result.status_code
@@ -71,10 +77,15 @@ class TaskManager:
         return result, db_path, current_tasks
 
     @staticmethod
+    def task_error(result):
+        print("TASK ERROR")
+        raise result
+
+    @staticmethod
     def task_complete(result):
 
         try:
-            task_result, db_path, current_tasks = result.result()
+            task_result, db_path, current_tasks = result
         except Exception as e:
             print("Exception during task " + str(e))
             return
@@ -91,4 +102,6 @@ class TaskManager:
         for i, task in enumerate(current_tasks):
             if task.website_id == task_result.website_id:
                 del current_tasks[i]
+
+
 

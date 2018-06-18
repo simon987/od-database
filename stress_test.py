@@ -1,5 +1,6 @@
 import os
 import json
+import shutil
 import sys
 from search.search import ElasticSearchEngine
 from concurrent.futures import ThreadPoolExecutor
@@ -80,7 +81,18 @@ def random_searches(count=10000000, max_workers=1000):
     pool.map(search, random.choices(terms, k=count))
 
 
+def make_wide_filesystem(count=100000):
+
+    shutil.rmtree("stress_test")
+    os.mkdir("stress_test")
+    for _ in range(count):
+        new_path = "stress_test/" + random.choice(terms)
+        if not os.path.exists(new_path):
+            os.mkdir(new_path)
+
+
 # dump_local_filesystem("/mnt/")
 # index_file_list("random_dump.json", 1000)
 # random_searches(100000)
 # dump_random_files(20000 * 100000)
+make_wide_filesystem(10000)

@@ -10,7 +10,6 @@ humanfriendly
 apscheduler
 bcrypt
 ftputil
-lxml
 elasticsearch
 python-dateutil
 flask_httpauth
