@@ -1,4 +1,4 @@
-from urllib.parse import unquote
+from urllib.parse import unquote, urljoin
 import os
 from html.parser import HTMLParser
 from itertools import repeat
@@ -177,7 +177,8 @@ class HttpDirectory(RemoteDirectory):
             return True
 
         # Ignore external links
-        if link.href.startswith("http") and not link.href.startswith(base_url):
+        full_url = os.path.join(base_url, link.href)
+        if not full_url.startswith(base_url):
             return True
 
     def close(self):

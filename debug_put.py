@@ -4,9 +4,9 @@ import json
 
 payload = json.dumps({
     "website_id": 123,
-    # "url": "http://alphamediazone.com/data/Movies1/",
+    "url": "http://liminaire.fr/TEXTES/",
     # "url": "http://localhost:8000/",
-    "url": "http://ubuntu.mirrorservice.org/",
+    # "url": "http://ubuntu.mirrorservice.org/",
     "priority": 2,
     "callback_type": "",
     "callback_args": "{}"
