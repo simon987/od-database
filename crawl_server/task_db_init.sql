@@ -13,7 +13,7 @@ CREATE TABLE TaskResult (
   website_id INT,
   status_code TEXT,
   file_count INT,
-  start_time INT,
-  end_time INT,
-  indexed_time INT DEFAULT NULL
+  start_time TIMESTAMP,
+  end_time TIMESTAMP,
+  indexed_time TIMESTAMP DEFAULT NULL
 );

@@ -32,6 +32,9 @@ class TaskManager:
     def get_non_indexed_results(self):
         return self.db.get_non_indexed_results()
 
+    def get_all_results(self):
+        return self.db.get_all_results()
+
     def execute_queued_task(self):
 
         if len(self.current_tasks) <= self.max_processes:

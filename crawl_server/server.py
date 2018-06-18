@@ -72,5 +72,13 @@ def get_file_list(website_id):
         return abort(404)
 
 
+@app.route("/task/logs/")
+@auth.login_required
+def get_task_logs():
+
+    json_str = json.dumps([result.to_json() for result in tm.get_all_results()])
+    return json_str
+
+
 if __name__ == "__main__":
     app.run(port=5001, host="0.0.0.0")

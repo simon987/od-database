@@ -70,6 +70,16 @@ class CrawlServer:
         except ConnectionError:
             return ""
 
+    def fetch_crawl_logs(self):
+
+        try:
+            r = requests.get(self.url + "/task/logs/", headers=CrawlServer.headers)
+            return [
+                TaskResult(r["status_code"], r["file_count"], r["start_time"], r["end_time"], r["website_id"], r["indexed_time"])
+                for r in json.loads(r.text)]
+        except ConnectionError:
+            return []
+
 
 class TaskDispatcher:
 
@@ -118,5 +128,14 @@ class TaskDispatcher:
             current_tasks.extend(server.fetch_current_tasks())
 
         return current_tasks
+
+    def get_task_logs_by_server(self) -> dict:
+
+        task_logs = dict()
+
+        for server in self.crawl_servers:
+            task_logs[server.url] = server.fetch_crawl_logs()
+
+        return task_logs
 
 

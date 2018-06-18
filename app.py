@@ -26,9 +26,15 @@ taskDispatcher = TaskDispatcher()
 searchEngine = ElasticSearchEngine("od-database")
 
 
-@app.template_filter("datetime_format")
+@app.template_filter("date_format")
 def datetime_format(value, format='%Y-%m-%d'):
     return time.strftime(format, time.gmtime(value))
+
+
+@app.template_filter("datetime_format")
+def datetime_format(value, format='%Y-%m-%d %H:%M:%S'):
+    return time.strftime(format, time.gmtime(value))
+
 
 
 @app.route("/dl")
@@ -289,6 +295,18 @@ def admin_del_token():
         db.delete_token(token)
         flash("Deleted API token", "success")
         return redirect("/dashboard")
+    else:
+        return abort(403)
+
+
+@app.route("/logs", methods=["GET"])
+def admin_crawl_logs():
+    if "username" in session:
+
+        results = taskDispatcher.get_task_logs_by_server()
+        print(results)
+
+        return render_template("crawl_logs.html", logs=results)
     else:
         return abort(403)
 
