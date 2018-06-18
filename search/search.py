@@ -75,7 +75,8 @@ class ElasticSearchEngine(SearchEngine):
         # Mappings
         self.es.indices.put_mapping(body={"properties": {
             "path": {"analyzer": "standard", "type": "text"},
-            "name": {"analyzer": "standard", "type": "text", "fields": {"nGram": {"type": "text", "analyzer": "my_nGram"}}},
+            "name": {"analyzer": "standard", "type": "text",
+                     "fields": {"nGram": {"type": "text", "analyzer": "my_nGram"}}},
             "mtime": {"type": "date", "format": "epoch_millis"},
             "size": {"type": "long"},
             "website_id": {"type": "integer"},
@@ -214,21 +215,70 @@ class ElasticSearchEngine(SearchEngine):
 
     def get_global_stats(self):
 
-        result = self.es.search(body={
+        # TODO: mem cache this
+
+        size_per_ext = self.es.search(body={
             "query": {
-                "match_all": {}
+                "bool": {
+                    "must_not": {
+                        "term": {"size": -1}
+                    }
+                }
             },
             "aggs": {
-                "total_size": {
-                    "sum": {"field": "size"}
+                "ext_group": {
+                    "terms": {
+                        "field": "ext",
+                        "size": 30
+                    },
+                    "aggs": {
+                        "size": {
+                            "sum": {
+                                "field": "size"
+                            }
+                        }
+                    }
                 }
             },
             "size": 0
         }, index=self.index_name)
 
+        total_stats = self.es.search(body={
+            "query": {
+                "bool": {
+                    "must_not": {
+                        "term": {"size": -1}
+                    }
+                }
+            },
+            "aggs": {
+                "file_stats": {
+                    "extended_stats": {
+                        "field": "size",
+                        "sigma": 1
+                    }
+                }
+            },
+            "size": 0
+        }, index=self.index_name)
+
+        es_stats = self.es.indices.stats(self.index_name)
+        print(es_stats)
+
         stats = dict()
-        stats["file_count"] = result["hits"]["total"]
-        stats["file_size"] = result["aggregations"]["total_size"]["value"]
+        stats["es_index_size"] = es_stats["indices"][self.index_name]["total"]["store"]["size_in_bytes"]
+        stats["es_search_count"] = es_stats["indices"][self.index_name]["total"]["search"]["query_total"]
+        stats["es_search_time"] = es_stats["indices"][self.index_name]["total"]["search"]["query_time_in_millis"]
+        stats["es_search_time_avg"] = stats["es_search_time"] / (stats["es_search_count"] if stats["es_search_count"] != 0 else 1)
+        stats["total_count"] = es_stats["indices"][self.index_name]["total"]["indexing"]["index_total"]
+        stats["total_count_nonzero"] = total_stats["hits"]["total"]
+        stats["total_size"] = total_stats["aggregations"]["file_stats"]["sum"]
+        stats["size_avg"] = total_stats["aggregations"]["file_stats"]["avg"]
+        stats["size_std_deviation"] = total_stats["aggregations"]["file_stats"]["std_deviation"]
+        stats["size_std_deviation_bounds"] = total_stats["aggregations"]["file_stats"]["std_deviation_bounds"]
+        stats["size_variance"] = total_stats["aggregations"]["file_stats"]["variance"]
+        stats["ext_stats"] = [(b["size"]["value"], b["doc_count"], b["key"])
+                              for b in size_per_ext["aggregations"]["ext_group"]["buckets"]]
+        stats["base_url"] = "entire database"
 
         return stats
-

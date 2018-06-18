@@ -1,20 +1,4 @@
-var xhttp = new XMLHttpRequest();
 
-xhttp.onreadystatechange = function() {
-    if (this.readyState === 4 && this.status === 200) {
-
-        console.log("Received: " + this.responseText);
-
-        var rData = this.responseText;
-
-        drawChart(JSON.parse(rData));
-        fillTable(JSON.parse(rData));
-
-        document.getElementById("loading-text").innerHTML = "";
-    }
-};
-xhttp.open("GET", "./json_chart", true);
-xhttp.send();
 
 function drawChart(rData) {
 
@@ -70,7 +54,7 @@ function drawChart(rData) {
     });
 }
 
-function fillTable(rData) {
+function fillWebsiteTable(rData) {
 
     document.getElementById("baseUrl").innerHTML = rData["base_url"];
     document.getElementById("fileCount").innerHTML = rData["total_count"];
@@ -79,13 +63,26 @@ function fillTable(rData) {
 
 }
 
+function fillDatabaseTable(rData) {
+    document.getElementById("esIndexSize") .innerHTML = humanFileSize(rData["es_index_size"]);
+    document.getElementById("esSearchCount").innerHTML = rData["es_search_count"];
+    document.getElementById("esSearchTime").innerHTML = rData["es_search_time"] + "ms";
+    document.getElementById("esSearchTimeAvg").innerHTML = rData["es_search_time_avg"].toFixed(2) + "ms";
+    document.getElementById("totalCount").innerHTML = rData["total_count"];
+    document.getElementById("totalCountNonzero").innerText = rData["total_count_nonzero"];
+    document.getElementById("totalSize").innerHTML = humanFileSize(rData["total_size"]);
+    document.getElementById("sizeAvg").innerHTML = humanFileSize(rData["size_avg"]);
+    document.getElementById("sizeStdDeviation").innerHTML = humanFileSize(rData["size_std_deviation"]);
+    document.getElementById("sizeStdDeviationBounds").innerHTML = "[" + humanFileSize(rData["size_std_deviation_bounds"]["lower"]) +
+        ", " + humanFileSize(rData["size_std_deviation_bounds"]["upper"]) + "]";
+    document.getElementById("sizeVariance").innerHTML = humanFileSize(rData["size_variance"]);
+}
 
 function isRelevant(rData, ext) {
 
-    // console.log("Checking + " + rData["ext_stats"][ext][2]);
-    // console.log("total + " + rData["total_size"]);
-    // console.log("size + " + rData["ext_stats"][ext][0]);
-    // console.log("min + " + 0.03 * rData["total_count"]);
+    // if (ext[2] === "") {
+    //     return false;
+    // }
 
     if(rData["total_size"] < 100000) {
         return rData["ext_stats"][ext][1] > 0.03 * rData["total_count"]
@@ -113,7 +110,7 @@ function getRandomColor() {
  */
 function humanFileSize(bytes) {
 
-    if(bytes <= 0) {
+    if(bytes === 0) {
         return "? B"
     }
 

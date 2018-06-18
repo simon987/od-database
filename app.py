@@ -36,7 +36,6 @@ def datetime_format(value, format='%Y-%m-%d %H:%M:%S'):
     return time.strftime(format, time.gmtime(value))
 
 
-
 @app.route("/dl")
 def downloads():
 
@@ -47,6 +46,18 @@ def downloads():
         export_file_stats = None
 
     return render_template("downloads.html", export_file_stats=export_file_stats)
+
+
+@app.route("/stats")
+def stats_page():
+    crawl_server_stats = taskDispatcher.get_stats_by_server()
+    return render_template("stats.html", crawl_server_stats=crawl_server_stats)
+
+
+@app.route("/stats/json_chart")
+def stats_json():
+    stats = searchEngine.get_global_stats()
+    return Response(json.dumps(stats), mimetype="application/json")
 
 
 @app.route("/get_export")
@@ -78,7 +89,7 @@ def website_json_chart(website_id):
         stats = searchEngine.get_stats(website_id)
         stats["base_url"] = website.url
         stats["report_time"] = website.last_modified
-        return json.dumps(stats)
+        return Response(json.dumps(stats), mimetype="application/json")
     else:
         abort(404)
 

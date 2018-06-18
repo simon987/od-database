@@ -103,5 +103,20 @@ class TaskManager:
             if task.website_id == task_result.website_id:
                 del current_tasks[i]
 
+    def get_stats(self):
+
+        task_results = self.get_all_results()
+        stats = dict()
+
+        if len(task_results) > 0:
+            stats["task_count"] = len(task_results)
+            stats["task_time"] = sum((task.end_time - task.start_time) for task in task_results)
+            stats["task_time_avg"] = stats["task_time"] / len(task_results)
+            stats["task_file_count"] = sum(task.file_count for task in task_results)
+            stats["task_file_count_avg"] = stats["task_file_count"] / len(task_results)
+
+        return stats
+
+
 
 

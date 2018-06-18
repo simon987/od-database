@@ -4,7 +4,7 @@ import json
 
 payload = json.dumps({
     "website_id": 123,
-    "url": "https://computerarchive.org/files/computer/",
+    "url": "ftp://132.249.213.137",
     # "url": "http://localhost:8000/",
     # "url": "http://ubuntu.mirrorservice.org/",
     "priority": 2,

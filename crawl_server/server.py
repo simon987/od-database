@@ -50,7 +50,7 @@ def task_put():
 @auth.login_required
 def get_completed_tasks():
     json_str = json.dumps([result.to_json() for result in tm.get_non_indexed_results()])
-    return json_str
+    return Response(json_str, mimetype="application/json")
 
 
 @app.route("/task/current", methods=["GET"])
@@ -77,7 +77,14 @@ def get_file_list(website_id):
 def get_task_logs():
 
     json_str = json.dumps([result.to_json() for result in tm.get_all_results()])
-    return json_str
+    return Response(json_str, mimetype="application/json")
+
+
+@app.route("/stats/")
+@auth.login_required
+def get_stats():
+    json_str = json.dumps(tm.get_stats())
+    return Response(json_str, mimetype="application/json")
 
 
 if __name__ == "__main__":

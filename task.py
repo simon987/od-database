@@ -14,8 +14,9 @@ class CrawlServer:
         "Authorization": "Token " + config.CRAWL_SERVER_TOKEN,
     }
 
-    def __init__(self, url):
+    def __init__(self, url, name):
         self.url = url
+        self.name = name
 
     def queue_task(self, task: Task) -> bool:
 
@@ -80,6 +81,13 @@ class CrawlServer:
         except ConnectionError:
             return []
 
+    def fetch_stats(self):
+        try:
+            r = requests.get(self.url + "/stats/", headers=CrawlServer.headers)
+            return json.loads(r.text)
+        except ConnectionError:
+            return {}
+
 
 class TaskDispatcher:
 
@@ -92,7 +100,7 @@ class TaskDispatcher:
 
         # TODO load from config
         self.crawl_servers = [
-            CrawlServer("http://localhost:5001"),
+            CrawlServer("http://localhost:5001", "OVH_VPS_SSD2 #1"),
         ]
 
     def check_completed_tasks(self):
@@ -134,8 +142,17 @@ class TaskDispatcher:
         task_logs = dict()
 
         for server in self.crawl_servers:
-            task_logs[server.url] = server.fetch_crawl_logs()
+            task_logs[server.name] = server.fetch_crawl_logs()
 
         return task_logs
+
+    def get_stats_by_server(self) -> dict:
+
+        stats = dict()
+
+        for server in self.crawl_servers:
+            stats[server.name] = server.fetch_stats()
+
+        return stats
 
 

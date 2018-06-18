@@ -43,4 +43,21 @@
             </div>
         </div>
     </div>
+    <script>
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+
+                var rData = this.responseText;
+
+                drawChart(JSON.parse(rData));
+                fillWebsiteTable(JSON.parse(rData));
+
+                document.getElementById("loading-text").innerHTML = "";
+            }
+        };
+        xhttp.open("GET", "./json_chart", true);
+        xhttp.send();
+    </script>
 {% endblock body %}

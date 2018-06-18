@@ -1,0 +1,134 @@
+{% extends "layout.html" %}
+{% set title = "Stats - OD-Database" %}
+{% set current_page = "stats" %}
+
+{% block body %}
+    <div class="container">
+
+        <div class="card">
+            <div class="card-header">Statistics</div>
+            <div class="card-body">
+
+                <div id="chart-wrapper" style="margin-bottom: 1em">
+                    <p id="loading-text">Calculating...</p>
+                    <canvas id="typesChart"></canvas>
+                    <script src="/static/js/Chart.min.js"></script>
+                    <script src="/static/js/report.js"></script>
+                </div>
+
+                <h4>Database stats</h4>
+                <table class="table table-striped">
+                    <tbody>
+                    <tr>
+                        <th>Database index size</th>
+                        <td id="esIndexSize"></td>
+                    </tr>
+                    <tr>
+                        <th>Query count</th>
+                        <td id="esSearchCount"></td>
+                    </tr>
+                    <tr>
+                        <th>Total query time</th>
+                        <td id="esSearchTime"></td>
+                    </tr>
+                    <tr>
+                        <th>Average time per query</th>
+                        <td id="esSearchTimeAvg"></td>
+                    </tr>
+                    <tr>
+                        <th>Total file count</th>
+                        <td id="totalCount"></td>
+                    </tr>
+                    <tr>
+                        <th>File count with known size</th>
+                        <td id="totalCountNonzero"></td>
+                    </tr>
+                    <tr>
+                        <th>Size total</th>
+                        <td id="totalSize"></td>
+                    </tr>
+                    <tr>
+                        <th>Size average</th>
+                        <td id="sizeAvg"></td>
+                    </tr>
+                    <tr>
+                        <th>Size standard deviation</th>
+                        <td id="sizeStdDeviation"></td>
+                    </tr>
+                    <tr>
+                        <th>Size standard deviation bounds (σ = 1)</th>
+                        <td id="sizeStdDeviationBounds"></td>
+                    </tr>
+                    <tr>
+                        <th>Size variance</th>
+                        <td id="sizeVariance"></td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <h4>Crawl server stats</h4>
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        {% for server in crawl_server_stats %}
+                            <th>{{ server }}</th>
+                        {% endfor %}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <th>Completed tasks</th>
+                        {% for server in crawl_server_stats %}
+                            <td>{{ crawl_server_stats[server].task_count }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <th>Crawl time</th>
+                        {% for server in crawl_server_stats %}
+                            <td>{{ crawl_server_stats[server].task_time|round(2) }}s</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <th>Crawl time average</th>
+                        {% for server in crawl_server_stats %}
+                            <td>{{ crawl_server_stats[server].task_time_avg|round(2) }}s per task</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <th>File crawled</th>
+                        {% for server in crawl_server_stats %}
+                            <td>{{ crawl_server_stats[server].task_file_count }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <th>File crawled average</th>
+                        {% for server in crawl_server_stats %}
+                            <td>{{ crawl_server_stats[server].task_file_count_avg | round(2) }} per task</td>
+                        {% endfor %}
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+
+                let rData = JSON.parse(this.responseText);
+
+                drawChart(rData);
+                fillDatabaseTable(rData);
+
+                document.getElementById("loading-text").innerHTML = "";
+            }
+        };
+        xhttp.open("GET", "/stats/json_chart", true);
+        xhttp.send();
+    </script>
+{% endblock body %}
