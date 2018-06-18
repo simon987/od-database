@@ -1,5 +1,4 @@
-from urllib.parse import urljoin, unquote, quote
-
+from urllib.parse import unquote
 import os
 from html.parser import HTMLParser
 from itertools import repeat
@@ -104,7 +103,7 @@ class HttpDirectory(RemoteDirectory):
 
     def request_files(self, urls_to_request: list) -> list:
 
-        if len(urls_to_request) > 30:
+        if len(urls_to_request) > 3000000:
             # Many urls, use multi-threaded solution
             pool = ThreadPool(processes=10)
             files = pool.starmap(HttpDirectory._request_file, zip(repeat(self), urls_to_request))

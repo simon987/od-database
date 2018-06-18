@@ -120,7 +120,6 @@ class RemoteDirectoryCrawler:
         files_q.put(None)
         file_writer_thread.join()
 
-
         return CrawlResult(files_written[0], "success")
 
     def _process_listings(self, url: str, in_q: Queue, files_q: Queue):
