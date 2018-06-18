@@ -53,9 +53,6 @@ class TaskManager:
     @staticmethod
     def run_task(task, db_path, current_tasks):
 
-        # import gc
-        # gc.set_debug(gc.DEBUG_LEAK)
-
         result = TaskResult()
         result.start_time = datetime.utcnow()
         result.website_id = task.website_id

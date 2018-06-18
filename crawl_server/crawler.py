@@ -80,8 +80,6 @@ class RemoteDirectoryCrawler:
 
     def crawl_directory(self, out_file: str) -> CrawlResult:
 
-        import gc
-        gc.set_debug(gc.DEBUG_LEAK)
         try:
             directory = RemoteDirectoryFactory.get_directory(self.url)
             root_listing = directory.list_dir("")
