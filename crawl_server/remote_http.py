@@ -164,7 +164,7 @@ class HttpDirectory(RemoteDirectory):
         parser = HTMLAnchorParser()
 
         for chunk in body:
-            parser.feed(chunk.decode("utf-8"))
+            parser.feed(chunk.decode("utf-8", errors="ignore"))
             for anchor in parser.anchors:
                 yield anchor
 
