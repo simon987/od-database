@@ -151,7 +151,7 @@ class HttpDirectory(RemoteDirectory):
                 try:
                     r = self.session.get(url, stream=True, timeout=40)
                     for chunk in r.iter_content(chunk_size=4096):
-                        yield chunk.decode(r.encoding, errors="ignore")
+                        yield chunk.decode(r.encoding if r.encoding else "utf-8", errors="ignore")
                     r.close()
                     del r
                     break
