@@ -10,6 +10,9 @@
 .list-group-item {
     padding-bottom: 0.3rem;
 }
+.badge {
+    padding-bottom: 0;
+}
 .table td {
     padding: 2px 0;
 }
@@ -78,6 +81,100 @@
     100% {
         background-color: rgba(255, 255, 255, 0.6); } }
 
-.hl {
-    background: #fff217;
+mark {
+    background-color: rgba(255, 255, 0, 0.4);
+    border-radius: 2px;
+    padding: 1px;
+}
+body {
+    color: #BBBBBB;
+    font-family: Lato,'Helvetica Neue',Arial,Helvetica,sans-serif;
+    background-image: url(/static/img/bg.png);
+}
+
+.card {
+    background-color: #36393e;
+    border: 3px double #262626;
+}
+
+.navbar {
+    background: #36393e;
+    font-family: Lato,'Helvetica Neue',Arial,Helvetica,sans-serif;
+}
+
+.navbar-brand {
+    border: none;
+}
+
+.nav-link {
+    color: #616161;
+    border-bottom: 2px solid #6c6c6c;
+}
+
+.active {
+    border-color: #b3b3b3;
+    color: #E6E6E6;
+}
+
+.nav-link:hover {
+    color: #c7c7c7;
+}
+
+.jumbotron {
+    background: #36393e;
+}
+
+a {
+    color: #fff;
+    border-bottom: 1px dotted #e0e0e0;
+}
+
+a:hover {
+    color:#ddd;
+    text-decoration: none;
+}
+
+.table a {
+    border: none;
+}
+
+.table th, .table td {
+    border-top: 1px solid #666a6e;
+}
+
+.table thead th {
+    border-bottom: 2px solid #999da1;
+}
+.form-control {
+    background-color: #2f3136;
+    color: inherit;
+    border: 1px solid #282b30;
+}
+
+.form-control:focus {
+    background-color: #2f3136;
+    border-color: #80bdff;
+    color: inherit;
+}
+
+.nav-tabs .nav-link {
+    border-color: transparent;
+}
+
+.nav-tabs .nav-link.active {
+    border-color: #8e9296 #8e9296;
+    background-color: transparent;
+    color: #E6E6E6;
+}
+
+.nav-tabs .nav-link:hover {
+    border-color: #e9ecef #e9ecef transparent #e9ecef;
+}
+
+.card-header-tabs {
+    border-bottom: 1px solid #a1a5a9;
+}
+
+* {
+    outline: none;
 }

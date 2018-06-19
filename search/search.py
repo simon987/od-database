@@ -147,8 +147,9 @@ class ElasticSearchEngine(SearchEngine):
             "sort": sort_by,
             "highlight": {
                 "fields": {
-                    "name": {"pre_tags": ["<span class='hl'>"], "post_tags": ["</span>"]},
-                    "path": {"pre_tags": ["<span class='hl'>"], "post_tags": ["</span>"]}
+                    "name": {"pre_tags": ["<mark>"], "post_tags": ["</mark>"]},
+                    "name.nGram": {"pre_tags": ["<mark>"], "post_tags": ["</mark>"]},
+                    "path": {"pre_tags": ["<mark>"], "post_tags": ["</mark>"]}
                 }
             },
             "size": per_page, "from": page * per_page}, index=self.index_name)

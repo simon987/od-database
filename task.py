@@ -151,7 +151,9 @@ class TaskDispatcher:
         stats = dict()
 
         for server in self.crawl_servers:
-            stats[server.name] = server.fetch_stats()
+            server_stats = server.fetch_stats()
+            if server_stats:
+                stats[server.name] = server_stats
 
         return stats
 

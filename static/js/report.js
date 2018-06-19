@@ -1,5 +1,3 @@
-
-
 function drawChart(rData) {
 
     var dataSetSize = [];
@@ -10,7 +8,7 @@ function drawChart(rData) {
     var otherSize = 0;
     var otherCount = 0;
 
-    for(var ext in rData["ext_stats"]) {
+    for (var ext in rData["ext_stats"]) {
         //Ignore file sizes below 0.5%
         if (!isRelevant(rData, ext)) {
 
@@ -25,7 +23,7 @@ function drawChart(rData) {
         }
     }
 
-    if(otherCount !== 0) {
+    if (otherCount !== 0) {
         colors.push(getRandomColor());
         labels.push("other x" + otherCount + " (" + humanFileSize(otherSize) + ")");
         dataSetSize.push(otherSize);
@@ -34,21 +32,31 @@ function drawChart(rData) {
 
     var ctx = document.getElementById('typesChart').getContext('2d');
 
-    var fileTypePieChart = new Chart(ctx,{
+    var fileTypePieChart = new Chart(ctx, {
         type: 'pie',
         data: {
             datasets: [{
                 data: rData["total_size"] < 100000 ? dataSetCount : dataSetSize,
-                backgroundColor: colors
+                backgroundColor: colors,
+                borderWidth: 1
             }],
-
             labels: labels
 
         },
         options: {
             title: {
                 display: true,
-                text: "File types for " + rData["base_url"] + " - " + humanFileSize(rData["total_size"])
+                text: "File types for " + rData["base_url"] + " - " + humanFileSize(rData["total_size"]),
+                fontColor: "#c6c6c6",
+                fontSize: 16,
+                fontFamily: "Lato,'Helvetica Neue',Arial,Helvetica,sans-serif"
+            },
+            legend: {
+                labels: {
+                    fontColor: "#bbbbbb",
+                    fontFamily: "Lato,'Helvetica Neue',Arial,Helvetica,sans-serif",
+                    boxWidth: 20,
+                }
             }
         }
     });
@@ -64,7 +72,7 @@ function fillWebsiteTable(rData) {
 }
 
 function fillDatabaseTable(rData) {
-    document.getElementById("esIndexSize") .innerHTML = humanFileSize(rData["es_index_size"]);
+    document.getElementById("esIndexSize").innerHTML = humanFileSize(rData["es_index_size"]);
     document.getElementById("esSearchCount").innerHTML = rData["es_search_count"];
     document.getElementById("esSearchTime").innerHTML = rData["es_search_time"] + "ms";
     document.getElementById("esSearchTimeAvg").innerHTML = rData["es_search_time_avg"].toFixed(2) + "ms";
@@ -84,7 +92,7 @@ function isRelevant(rData, ext) {
     //     return false;
     // }
 
-    if(rData["total_size"] < 100000) {
+    if (rData["total_size"] < 100000) {
         return rData["ext_stats"][ext][1] > 0.03 * rData["total_count"]
     } else {
         return rData["ext_stats"][ext][0] > 0.005 * rData["total_size"]
@@ -110,20 +118,20 @@ function getRandomColor() {
  */
 function humanFileSize(bytes) {
 
-    if(bytes === 0) {
+    if (bytes === 0) {
         return "? B"
     }
 
     var thresh = 1000;
-    if(Math.abs(bytes) < thresh) {
+    if (Math.abs(bytes) < thresh) {
         return bytes + ' B';
     }
-    var units = ['kB','MB','GB','TB','PB','EB','ZB','YB'];
+    var units = ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
     var u = -1;
     do {
         bytes /= thresh;
         ++u;
-    } while(Math.abs(bytes) >= thresh && u < units.length - 1);
+    } while (Math.abs(bytes) >= thresh && u < units.length - 1);
 
     return bytes.toFixed(1) + ' ' + units[u];
 }
