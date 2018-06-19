@@ -218,6 +218,18 @@ class Database:
 
         return page
 
+    def join_website_on_scan(self, docs: list):
+
+        websites = self.get_all_websites()
+
+        for doc in docs:
+            if doc["_source"]["website_id"] in websites:
+                doc["_source"]["website_url"] = websites[doc["_source"]["website_id"]]
+            else:
+                doc["_source"]["website_url"] = "[DELETED]"
+
+            yield doc
+
 
 
 
