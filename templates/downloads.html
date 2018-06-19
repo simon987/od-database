@@ -8,7 +8,7 @@
             <div class="card-header">Downloads</div>
             <div class="card-body">
 
-                <p>The entire database is exported to CSV every ±30min</p>
+                <p>The entire database is exported to CSV regularly</p>
 
                 <table class="table table-striped">
 
@@ -25,7 +25,7 @@
                     <tr>
                         <td><a href="/get_export">out.csv.xz</a></td>
                         <td>{{ export_file_stats.st_size |filesizeformat }}</td>
-                        <td>{{ export_file_stats.st_mtime|date_format }}</td>
+                        <td>{{ export_file_stats.st_mtime|datetime_format }}</td>
                     </tr>
                     {% endif %}
                     </tbody>

@@ -12,7 +12,7 @@ def export(outfile="out.csv"):
     docs = es.stream_all_docs()
     docs_with_website = db.join_website_on_scan(docs)
 
-    print("Connected")
+    print("Connected, writing to csv")
 
     with open(outfile + ".temp", "w") as out:
 
@@ -29,7 +29,7 @@ def export(outfile="out.csv"):
                                  doc["_source"]["mtime"]])
     print("Wrote to csv, compressing with xz")
 
-    os.system("xz " + outfile + ".temp")
+    os.system("xz -0 " + outfile + ".temp")
     os.system("mv " + outfile + ".temp.xz " + outfile + ".xz")
     print("Compressed to " + str(os.path.getsize(outfile + ".xz")) + " bytes")
 
