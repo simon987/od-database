@@ -62,7 +62,11 @@ class HttpDirectory(RemoteDirectory):
         "?C=N;O=D",
         "?C=M;O=A",
         "?C=S;O=A",
-        "?C=D;O=A"
+        "?C=D;O=A",
+        "?MA",
+        "?SA",
+        "?DA",
+        "?ND"
     )
     MAX_RETRIES = 3
 
@@ -75,7 +79,7 @@ class HttpDirectory(RemoteDirectory):
 
     def list_dir(self, path):
 
-        path_url = self.base_url + path.strip("/") + "/"
+        path_url = urljoin(self.base_url, path, "")
         body = self._stream_body(path_url)
         if not body:
             return None
@@ -96,8 +100,7 @@ class HttpDirectory(RemoteDirectory):
                     is_dir=True
                 )
             else:
-                pass
-                urls_to_request.append(path_url + anchor.href)
+                urls_to_request.append(urljoin(path_url, anchor.href))
 
         for file in self.request_files(urls_to_request):
             yield file
@@ -181,7 +184,7 @@ class HttpDirectory(RemoteDirectory):
             return True
 
         # Ignore external links
-        full_url = os.path.join(base_url, link.href)
+        full_url = urljoin(base_url, link.href)
         if not full_url.startswith(base_url):
             return True
 
