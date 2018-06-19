@@ -57,21 +57,24 @@
 
                                 <tr>
                                     <td>
+                                        {% set category = get_mime(src["ext"]) %}
+                                        {% set url = src["website_url"] + src["path"] + "/" + src["name"] + ("." if src["ext"] != "" else "") + src["ext"] %}
+                                        {# Preview #}
+                                        {% if category == "image" %}
+                                            <i class="fas fa-eye prev-icon" data-toggle="popover" tabindex="-1"
+                                               data-content='<img class="prev-img" src="{{ url }}">'></i>
+                                        {% endif %}
                                         {# File name & link #}
-                                        <a href="{{ src["website_url"] + src["path"] + "/" + src["name"] + ("." if src["ext"] != "" else "") + src["ext"] }}" title="{{ src["name"] + src["ext"] }}">
-                                            {{ hl_name |safe }}{{ ("." if src["ext"] != "" else "") + src["ext"] }}
-                                        </a>
+                                        <a href="{{ url }}"><span>{{ hl_name |safe }}{{ ("." if src["ext"] != "" else "") + src["ext"] }}</span></a>
                                         {# File type badge #}
-                                        {% set mime = get_mime(src["ext"]) %}
-                                        {% if mime %}
-                                            <span class="badge badge-pill {{ get_color(mime) }}">
+                                        {% if category %}
+                                            <span class="badge badge-pill {{ get_color(category ) }}">
                                                 {{ src["ext"] }}
                                             </span>
                                         {% endif %}
                                         {# File path #}
                                         <div class="text-muted" title="{{ path }}" style="font-size: 10px;">
-                                            <a style="color: #6c757d" title="See files from this website"
-                                               href="/website/{{ src["website_id"] }}">{{ src["website_url"] }}</a>{{ hl_path|safe }}
+                                            <a title="See files from this website" href="/website/{{ src["website_id"] }}">{{ src["website_url"] }}</a>{{ hl_path|safe }}
                                         </div>
                                     </td>
                                     {# File size & date #}
@@ -100,6 +103,16 @@
                 <div class="card-body">No results</div>
             </div>
         {% endif %}
+
+
+        <script>
+            $('[data-toggle="popover"]').popover({
+                trigger: "focus",
+                delay: {"show": 0, "hide": 100},
+                placement: "right",
+                html: true
+            });
+        </script>
     </div>
 
 {% endblock body %}

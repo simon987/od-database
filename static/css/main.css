@@ -51,6 +51,15 @@
     -o-animation: vimCaret 1s linear infinite;
     animation: vimCaret 1s linear infinite; }
 
+.prev-img {
+    width: 100%;
+    max-width: 250px;
+    height: 100%;
+}
+
+.prev-icon {
+    cursor: pointer;
+}
 @-webkit-keyframes vimCaret {
     0% {
         background-color: transparent; }
