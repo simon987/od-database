@@ -8,7 +8,7 @@ def export(outfile="out.csv"):
 
     print("Export started, connecting to databases...")
     es = ElasticSearchEngine("od-database")
-    db = Database("db.sqlite")
+    db = Database("db.sqlite3")
     docs = es.stream_all_docs()
     docs_with_website = db.join_website_on_scan(docs)
 
