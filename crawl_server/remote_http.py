@@ -177,7 +177,7 @@ class HttpDirectory(RemoteDirectory):
 
     @staticmethod
     def _should_ignore(base_url, link: Anchor):
-        if link.text == "../" or link.href.endswith(HttpDirectory.BLACK_LIST):
+        if link.text == "../" or link.href == "../" or link.href.endswith(HttpDirectory.BLACK_LIST):
             return True
 
         # Ignore external links
