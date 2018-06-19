@@ -19,8 +19,8 @@ function drawSizeHistogram(rData) {
             datasets: [{
                 data: dataSet,
                 borderWidth: 1,
-                strokeColor: "#FFFFFF",
-                backgroundColor: "#FFFFFF"
+                borderColor: "#E94700",
+                backgroundColor: "rgba(233, 71, 0, 0.6)"
             }],
             labels: labels,
             title: "test"
@@ -81,8 +81,8 @@ function drawDateHistogram(rData) {
             datasets: [{
                 data: dataSet,
                 borderWidth: 1,
-                strokeColor: "#FFFFFF",
-                backgroundColor: "#FFFFFF"
+                borderColor: "#E94700",
+                backgroundColor: "rgba(233, 71, 0, 0.6)"
             }],
             labels: labels,
 

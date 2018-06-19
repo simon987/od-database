@@ -310,7 +310,7 @@ class ElasticSearchEngine(SearchEngine):
                 "dates": {
                     "date_histogram": {
                         "field": "mtime",
-                        "interval": "1M",
+                        "interval": "1y",
                         "min_doc_count": 5,
                         "format": "yyyy"
                     }
@@ -320,7 +320,6 @@ class ElasticSearchEngine(SearchEngine):
         }, index=self.index_name)
 
         es_stats = self.es.indices.stats(self.index_name)
-        print(size_and_date_histogram)
 
         stats = dict()
         stats["es_index_size"] = es_stats["indices"][self.index_name]["total"]["store"]["size_in_bytes"]
