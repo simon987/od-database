@@ -72,6 +72,17 @@ def get_file_list(website_id):
         return abort(404)
 
 
+@app.route("/file_list/<int:website_id>/free")
+@auth.login_required
+def free_file_list(website_id):
+    file_name = "./crawled/" + str(website_id) + ".json"
+    if os.path.exists(file_name):
+        os.remove(file_name)
+        return '{"ok": "true"}'
+    else:
+        return abort(404)
+
+
 @app.route("/task/logs/")
 @auth.login_required
 def get_task_logs():

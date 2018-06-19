@@ -5,6 +5,7 @@ import requests
 from requests.exceptions import ConnectionError
 import json
 import config
+from database import Database
 
 
 class CrawlServer:
@@ -71,6 +72,15 @@ class CrawlServer:
         except ConnectionError:
             return ""
 
+    def free_website_files(self, website_id) -> bool:
+
+        try:
+            r = requests.get(self.url + "/file_list/" + str(website_id) + "/free", headers=CrawlServer.headers)
+            return r.status_code == 200
+        except ConnectionError as e:
+            print(e)
+            return False
+
     def fetch_crawl_logs(self):
 
         try:
@@ -97,6 +107,7 @@ class TaskDispatcher:
         scheduler.start()
 
         self.search = ElasticSearchEngine("od-database")
+        self.db = Database("db.sqlite3")
 
         # TODO load from config
         self.crawl_servers = [
@@ -108,9 +119,17 @@ class TaskDispatcher:
         for server in self.crawl_servers:
             for task in server.fetch_completed_tasks():
                 print("Completed task")
+                # All files are overwritten
+                self.search.delete_docs(task.website_id)
                 file_list = server.fetch_website_files(task.website_id)
                 if file_list:
                     self.search.import_json(file_list, task.website_id)
+
+                # Update last_modified date for website
+                self.db.update_website_date_if_exists(task.website_id)
+
+                # File list is safe to delete once indexed
+                server.free_website_files(task.website_id)
 
     def dispatch_task(self, task: Task):
         self._get_available_crawl_server().queue_task(task)

@@ -45,6 +45,14 @@ class Database:
             conn.executescript(init_script)
             conn.commit()
 
+    def update_website_date_if_exists(self, website_id):
+
+        with sqlite3.connect(self.db_path) as conn:
+
+            cursor = conn.cursor()
+            cursor.execute("UPDATE Website SET last_modified=CURRENT_TIMESTAMP WHERE id=?", (website_id, ))
+            conn.commit()
+
     def insert_website(self, website: Website):
 
         with sqlite3.connect(self.db_path) as conn:

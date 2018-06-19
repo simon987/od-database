@@ -91,6 +91,22 @@ class ElasticSearchEngine(SearchEngine):
     def ping(self):
         return self.es.ping()
 
+    def delete_docs(self, website_id):
+
+        try:
+            print("Deleting docs of " + str(website_id))
+            self.es.delete_by_query(body={
+                "query": {
+                    "constant_score": {
+                        "filter": {
+                            "term": {"website_id": website_id}
+                        }
+                    }
+                }
+            }, index=self.index_name)
+        except elasticsearch.exceptions.ConflictError:
+            print("Error: multiple delete tasks at the same time")
+
     def import_json(self, in_lines, website_id: int):
 
         import_every = 5000
@@ -270,7 +286,8 @@ class ElasticSearchEngine(SearchEngine):
         stats["es_index_size"] = es_stats["indices"][self.index_name]["total"]["store"]["size_in_bytes"]
         stats["es_search_count"] = es_stats["indices"][self.index_name]["total"]["search"]["query_total"]
         stats["es_search_time"] = es_stats["indices"][self.index_name]["total"]["search"]["query_time_in_millis"]
-        stats["es_search_time_avg"] = stats["es_search_time"] / (stats["es_search_count"] if stats["es_search_count"] != 0 else 1)
+        stats["es_search_time_avg"] = stats["es_search_time"] / (
+            stats["es_search_count"] if stats["es_search_count"] != 0 else 1)
         stats["total_count"] = es_stats["indices"][self.index_name]["total"]["indexing"]["index_total"]
         stats["total_count_nonzero"] = total_stats["hits"]["total"]
         stats["total_size"] = total_stats["aggregations"]["file_stats"]["sum"]
