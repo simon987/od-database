@@ -1,3 +1,126 @@
+function drawSizeHistogram(rData) {
+
+    let labels = [];
+    let dataSet = [];
+
+    for (let i in rData["sizes_histogram"]) {
+
+        let slice = rData["sizes_histogram"][i];
+        dataSet.push(slice[1]);
+        labels.push("[" + humanFileSize(slice[0]) + ", " + humanFileSize(slice[0] + 10000000) + "]")
+    }
+
+    console.log(dataSet);
+
+    let ctx = document.getElementById('sizeHistogram').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                data: dataSet,
+                borderWidth: 1,
+                strokeColor: "#FFFFFF",
+                backgroundColor: "#FFFFFF"
+            }],
+            labels: labels,
+            title: "test"
+
+        },
+        options: {
+            title: {
+                display: true,
+                text: "Size histogram",
+                fontColor: "#c6c6c6",
+                fontSize: 16,
+                fontFamily: "Lato,'Helvetica Neue',Arial,Helvetica,sans-serif"
+            },
+            legend: {
+                display: false
+            },
+            scales: {
+                yAxes: [
+                    {
+                        id: "count",
+                        type: "logarithmic",
+                        ticks: {
+                            // Include a dollar sign in the ticks
+                            callback: function(value, index, values) {
+
+                                let log10 = Math.log10(value);
+
+                                if (Number.isInteger(log10)) {
+                                    return value;
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    });
+}
+
+function drawDateHistogram(rData) {
+
+    let labels = [];
+    let dataSet = [];
+
+    console.log(rData["dates_histogram"]);
+
+    for (let i in rData["dates_histogram"]) {
+
+        let slice = rData["dates_histogram"][i];
+        dataSet.push(slice[1]);
+        labels.push(slice[0])
+    }
+
+    let ctx = document.getElementById('dateHistogram').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                data: dataSet,
+                borderWidth: 1,
+                strokeColor: "#FFFFFF",
+                backgroundColor: "#FFFFFF"
+            }],
+            labels: labels,
+
+        },
+        options: {
+            title: {
+                display: true,
+                text: "Dates histogram",
+                fontColor: "#c6c6c6",
+                fontSize: 16,
+                fontFamily: "Lato,'Helvetica Neue',Arial,Helvetica,sans-serif"
+            },
+            legend: {
+                display: false
+            },
+            scales: {
+                yAxes: [
+                    {
+                        id: "count",
+                        type: "logarithmic",
+                        ticks: {
+                            // Include a dollar sign in the ticks
+                            callback: function(value, index, values) {
+
+                                let log10 = Math.log10(value);
+
+                                if (Number.isInteger(log10)) {
+                                    return value;
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    });
+}
+
 function drawChart(rData) {
 
     var dataSetSize = [];
@@ -117,10 +240,6 @@ function getRandomColor() {
  * https://stackoverflow.com/questions/10420352
  */
 function humanFileSize(bytes) {
-
-    if (bytes === 0) {
-        return "? B"
-    }
 
     var thresh = 1000;
     if (Math.abs(bytes) < thresh) {

@@ -12,8 +12,12 @@
                 <div id="chart-wrapper" style="margin-bottom: 1em">
                     <p id="loading-text">Calculating...</p>
                     <canvas id="typesChart"></canvas>
-                    <script src="/static/js/Chart.min.js"></script>
-                    <script src="/static/js/report.js"></script>
+                </div>
+                <div id="chart-wrapper" style="margin-bottom: 1em">
+                    <canvas id="sizeHistogram"></canvas>
+                </div>
+                <div id="chart-wrapper" style="margin-bottom: 1em">
+                    <canvas id="dateHistogram"></canvas>
                 </div>
 
                 <h4>Database stats</h4>
@@ -114,6 +118,7 @@
 
     </div>
 
+    <script src="/static/js/report.js"></script>
     <script>
         var xhttp = new XMLHttpRequest();
 
@@ -123,6 +128,8 @@
                 let rData = JSON.parse(this.responseText);
 
                 drawChart(rData);
+                drawSizeHistogram(rData);
+                drawDateHistogram(rData);
                 fillDatabaseTable(rData);
 
                 document.getElementById("loading-text").innerHTML = "";

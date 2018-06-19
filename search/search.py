@@ -77,7 +77,7 @@ class ElasticSearchEngine(SearchEngine):
             "path": {"analyzer": "standard", "type": "text"},
             "name": {"analyzer": "standard", "type": "text",
                      "fields": {"nGram": {"type": "text", "analyzer": "my_nGram"}}},
-            "mtime": {"type": "date", "format": "epoch_millis"},
+            "mtime": {"type": "date", "format": "epoch_second"},
             "size": {"type": "long"},
             "website_id": {"type": "integer"},
             "ext": {"type": "keyword"}
@@ -202,7 +202,7 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
-        })
+        }, index=self.index_name)
 
         stats = dict()
         stats["total_size"] = result["aggregations"]["total_size"]["value"]
@@ -279,8 +279,48 @@ class ElasticSearchEngine(SearchEngine):
             "size": 0
         }, index=self.index_name)
 
+        size_and_date_histogram = self.es.search(body={
+            "query": {
+                "bool": {
+                    "must_not": {
+                        "term": {"size": -1},
+                    },
+                    "filter": [
+                        {"range": {
+                            "mtime": {
+                                "gt": 0  # 1970-01-01
+                            }
+                        }},
+                        {"range": {
+                            "size": {
+                                "gt": 0
+                            }
+                        }}
+                    ]
+                }
+            },
+            "aggs": {
+                "sizes": {
+                    "histogram": {
+                        "field": "size",
+                        "interval": 10000000,  # 10Mb
+                        "min_doc_count": 5
+                    }
+                },
+                "dates": {
+                    "date_histogram": {
+                        "field": "mtime",
+                        "interval": "1M",
+                        "min_doc_count": 5,
+                        "format": "yyyy"
+                    }
+                }
+            },
+            "size": 0
+        }, index=self.index_name)
+
         es_stats = self.es.indices.stats(self.index_name)
-        print(es_stats)
+        print(size_and_date_histogram)
 
         stats = dict()
         stats["es_index_size"] = es_stats["indices"][self.index_name]["total"]["store"]["size_in_bytes"]
@@ -297,6 +337,10 @@ class ElasticSearchEngine(SearchEngine):
         stats["size_variance"] = total_stats["aggregations"]["file_stats"]["variance"]
         stats["ext_stats"] = [(b["size"]["value"], b["doc_count"], b["key"])
                               for b in size_per_ext["aggregations"]["ext_group"]["buckets"]]
+        stats["sizes_histogram"] = [(b["key"], b["doc_count"])
+                                    for b in size_and_date_histogram["aggregations"]["sizes"]["buckets"]]
+        stats["dates_histogram"] = [(b["key_as_string"], b["doc_count"])
+                                    for b in size_and_date_histogram["aggregations"]["dates"]["buckets"]]
         stats["base_url"] = "entire database"
 
         return stats
