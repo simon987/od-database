@@ -8,9 +8,9 @@
         <div class="jumbotron">
             <h1 class="text-monospace" style="font-size: 3.5rem;">OD-Database</h1>
 
-            {% if stats and stats["file_size"] %}
-                <p class="lead">{{ stats["file_count"] }} files totalling
-                    ~{{ stats["file_size"] | filesizeformat }} from {{ stats["website_count"] }} website(s)</p>
+            {% if stats and stats["total_size"] %}
+                <p class="lead">{{ stats["total_count"] }} files totalling
+                    ~{{ stats["total_size"] | filesizeformat }} from {{ stats["website_count"] }} website(s)</p>
             {% endif %}
             {% if current_websites %}
                 <p>Currently indexing <code>{{ current_websites }}</code><span class="vim-caret">&nbsp;</span> </p>
