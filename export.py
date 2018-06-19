@@ -34,4 +34,4 @@ def export(outfile="out.csv"):
     print("Compressed to " + str(os.path.getsize(outfile + ".xz")) + " bytes")
 
 
-export("static/export.csv")
+export("static/out.csv")
