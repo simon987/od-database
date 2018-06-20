@@ -67,7 +67,7 @@ def index_file_list(path: str, website_id):
 
     es = ElasticSearchEngine("od-database")
     with open(path, "r") as f:
-        es.import_json(f.read(), website_id)
+        es.import_json(f.readlines(), website_id)
 
 
 def search(term=""):
@@ -92,7 +92,7 @@ def make_wide_filesystem(count=100000):
 
 
 # dump_local_filesystem("/mnt/")
-# index_file_list("random_dump.json", 1000)
+index_file_list("local_filesystem.json", 4)
 # random_searches(100000)
 # dump_random_files(20000 * 100000)
-make_wide_filesystem(10000)
+# make_wide_filesystem(10000)

@@ -6,7 +6,8 @@ payload = json.dumps({
     "website_id": 3,
     # "url": "ftp://132.249.213.137",
     "url": "http://localhost:8000/",
-    # "url": "http://ubuntu.mirrorservice.org/",
+    # "url": "http://dlst18.xyz/
+    # dl/vip/film/",
     "priority": 2,
     "callback_type": "",
     "callback_args": "{}"
