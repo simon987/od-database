@@ -126,7 +126,7 @@ function drawChart(rData) {
 
     for (let ext in rData["ext_stats"]) {
 
-        dataSetSize.push(rData["ext_stats"][ext][0]);
+        dataSetSize.push(Math.max(rData["ext_stats"][ext][0], 0));
         dataSetCount.push(rData["ext_stats"][ext][1]);
         labels.push(rData["ext_stats"][ext][2] + " x" + rData["ext_stats"][ext][1] + " (" + humanFileSize(rData["ext_stats"][ext][0]) + ")");
 
@@ -252,7 +252,7 @@ category_map = {
     'h': 'text', 'tsv': 'text', 'rtx': 'text',
     'sgm': 'text', 'sgml': 'text', 'txt': 'text',
     'vcf': 'text', 'pdf': 'text', 'epub': 'text',
-    'srt': 'text', 'cbr': 'text',
+    'srt': 'text', 'cbr': 'text', 'inc': 'text',
     //Video category
     '3g2': 'video', '3gp': 'video', 'asf': 'video',
     'asx': 'video', 'avi': 'video', 'flv': 'video',
@@ -261,7 +261,8 @@ category_map = {
     'm3u': 'video', 'm3u8': 'video', 'movie': 'video',
     'mp4': 'video', 'mpa': 'video', 'mpe': 'video',
     'mpeg': 'video', 'mpg': 'video', 'mkv': 'video',
-    'wmv': 'video', 'm4s': 'video',
+    'wmv': 'video', 'm4s': 'video', 'm4v': 'video',
+    'mp4a': 'video',
     // Audio category
     'wav': 'audio', 'snd': 'audio', 'mp2': 'audio',
     'aif': 'audio', 'iff': 'audio', 'm4a': 'audio',

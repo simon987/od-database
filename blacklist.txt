@@ -6,3 +6,4 @@ https://www.dropbox.com
 https://oss.jfrog.org
 http://skyarchive.info
 https://skyarchive.info
+http://ftp.ubuntu.com/

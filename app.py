@@ -112,6 +112,55 @@ def websites():
     return render_template("websites.html", websites=db.get_websites(100, page))
 
 
+@app.route("/website/delete_empty")
+def admin_delete_empty_website():
+    """Delete websites with no associated files that are not queued"""
+
+    if "username" in session:
+
+        current_tasks = taskDispatcher.get_queued_tasks() + taskDispatcher.get_current_tasks()
+        queued_websites = [task.website_id for task in current_tasks]
+        all_websites = db.get_all_websites()
+        non_queued_websites = list(set(all_websites).difference(queued_websites))
+
+        empty_websites = searchEngine.are_empty(non_queued_websites)
+
+        for website in empty_websites:
+            db.delete_website(website)
+
+        flash("Deleted: " + repr(list(empty_websites)), "success")
+        return redirect("/dashboard")
+
+    else:
+        abort(403)
+
+
+@app.route("/website/<int:website_id>/clear")
+def admin_clear_website(website_id):
+
+    if "username" in session:
+
+        searchEngine.delete_docs(website_id)
+        flash("Cleared all documents associated with this website", "success")
+        return redirect("/website/" + str(website_id))
+    else:
+        abort(403)
+
+
+@app.route("/website/<int:website_id>/delete")
+def admin_delete_website(website_id):
+
+    if "username" in session:
+
+        searchEngine.delete_docs(website_id)
+        db.delete_website(website_id)
+        flash("Deleted website " + str(website_id), "success")
+        return redirect("/website/")
+
+    else:
+        abort(403)
+
+
 @app.route("/search")
 def search():
 

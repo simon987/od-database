@@ -114,16 +114,6 @@ class Database:
             website_id = cursor.fetchone()
             return website_id[0] if website_id else None
 
-    def website_has_been_scanned(self, url):
-        """Check if a website has at least 1 file"""
-        # TODO: Check with SearchEngine
-        print("FIXME: website_has_been_scanned")
-
-    def clear_website(self, website_id):
-        """Remove all files from a website and update its last_updated date"""
-        # TODO: Check with SearchEngine
-        print("FIXME: clear_website")
-
     def get_websites_older(self, delta: datetime.timedelta):
         """Get websites last updated before a given date"""
         date = datetime.datetime.utcnow() - delta
@@ -158,7 +148,7 @@ class Database:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
 
-            hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt(14))
+            hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt(12))
 
             cursor.execute("INSERT INTO Admin (username, password) VALUES (?,?)", (username, hashed_pw))
             conn.commit()

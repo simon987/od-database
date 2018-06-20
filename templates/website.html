@@ -40,6 +40,10 @@
                 <hr>
                 <a href="/website/{{ website.id }}/links" class="btn btn-shadow btn-primary">Link list</a>
                 <a href="/website/{{ website.id }}/json_chart" class="btn btn-shadow btn-primary">Summary (JSON)</a>
+                {% if "username" in session %}
+                    <a href="/website/{{ website.id }}/clear" class="btn btn-danger"><i class="fas fa-exclamation"></i> Clear</a>
+                    <a href="/website/{{ website.id }}/delete" class="btn btn-danger"><i class="fas fa-trash"></i> Delete</a>
+                {% endif %}
             </div>
         </div>
     </div>
