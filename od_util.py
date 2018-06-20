@@ -39,7 +39,8 @@ category_map = {
     'texi': 'application', 'texinfo': 'application', 'ustar': 'application',
     'wiz': 'application', 'wsdl': 'application', 'xlb': 'application',
     'xls': 'application', 'xpdl': 'application', 'xsl': 'application',
-    'torrent': 'application',
+    'torrent': 'application', 'rpm': 'application', 'deb': 'application',
+    'atr': 'application',
     # Text category
     'java': 'text', 'cpp': 'text', 'rb': 'text',
     'bat': 'text', 'latex': 'text', 'xml': 'text',
@@ -59,7 +60,7 @@ category_map = {
     'm3u': 'video', 'm3u8': 'video', 'movie': 'video',
     'mp4': 'video', 'mpa': 'video', 'mpe': 'video',
     'mpeg': 'video', 'mpg': 'video', 'mkv': 'video',
-    'wmv': 'video',
+    'wmv': 'video', 'm4s': 'video',
     # Audio category
     'wav': 'audio', 'snd': 'audio', 'mp2': 'audio',
     'aif': 'audio', 'iff': 'audio', 'm4a': 'audio',
@@ -106,7 +107,7 @@ category_map = {
     'xp3': 'archive', 'yz1': 'archive', 'zip': 'archive',
     'zipx': 'archive', 'zoo': 'archive', 'zpaq': 'archive',
     'zz': 'archive', 'xpi': 'archive', 'tgz': 'archive',
-    'tbz': 'archive'
+    'tbz': 'archive',
 }
 
 colors = {
