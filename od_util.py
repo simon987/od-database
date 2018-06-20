@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 import os
 import validators
 import re
-import mimetypes
 from ftplib import FTP
 
 
@@ -198,11 +197,3 @@ def is_od(url):
         print(e)
         return False
 
-
-def is_blacklisted(url):
-    with open("blacklist.txt", "r") as f:
-        for line in f.readlines():
-            if url.startswith(line.strip()):
-                return True
-
-    return False

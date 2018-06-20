@@ -18,3 +18,8 @@ CREATE TABLE ApiToken (
   token TEXT PRIMARY KEY NOT NULL,
   description TEXT
 );
+
+CREATE TABLE BlacklistedWebsite (
+  id INTEGER PRIMARY KEY NOT NULL,
+  url TEXT
+);

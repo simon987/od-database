@@ -1,6 +1,6 @@
 import sqlite3
 import datetime
-import json
+from urllib.parse import urlparse
 import os
 import bcrypt
 import uuid
@@ -8,6 +8,12 @@ import uuid
 
 class InvalidQueryException(Exception):
     pass
+
+
+class BlacklistedWebsite:
+    def __init__(self, blacklist_id, url):
+        self.id = blacklist_id
+        self.netloc = url
 
 
 class Website:
@@ -227,6 +233,43 @@ class Database:
                 doc["_source"]["website_url"] = "[DELETED]"
 
             yield doc
+
+    def add_blacklist_website(self, url):
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            parsed_url = urlparse(url)
+            url = parsed_url.scheme + "://" + parsed_url.netloc
+            cursor.execute("INSERT INTO BlacklistedWebsite (url) VALUES (?)", (url, ))
+            conn.commit()
+
+    def remove_blacklist_website(self, blacklist_id):
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("DELETE FROM BlacklistedWebsite WHERE id=?", (blacklist_id, ))
+            conn.commit()
+
+    def is_blacklisted(self, url):
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            parsed_url = urlparse(url)
+            url = parsed_url.scheme + "://" + parsed_url.netloc
+            print(url)
+            cursor.execute("SELECT id FROM BlacklistedWebsite WHERE url LIKE ? LIMIT 1", (url, ))
+
+            return cursor.fetchone() is not None
+
+    def get_blacklist(self):
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT * FROM BlacklistedWebsite")
+            return [BlacklistedWebsite(r[0], r[1]) for r in cursor.fetchall()]
+
 
 
 

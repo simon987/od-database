@@ -224,7 +224,7 @@ def try_enqueue(url):
     if not od_util.is_valid_url(url):
         return "<strong>Error:</strong> Invalid url. Make sure to include the appropriate scheme.", "danger"
 
-    if od_util.is_blacklisted(url):
+    if db.is_blacklisted(url):
 
         return "<strong>Error:</strong> " \
               "Sorry, this website has been blacklisted. If you think " \
@@ -326,10 +326,33 @@ def admin_dashboard():
     if "username" in session:
 
         tokens = db.get_tokens()
+        blacklist = db.get_blacklist()
 
-        return render_template("dashboard.html", api_tokens=tokens)
+        return render_template("dashboard.html", api_tokens=tokens, blacklist=blacklist)
     else:
         return abort(403)
+
+
+@app.route("/blacklist/add", methods=["POST"])
+def admin_blacklist_add():
+    if "username" in session:
+
+        url = request.form.get("url")
+        db.add_blacklist_website(url)
+        flash("Added item to blacklist", "success")
+        return redirect("/dashboard")
+
+    else:
+        return abort(403)
+
+
+@app.route("/blacklist/<int:blacklist_id>/delete")
+def admin_blacklist_remove(blacklist_id):
+    if "username" in session:
+
+        db.remove_blacklist_website(blacklist_id)
+        flash("Removed blacklist item", "success")
+        return redirect("/dashboard")
 
 
 @app.route("/generate_token", methods=["POST"])
