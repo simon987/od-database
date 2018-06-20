@@ -354,8 +354,7 @@ class ElasticSearchEngine(SearchEngine):
         stats["es_search_time"] = es_stats["indices"][self.index_name]["total"]["search"]["query_time_in_millis"]
         stats["es_search_time_avg"] = stats["es_search_time"] / (
             stats["es_search_count"] if stats["es_search_count"] != 0 else 1)
-        stats["total_count"] = es_stats["indices"][self.index_name]["total"]["indexing"]["index_total"]
-        stats["total_count_nonzero"] = total_stats["hits"]["total"]
+        stats["total_count"] = total_stats["hits"]["total"]
         stats["total_size"] = total_stats["aggregations"]["file_stats"]["sum"]
         stats["size_avg"] = total_stats["aggregations"]["file_stats"]["avg"]
         stats["size_std_deviation"] = total_stats["aggregations"]["file_stats"]["std_deviation"]

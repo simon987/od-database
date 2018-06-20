@@ -73,8 +73,6 @@ function drawWebsiteScatter(rData) {
             tooltips: {
                 callbacks: {
                     label: function(tooltipItem, data) {
-                        console.log(tooltipItem);
-                        console.log(data);
                         return data.labels[tooltipItem.index];
                     }
                 }
@@ -271,7 +269,6 @@ function fillDatabaseTable(rData) {
     document.getElementById("esSearchTime").innerHTML = rData["es_search_time"] + "ms";
     document.getElementById("esSearchTimeAvg").innerHTML = rData["es_search_time_avg"].toFixed(2) + "ms";
     document.getElementById("totalCount").innerHTML = rData["total_count"];
-    document.getElementById("totalCountNonzero").innerText = rData["total_count_nonzero"];
     document.getElementById("totalSize").innerHTML = humanFileSize(rData["total_size"]);
     document.getElementById("sizeAvg").innerHTML = humanFileSize(rData["size_avg"]);
     document.getElementById("sizeStdDeviation").innerHTML = humanFileSize(rData["size_std_deviation"]);
