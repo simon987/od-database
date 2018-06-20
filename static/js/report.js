@@ -44,7 +44,7 @@ function drawSizeHistogram(rData) {
                         type: "logarithmic",
                         ticks: {
                             // Include a dollar sign in the ticks
-                            callback: function(value, index, values) {
+                            callback: function (value, index, values) {
 
                                 let log10 = Math.log10(value);
 
@@ -105,7 +105,7 @@ function drawDateHistogram(rData) {
                         type: "logarithmic",
                         ticks: {
                             // Include a dollar sign in the ticks
-                            callback: function(value, index, values) {
+                            callback: function (value, index, values) {
 
                                 let log10 = Math.log10(value);
 
@@ -132,34 +132,24 @@ function drawChart(rData) {
     var otherCount = 0;
 
     for (var ext in rData["ext_stats"]) {
-        //Ignore file sizes below 0.5%
-        if (!isRelevant(rData, ext)) {
 
-            otherSize += rData["ext_stats"][ext][0];
-            otherCount += rData["ext_stats"][ext][1];
-
-        } else {
-            dataSetSize.push(rData["ext_stats"][ext][0]);
-            dataSetCount.push(rData["ext_stats"][ext][1]);
-            labels.push(rData["ext_stats"][ext][2] + " x" + rData["ext_stats"][ext][1] + " (" + humanFileSize(rData["ext_stats"][ext][0]) + ")");
-            colors.push(getRandomColor())
-        }
-    }
-
-    if (otherCount !== 0) {
+        dataSetSize.push(rData["ext_stats"][ext][0]);
+        dataSetCount.push(rData["ext_stats"][ext][1]);
+        labels.push(rData["ext_stats"][ext][2] + " x" + rData["ext_stats"][ext][1] + " (" + humanFileSize(rData["ext_stats"][ext][0]) + ")");
         colors.push(getRandomColor());
-        labels.push("other x" + otherCount + " (" + humanFileSize(otherSize) + ")");
-        dataSetSize.push(otherSize);
-        dataSetCount.push(otherCount);
     }
 
     var ctx = document.getElementById('typesChart').getContext('2d');
 
     var fileTypePieChart = new Chart(ctx, {
-        type: 'pie',
+        type: 'doughnut',
         data: {
             datasets: [{
-                data: rData["total_size"] < 100000 ? dataSetCount : dataSetSize,
+                data: dataSetSize,
+                backgroundColor: colors,
+                borderWidth: 1
+            }, {
+                data: dataSetCount,
                 backgroundColor: colors,
                 borderWidth: 1
             }],
@@ -179,8 +169,10 @@ function drawChart(rData) {
                     fontColor: "#bbbbbb",
                     fontFamily: "Lato,'Helvetica Neue',Arial,Helvetica,sans-serif",
                     boxWidth: 20,
-                }
-            }
+                },
+                position: "left"
+            },
+            cutoutPercentage: 15
         }
     });
 }
@@ -209,16 +201,16 @@ function fillDatabaseTable(rData) {
     document.getElementById("sizeVariance").innerHTML = humanFileSize(rData["size_variance"]);
 }
 
-function isRelevant(rData, ext) {
+function isRelevant(rData, ext, bySize) {
 
-    // if (ext[2] === "") {
-    //     return false;
-    // }
+    if (ext[2] === "") {
+        return false;
+    }
 
-    if (rData["total_size"] < 100000) {
+    if (bySize) {
         return rData["ext_stats"][ext][1] > 0.03 * rData["total_count"]
     } else {
-        return rData["ext_stats"][ext][0] > 0.005 * rData["total_size"]
+        return rData["ext_stats"][ext][0] > 0.002 * rData["total_size"]
     }
 
 

@@ -246,7 +246,7 @@ class ElasticSearchEngine(SearchEngine):
                 "ext_group": {
                     "terms": {
                         "field": "ext",
-                        "size": 30
+                        "size": 20
                     },
                     "aggs": {
                         "size": {
