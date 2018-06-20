@@ -234,6 +234,13 @@ class Database:
 
             yield doc
 
+    def join_website_on_stats(self, stats):
+
+        websites = self.get_all_websites()
+
+        for website in stats["website_scatter"]:
+                website[0] = websites.get(website[0], "[DELETED]")
+
     def add_blacklist_website(self, url):
 
         with sqlite3.connect(self.db_path) as conn:

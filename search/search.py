@@ -320,6 +320,32 @@ class ElasticSearchEngine(SearchEngine):
             "size": 0
         }, index=self.index_name)
 
+        website_scatter = self.es.search(body={
+            "query": {
+                "bool": {
+                    "must_not": {
+                        "term": {"size": -1},
+                    }
+                }
+            },
+            "aggs": {
+                "websites": {
+                    "terms": {
+                        "field": "website_id",
+                        "size": 300  # TODO: Figure out what size is appropriate
+                    },
+                    "aggs": {
+                        "size": {
+                            "sum": {
+                                "field": "size"
+                            }
+                        }
+                    }
+                }
+            },
+            "size": 0
+        }, index=self.index_name)
+
         es_stats = self.es.indices.stats(self.index_name)
 
         stats = dict()
@@ -341,6 +367,8 @@ class ElasticSearchEngine(SearchEngine):
                                     for b in size_and_date_histogram["aggregations"]["sizes"]["buckets"]]
         stats["dates_histogram"] = [(b["key_as_string"], b["doc_count"])
                                     for b in size_and_date_histogram["aggregations"]["dates"]["buckets"]]
+        stats["website_scatter"] = [[b["key"], b["doc_count"], b["size"]["value"]]
+                                    for b in website_scatter["aggregations"]["websites"]["buckets"]]
         stats["base_url"] = "entire database"
 
         return stats

@@ -57,6 +57,7 @@ def stats_page():
 @app.route("/stats/json_chart")
 def stats_json():
     stats = searchEngine.get_global_stats()
+    db.join_website_on_stats(stats)
     return Response(json.dumps(stats), mimetype="application/json")
 
 

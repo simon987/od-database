@@ -1,3 +1,89 @@
+function drawWebsiteScatter(rData) {
+
+    let dataSet = [];
+    let labels = [];
+
+    for (let i in rData["website_scatter"]) {
+
+        let website = rData["website_scatter"][i];
+
+        dataSet.push({x: website[1], y: website[2]});
+        labels.push(website[0] + " " + website[1] + " files, " + humanFileSize(website[2]))
+    }
+
+    let ctx = document.getElementById('websiteScatter').getContext('2d');
+    new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                data: dataSet,
+                borderWidth: 1,
+                borderColor: "#E94700",
+                backgroundColor: "rgba(233, 71, 0, 0.6)"
+            }],
+            labels: labels
+        },
+        options: {
+            title: {
+                display: true,
+                text: "Top " + labels.length + " websites",
+                fontColor: "#c6c6c6",
+                fontSize: 16,
+                fontFamily: "Lato,'Helvetica Neue',Arial,Helvetica,sans-serif"
+            },
+            legend: {
+                display: false
+            },
+            scales: {
+                xAxes: [
+                    {
+                        type: "logarithmic",
+                        ticks: {
+                            callback: function (value, index, values) {
+
+                                let log10 = Math.log10(value);
+
+                                if (Number.isInteger(log10)) {
+                                    return value;
+                                }
+                            }
+                        },
+                        scaleLabel: {
+                            labelString: "File count",
+                            display: true
+                        }
+                    }
+                ],
+                yAxes: [
+                    {
+                        type: "logarithmic",
+                        ticks: {
+                            callback: function (value, index, values) {
+
+                                let log10 = Math.log10(value);
+
+                                if (Number.isInteger(log10)) {
+                                    return humanFileSize(value);
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            tooltips: {
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        console.log(tooltipItem);
+                        console.log(data);
+                        return data.labels[tooltipItem.index];
+                    }
+                }
+            }
+        },
+    });
+
+}
+
 function drawSizeHistogram(rData) {
 
     let labels = [];
@@ -20,9 +106,7 @@ function drawSizeHistogram(rData) {
                 borderColor: "#E94700",
                 backgroundColor: "rgba(233, 71, 0, 0.6)"
             }],
-            labels: labels,
-            title: "test"
-
+            labels: labels
         },
         options: {
             title: {

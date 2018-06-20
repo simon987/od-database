@@ -19,6 +19,10 @@
                 <div id="chart-wrapper" style="margin-bottom: 1em">
                     <canvas id="dateHistogram"></canvas>
                 </div>
+                <div id="chart-wrapper" style="margin-bottom: 1em">
+                    <canvas id="websiteScatter"></canvas>
+                </div>
+
 
                 <h4>Database stats</h4>
                 <table class="table table-striped">
@@ -130,6 +134,7 @@
                 drawChart(rData);
                 drawSizeHistogram(rData);
                 drawDateHistogram(rData);
+                drawWebsiteScatter(rData);
                 fillDatabaseTable(rData);
 
                 document.getElementById("loading-text").innerHTML = "";
