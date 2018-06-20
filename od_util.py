@@ -50,6 +50,7 @@ category_map = {
     'h': 'text', 'tsv': 'text', 'rtx': 'text',
     'sgm': 'text', 'sgml': 'text', 'txt': 'text',
     'vcf': 'text', 'pdf': 'text', 'epub': 'text',
+    'srt': 'text',
     # Video category
     '3g2': 'video', '3gp': 'video', 'asf': 'video',
     'asx': 'video', 'avi': 'video', 'flv': 'video',
@@ -64,7 +65,7 @@ category_map = {
     'aif': 'audio', 'iff': 'audio', 'm4a': 'audio',
     'mid': 'audio', 'midi': 'audio', 'mp3': 'audio',
     'wma': 'audio', 'ra': 'audio', 'aifc': 'audio',
-    'aiff': 'audio', 'au': 'audio',
+    'aiff': 'audio', 'au': 'audio', 'flac': 'audio',
     # Image category
     'bmp': 'image', 'gif': 'image', 'jpg': 'image',
     'xwd': 'image', 'tif': 'image', 'tiff': 'image',

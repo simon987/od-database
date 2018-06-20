@@ -185,7 +185,8 @@ class ElasticSearchEngine(SearchEngine):
             "aggs": {
                 "ext_group": {
                     "terms": {
-                        "field": "ext"
+                        "field": "ext",
+                        "size": 20
                     },
                     "aggs": {
                         "size": {

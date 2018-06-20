@@ -10,8 +10,6 @@ function drawSizeHistogram(rData) {
         labels.push("[" + humanFileSize(slice[0]) + ", " + humanFileSize(slice[0] + 10000000) + "]")
     }
 
-    console.log(dataSet);
-
     let ctx = document.getElementById('sizeHistogram').getContext('2d');
     new Chart(ctx, {
         type: 'line',
@@ -64,8 +62,6 @@ function drawDateHistogram(rData) {
 
     let labels = [];
     let dataSet = [];
-
-    console.log(rData["dates_histogram"]);
 
     for (let i in rData["dates_histogram"]) {
 
@@ -123,25 +119,24 @@ function drawDateHistogram(rData) {
 
 function drawChart(rData) {
 
-    var dataSetSize = [];
-    var dataSetCount = [];
-    var labels = [];
-    var colors = [];
+    let dataSetSize = [];
+    let dataSetCount = [];
+    let labels = [];
+    let colors = [];
 
-    var otherSize = 0;
-    var otherCount = 0;
-
-    for (var ext in rData["ext_stats"]) {
+    for (let ext in rData["ext_stats"]) {
 
         dataSetSize.push(rData["ext_stats"][ext][0]);
         dataSetCount.push(rData["ext_stats"][ext][1]);
         labels.push(rData["ext_stats"][ext][2] + " x" + rData["ext_stats"][ext][1] + " (" + humanFileSize(rData["ext_stats"][ext][0]) + ")");
-        colors.push(getRandomColor());
+
+        let category = category_map.hasOwnProperty(rData["ext_stats"][ext][2]) ? category_map[rData["ext_stats"][ext][2]] : "default";
+        colors.push(getRandomTintOfColor(colors_map[category]));
     }
 
-    var ctx = document.getElementById('typesChart').getContext('2d');
+    let ctx = document.getElementById('typesChart').getContext('2d');
 
-    var fileTypePieChart = new Chart(ctx, {
+    let fileTypePieChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
             datasets: [{
@@ -201,32 +196,128 @@ function fillDatabaseTable(rData) {
     document.getElementById("sizeVariance").innerHTML = humanFileSize(rData["size_variance"]);
 }
 
-function isRelevant(rData, ext, bySize) {
+function getRandomTintOfColor(color) {
+    let p = 1,
+        temp,
+        random = Math.random(),
+        result = '#';
 
-    if (ext[2] === "") {
-        return false;
-    }
-
-    if (bySize) {
-        return rData["ext_stats"][ext][1] > 0.03 * rData["total_count"]
-    } else {
-        return rData["ext_stats"][ext][0] > 0.002 * rData["total_size"]
-    }
-
-
-}
-
-/**
- * https://stackoverflow.com/questions/1484506
- */
-function getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
+    while (p < color.length) {
+        temp = parseInt(color.slice(p, p += 2), 16);
+        temp += Math.floor((16 - temp) * random);
+        result += temp.toString(16).padStart(2, '0');
     }
     return color;
 }
+
+category_map = {
+
+    //Application category
+    'bcpio': 'application', 'bin': 'application',
+    'cdf': 'application', 'csh': 'application',
+    'dll': 'application', 'doc': 'application',
+    'dot': 'application', 'dvi': 'application',
+    'eml': 'application', 'exe': 'application',
+    'hdf': 'application', 'man': 'application',
+    'me': 'application', 'mht': 'application',
+    'mhtml': 'application', 'mif': 'application',
+    'ms': 'application', 'nc': 'application',
+    'nws': 'application', 'o': 'application',
+    'obj': 'application', 'oda': 'application',
+    'p12': 'application', 'p7c': 'application',
+    'pfx': 'application', 'tr': 'application',
+    'ppa': 'application', 'pps': 'application',
+    'ppt': 'application', 'ps': 'application',
+    'pwz': 'application', 'pyc': 'application',
+    'pyo': 'application', 'ram': 'application',
+    'rdf': 'application', 'roff': 'application',
+    'sh': 'application', 'so': 'application',
+    'src': 'application', 'sv4cpio': 'application',
+    'sv4crc': 'application', 't': 'application',
+    'tcl': 'application', 'tex': 'application',
+    'texi': 'application', 'texinfo': 'application',
+    'ustar': 'application', 'wiz': 'application',
+    'wsdl': 'application', 'xlb': 'application',
+    'xls': 'application', 'xpdl': 'application',
+    'xsl': 'application', 'torrent': 'application',
+    //Text category
+    'java': 'text', 'cpp': 'text', 'rb': 'text',
+    'bat': 'text', 'latex': 'text', 'xml': 'text',
+    'etx': 'text', 'htm': 'text', 'c': 'text',
+    'css': 'text', 'csv': 'text', 'html': 'text',
+    'js': 'text', 'json': 'text', 'ksh': 'text',
+    'pl': 'text', 'pot': 'application', 'py': 'text',
+    'h': 'text', 'tsv': 'text', 'rtx': 'text',
+    'sgm': 'text', 'sgml': 'text', 'txt': 'text',
+    'vcf': 'text', 'pdf': 'text', 'epub': 'text',
+    'srt': 'text',
+    //Video category
+    '3g2': 'video', '3gp': 'video', 'asf': 'video',
+    'asx': 'video', 'avi': 'video', 'flv': 'video',
+    'swf': 'video', 'vob:': 'video', 'qt': 'video',
+    'webm': 'video', 'mov': 'video', 'm1v': 'video',
+    'm3u': 'video', 'm3u8': 'video', 'movie': 'video',
+    'mp4': 'video', 'mpa': 'video', 'mpe': 'video',
+    'mpeg': 'video', 'mpg': 'video', 'mkv': 'video',
+    'wmv': 'video',
+    // Audio category
+    'wav': 'audio', 'snd': 'audio', 'mp2': 'audio',
+    'aif': 'audio', 'iff': 'audio', 'm4a': 'audio',
+    'mid': 'audio', 'midi': 'audio', 'mp3': 'audio',
+    'wma': 'audio', 'ra': 'audio', 'aifc': 'audio',
+    'aiff': 'audio', 'au': 'audio', 'flac': 'audio',
+    // Image category
+    'bmp': 'image', 'gif': 'image', 'jpg': 'image',
+    'xwd': 'image', 'tif': 'image', 'tiff': 'image',
+    'png': 'image', 'pnm': 'image', 'ras': 'image',
+    'ico': 'image', 'ief': 'image', 'pgm': 'image',
+    'jpe': 'image', 'pbm': 'image', 'jpeg': 'image',
+    'ppm': 'image', 'xpm': 'image', 'xbm': 'image',
+    'rgb': 'image', 'svg': 'image', 'psd': 'image',
+    'yuv': 'image', 'ai': 'image', 'eps': 'image',
+    // Archive category
+    'ar': 'archive', 'cpio': 'archive', 'shar': 'archive',
+    'iso': 'archive', 'lbr': 'archive', 'mar': 'archive',
+    'sbx': 'archive', 'bz2': 'archive', 'f': 'archive',
+    'gz': 'archive', 'lz': 'archive', 'lzma': 'archive',
+    'lzo': 'archive', 'rz': 'archive', 'sfark': 'archive',
+    'sz': 'archive', 'z': 'archive', '7z': 'archive',
+    's7z': 'archive', 'ace': 'archive', 'afa': 'archive',
+    'alz': 'archive', 'apk': 'archive', 'arc': 'archive',
+    'arj': 'archive', 'b1': 'archive', 'b6z': 'archive',
+    'a': 'archive', 'bh': 'archive', 'cab': 'archive',
+    'car': 'archive', 'cfs': 'archive', 'cpt': 'archive',
+    'dar': 'archive', 'dd': 'archive', 'dgc': 'archive',
+    'dmg': 'archive', 'ear': 'archive', 'gca': 'archive',
+    'ha': 'archive', 'hki': 'archive', 'ice': 'archive',
+    'jar': 'archive', 'kgb': 'archive', 'lzh': 'archive',
+    'lha': 'archive', 'lzx': 'archive', 'pak': 'archive',
+    'partimg': 'archive', 'paq6': 'archive', 'paq7': 'archive',
+    'paq8': 'archive', 'pea': 'archive', 'pim': 'archive',
+    'pit': 'archive', 'qda': 'archive', 'rar': 'archive',
+    'rk': 'archive', 'sda': 'archive', 'sea': 'archive',
+    'sen': 'archive', 'sfx': 'archive', 'shk': 'archive',
+    'sit': 'archive', 'sitx': 'archive', 'sqx': 'archive',
+    'tbz2': 'archive', 'tlz': 'archive', 'xz': 'archive',
+    'txz': 'archive', 'uc': 'archive', 'uc0': 'archive',
+    'uc2': 'archive', 'ucn': 'archive', 'ur2': 'archive',
+    'ue2': 'archive', 'uca': 'archive', 'uha': 'archive',
+    'war': 'archive', 'wim': 'archive', 'xar': 'archive',
+    'xp3': 'archive', 'yz1': 'archive', 'zip': 'archive',
+    'zipx': 'archive', 'zoo': 'archive', 'zpaq': 'archive',
+    'zz': 'archive', 'xpi': 'archive', 'tgz': 'archive',
+    'tbz': 'archive'
+};
+
+colors_map = {
+    "archive": "#23d630",
+    "application": "#8fb847",
+    "image": "#c55fce",
+    "audio": "#00a4e2",
+    "video": "#dc7846",
+    "text": "#e1ba45",
+    "default": "#CCCCCC"
+};
 
 /**
  * https://stackoverflow.com/questions/10420352
