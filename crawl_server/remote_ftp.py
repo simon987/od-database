@@ -36,14 +36,13 @@ class FtpDirectory(RemoteDirectory):
                 break
             except ftputil.error.FTPError as e:
 
-                if e.errno == 530:
+                if e.errno == 530 or e.errno == 421:
                     print("Cancel connection - too many connections")
                     break
 
                 failed_attempts += 1
                 print("Connection error; reconnecting..." + e.strerror + " " + str(e.errno))
                 time.sleep(2 * random.uniform(0.5, 1.5))
-                self.stop_when_connected()
 
     def list_dir(self, path) -> list:
         if not self.ftp:
