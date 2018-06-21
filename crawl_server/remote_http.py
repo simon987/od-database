@@ -1,5 +1,4 @@
 from urllib.parse import unquote, urljoin
-import warnings
 import os
 from html.parser import HTMLParser
 from itertools import repeat
@@ -10,6 +9,9 @@ from multiprocessing.pool import ThreadPool
 import config
 from dateutil.parser import parse as parse_date
 import hashlib
+
+import urllib3
+urllib3.disable_warnings()
 
 
 class Anchor:
@@ -134,47 +136,47 @@ class HttpDirectory(RemoteDirectory):
 
     def _request_file(self, url):
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            retries = HttpDirectory.MAX_RETRIES
-            while retries > 0:
-                try:
-                    r = self.session.head(url, allow_redirects=False, timeout=40)
+        retries = HttpDirectory.MAX_RETRIES
+        while retries > 0:
+            try:
+                r = self.session.head(url, allow_redirects=False, timeout=40)
 
-                    stripped_url = url[len(self.base_url) - 1:]
+                stripped_url = url[len(self.base_url) - 1:]
 
-                    path, name = os.path.split(stripped_url)
-                    date = r.headers["Last-Modified"] if "Last-Modified" in r.headers else "1970-01-01"
-                    return File(
-                        path=unquote(path).strip("/"),
-                        name=unquote(name),
-                        size=int(r.headers["Content-Length"]) if "Content-Length" in r.headers else -1,
-                        mtime=int(parse_date(date).timestamp()),
-                        is_dir=False
-                    )
-                except RequestException:
-                    self.session.close()
-                    retries -= 1
+                path, name = os.path.split(stripped_url)
+                date = r.headers["Last-Modified"] if "Last-Modified" in r.headers else "1970-01-01"
+                return File(
+                    path=unquote(path).strip("/"),
+                    name=unquote(name),
+                    size=int(r.headers["Content-Length"]) if "Content-Length" in r.headers else -1,
+                    mtime=int(parse_date(date).timestamp()),
+                    is_dir=False
+                )
+            except RequestException:
+                self.session.close()
+                retries -= 1
 
-            return None
+        return None
 
     def _stream_body(self, url: str):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            retries = HttpDirectory.MAX_RETRIES
-            while retries > 0:
-                try:
-                    r = self.session.get(url, stream=True, timeout=40)
-                    for chunk in r.iter_content(chunk_size=4096):
+        retries = HttpDirectory.MAX_RETRIES
+        while retries > 0:
+            try:
+                r = self.session.get(url, stream=True, timeout=40)
+                for chunk in r.iter_content(chunk_size=4096):
+                    try:
                         yield chunk.decode(r.encoding if r.encoding else "utf-8", errors="ignore")
-                    r.close()
-                    del r
-                    break
-                except RequestException:
-                    self.session.close()
-                    retries -= 1
+                    except LookupError:
+                        # Unsupported encoding
+                        yield chunk.decode("utf-8", errors="ignore")
+                r.close()
+                del r
+                break
+            except RequestException:
+                self.session.close()
+                retries -= 1
 
-            return None
+        return None
 
     @staticmethod
     def _parse_links(body):
