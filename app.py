@@ -8,7 +8,7 @@ from flask_recaptcha import ReCaptcha
 import od_util
 import config
 from flask_caching import Cache
-from task import TaskDispatcher, Task
+from task import TaskDispatcher, Task, CrawlServer
 from search.search import ElasticSearchEngine
 
 app = Flask(__name__)
@@ -349,8 +349,9 @@ def admin_dashboard():
 
         tokens = db.get_tokens()
         blacklist = db.get_blacklist()
+        crawl_servers = db.get_crawl_servers()
 
-        return render_template("dashboard.html", api_tokens=tokens, blacklist=blacklist)
+        return render_template("dashboard.html", api_tokens=tokens, blacklist=blacklist, crawl_servers=crawl_servers)
     else:
         return abort(403)
 
@@ -414,6 +415,37 @@ def admin_crawl_logs():
         return render_template("crawl_logs.html", logs=results)
     else:
         return abort(403)
+
+
+@app.route("/crawl_server/add", methods=["POST"])
+def admin_add_crawl_server():
+    if "username" in session:
+
+        server = CrawlServer(
+            request.form.get("url"),
+            request.form.get("name"),
+            request.form.get("slots"),
+            request.form.get("token")
+        )
+
+        db.add_crawl_server(server)
+        flash("Added crawl server", "success")
+        return redirect("/dashboard")
+
+    else:
+        return abort(403)
+
+
+@app.route("/crawl_server/<int:server_id>/delete")
+def admin_delete_crawl_server(server_id):
+    if "username" in session:
+
+        db.remove_crawl_server(server_id)
+        flash("Deleted crawl server", "success")
+        return redirect("/dashboard")
+
+    else:
+        abort(403)
 
 
 if __name__ == '__main__':

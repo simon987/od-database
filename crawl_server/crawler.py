@@ -84,46 +84,48 @@ class RemoteDirectoryCrawler:
         self.crawled_paths = list()
 
     def crawl_directory(self, out_file: str) -> CrawlResult:
-
         try:
-            directory = RemoteDirectoryFactory.get_directory(self.url)
-            path, root_listing = directory.list_dir("")
-            self.crawled_paths.append(path)
-            directory.close()
-        except TimeoutError:
-            return CrawlResult(0, "timeout")
+            try:
+                directory = RemoteDirectoryFactory.get_directory(self.url)
+                path, root_listing = directory.list_dir("")
+                self.crawled_paths.append(path)
+                directory.close()
+            except TimeoutError:
+                return CrawlResult(0, "timeout")
 
-        in_q = Queue(maxsize=0)
-        files_q = Queue(maxsize=0)
-        for f in root_listing:
-            if f.is_dir:
-                in_q.put(os.path.join(f.path, f.name, ""))
-            else:
-                files_q.put(f)
+            in_q = Queue(maxsize=0)
+            files_q = Queue(maxsize=0)
+            for f in root_listing:
+                if f.is_dir:
+                    in_q.put(os.path.join(f.path, f.name, ""))
+                else:
+                    files_q.put(f)
 
-        threads = []
-        for i in range(self.max_threads):
-            worker = Thread(target=RemoteDirectoryCrawler._process_listings, args=(self, self.url, in_q, files_q))
-            threads.append(worker)
-            worker.start()
+            threads = []
+            for i in range(self.max_threads):
+                worker = Thread(target=RemoteDirectoryCrawler._process_listings, args=(self, self.url, in_q, files_q))
+                threads.append(worker)
+                worker.start()
 
-        files_written = []  # Pass array to worker to get result
-        file_writer_thread = Thread(target=RemoteDirectoryCrawler._log_to_file, args=(files_q, out_file, files_written))
-        file_writer_thread.start()
+            files_written = []  # Pass array to worker to get result
+            file_writer_thread = Thread(target=RemoteDirectoryCrawler._log_to_file, args=(files_q, out_file, files_written))
+            file_writer_thread.start()
 
-        in_q.join()
-        files_q.join()
-        print("Done")
+            in_q.join()
+            files_q.join()
+            print("Done")
 
-        # Kill threads
-        for _ in threads:
-            in_q.put(None)
-        for t in threads:
-            t.join()
-        files_q.put(None)
-        file_writer_thread.join()
+            # Kill threads
+            for _ in threads:
+                in_q.put(None)
+            for t in threads:
+                t.join()
+            files_q.put(None)
+            file_writer_thread.join()
 
-        return CrawlResult(files_written[0], "success")
+            return CrawlResult(files_written[0], "success")
+        except Exception as e:
+            return CrawlResult(0, str(e) + " \nType:" + str(type(e)))
 
     def _process_listings(self, url: str, in_q: Queue, files_q: Queue):
 

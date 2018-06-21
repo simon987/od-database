@@ -168,7 +168,7 @@ class ElasticSearchEngine(SearchEngine):
                     "path": {"pre_tags": ["<mark>"], "post_tags": ["</mark>"]}
                 }
             },
-            "size": per_page, "from": page * per_page}, index=self.index_name)
+            "size": per_page, "from": min(page * per_page, 10000 - per_page)}, index=self.index_name)
 
         return page
 

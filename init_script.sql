@@ -23,3 +23,11 @@ CREATE TABLE BlacklistedWebsite (
   id INTEGER PRIMARY KEY NOT NULL,
   url TEXT
 );
+
+CREATE TABLE CrawlServer (
+  id INTEGER PRIMARY KEY NOT NULL,
+  url TEXT,
+  name TEXT,
+  token TEXT,
+  slots INTEGER
+)

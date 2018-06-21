@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 import os
 import bcrypt
 import uuid
+import task
 
 
 class InvalidQueryException(Exception):
@@ -276,6 +277,33 @@ class Database:
 
             cursor.execute("SELECT * FROM BlacklistedWebsite")
             return [BlacklistedWebsite(r[0], r[1]) for r in cursor.fetchall()]
+
+    def add_crawl_server(self, server: task.CrawlServer):
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("INSERT INTO CrawlServer (url, name, slots, token) VALUES (?,?,?,?)",
+                           (server.url, server.name, server.slots, server.token))
+            conn.commit()
+
+    def remove_crawl_server(self, server_id):
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("DELETE FROM CrawlServer WHERE id=?", (server_id, ))
+            conn.commit()
+
+    def get_crawl_servers(self) -> list:
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT url, name, slots, token, id FROM CrawlServer")
+
+            return [task.CrawlServer(r[0], r[1], r[2], r[3], r[4]) for r in cursor.fetchall()]
+
 
 
 

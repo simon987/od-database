@@ -7,15 +7,14 @@ import config
 app = Flask(__name__)
 auth = HTTPTokenAuth(scheme="Token")
 
-tokens = [config.CRAWL_SERVER_TOKEN]
+token = config.CRAWL_SERVER_TOKEN
 
 tm = TaskManager("tm_db.sqlite3", 32)
 
 
 @auth.verify_token
-def verify_token(token):
-    if token in tokens:
-        return True
+def verify_token(provided_token):
+    return token == provided_token
 
 
 @app.route("/task/")
@@ -99,4 +98,4 @@ def get_stats():
 
 
 if __name__ == "__main__":
-    app.run(port=5001, host="0.0.0.0")
+    app.run(port=config.CRAWL_SERVER_PORT, host="0.0.0.0", ssl_context="adhoc")

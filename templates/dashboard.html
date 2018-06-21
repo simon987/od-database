@@ -7,6 +7,48 @@
             <div class="card-header">Dashboard</div>
             <div class="card-body">
 
+                <h3>Crawl servers</h3>
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Url</th>
+                        <th>Name</th>
+                        <th>Slots</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for server in crawl_servers %}
+                        <tr>
+                            <td>{{ server.url }}</td>
+                            <td>{{ server.name }}</td>
+                            <td>{{ server.slots }}</td>
+                            <td><a class="btn btn-danger" href="/crawl_server/{{ server.id }}/delete">Delete</a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <form action="/crawl_server/add" method="post">
+                    <div class="form-row">
+                        <div class="col col-md-3">
+                            <input class="form-control" name="url" placeholder="Url">
+                        </div>
+                        <div class="col col-md-3">
+                            <input class="form-control" name="name" placeholder="Name">
+                        </div>
+                        <div class="col col-md-2">
+                            <input class="form-control" name="token" placeholder="Token">
+                        </div>
+                        <div class="col col-md-2">
+                            <input class="form-control" name="slots" placeholder="Slots" type="number">
+                        </div>
+                        <div class="col col-md-2">
+                            <input type="submit" class="form-control btn btn-primary" value="Add server">
+                        </div>
+                    </div>
+                </form>
+                <br>
+                <hr>
                 <h3>API Keys</h3>
                 <table class="table table-striped">
                     <thead>
