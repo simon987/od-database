@@ -162,6 +162,27 @@ def admin_delete_website(website_id):
         abort(403)
 
 
+@app.route("/website/<int:website_id>/rescan")
+def admin_rescan_website(website_id):
+
+    if "username" in session:
+
+        website = db.get_website_by_id(website_id)
+
+        if website:
+            priority = request.args.get("priority") if "priority" in request.args else 1
+            task = Task(website_id, website.url, priority)
+            taskDispatcher.dispatch_task(task)
+
+            flash("Enqueued rescan task", "success")
+        else:
+            flash("Website does not exist", "danger")
+        return redirect("/website/" + str(website_id))
+
+    else:
+        abort(403)
+
+
 @app.route("/search")
 def search():
 

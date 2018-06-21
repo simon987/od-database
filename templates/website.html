@@ -43,6 +43,7 @@
                 {% if "username" in session %}
                     <a href="/website/{{ website.id }}/clear" class="btn btn-danger"><i class="fas fa-exclamation"></i> Clear</a>
                     <a href="/website/{{ website.id }}/delete" class="btn btn-danger"><i class="fas fa-trash"></i> Delete</a>
+                    <a href="/website/{{ website.id }}/rescan" class="btn btn-secondary"><i class="fas fa-redo"></i> rescan</a>
                 {% endif %}
             </div>
         </div>
