@@ -44,7 +44,7 @@ class FtpDirectory(RemoteDirectory):
                 print("Connection error; reconnecting..." + e.strerror + " " + str(e.errno))
                 time.sleep(2 * random.uniform(0.5, 1.5))
 
-    def list_dir(self, path) -> list:
+    def list_dir(self, path):
         if not self.ftp:
             # No connection - assuming that connection was dropped because too many
             raise TooManyConnectionsError()
@@ -65,7 +65,7 @@ class FtpDirectory(RemoteDirectory):
                             is_dir=is_dir,
                             path=path
                         ))
-                return results
+                return path, results
             except ftputil.error.ParserError as e:
                 print("TODO: fix parsing error: " + e.strerror + " @ " + str(e.file_name))
                 break
@@ -82,7 +82,7 @@ class FtpDirectory(RemoteDirectory):
                 print(type(e))
                 raise e
 
-        return []
+        return path, []
 
     def try_stat(self, path):
 

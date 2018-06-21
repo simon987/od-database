@@ -9,6 +9,7 @@ from requests.exceptions import RequestException
 from multiprocessing.pool import ThreadPool
 import config
 from dateutil.parser import parse as parse_date
+import hashlib
 
 
 class Anchor:
@@ -66,7 +67,9 @@ class HttpDirectory(RemoteDirectory):
         "?MA",
         "?SA",
         "?DA",
-        "?ND"
+        "?ND",
+        "?C=N&O=A",
+        "?C=N&O=A"
     )
     MAX_RETRIES = 3
 
@@ -79,31 +82,40 @@ class HttpDirectory(RemoteDirectory):
 
     def list_dir(self, path):
 
+        current_dir_name = path[path.rstrip("/").rfind("/") + 1: -1]
+        path_identifier = hashlib.sha1(current_dir_name.encode())
         path_url = urljoin(self.base_url, path, "")
         body = self._stream_body(path_url)
         if not body:
-            return None
+            return None, None
         anchors = self._parse_links(body)
 
         urls_to_request = []
+        files = []
 
         for anchor in anchors:
             if self._should_ignore(self.base_url, anchor):
                 continue
 
             if self._isdir(anchor):
-                yield File(
+
+                directory = File(
                     name=anchor.href,
-                    mtime=None,
-                    size=None,
+                    mtime=0,
+                    size=0,
                     path=path,
                     is_dir=True
                 )
+                path_identifier.update(bytes(directory))
+                files.append(directory)
             else:
                 urls_to_request.append(urljoin(path_url, anchor.href))
 
         for file in self.request_files(urls_to_request):
-            yield file
+            files.append(file)
+            path_identifier.update(bytes(file))
+
+        return path_identifier.hexdigest(), files
 
     def request_files(self, urls_to_request: list) -> list:
 
@@ -168,11 +180,14 @@ class HttpDirectory(RemoteDirectory):
     def _parse_links(body):
 
         parser = HTMLAnchorParser()
+        anchors = []
 
         for chunk in body:
             parser.feed(chunk)
             for anchor in parser.anchors:
-                yield anchor
+                anchors.append(anchor)
+
+        return anchors
 
     @staticmethod
     def _isdir(link: Anchor):
@@ -180,7 +195,7 @@ class HttpDirectory(RemoteDirectory):
 
     @staticmethod
     def _should_ignore(base_url, link: Anchor):
-        if link.text == "../" or link.href == "../" or link.href == "./" \
+        if link.text == "../" or link.href == "../" or link.href == "./" or link.href == "" \
                 or link.href.endswith(HttpDirectory.BLACK_LIST):
             return True
 

@@ -20,8 +20,13 @@ class File:
         self.path = path
         self.is_dir = is_dir
 
-    def __str__(self):
-        return ("DIR " if self.is_dir else "FILE ") + self.path + "/" + self.name
+    def __bytes__(self):
+        return b"|".join([
+            self.name.encode(),
+            b"D" if self.is_dir else b"F",
+            str(self.size).encode(),
+            str(self.mtime).encode(),
+        ])
 
     def to_json(self):
         return ujson.dumps({
@@ -39,7 +44,7 @@ class RemoteDirectory:
     def __init__(self, base_url):
         self.base_url = base_url
 
-    def list_dir(self, path: str) -> list:
+    def list_dir(self, path: str):
         raise NotImplementedError
 
     def close(self):
@@ -82,8 +87,8 @@ class RemoteDirectoryCrawler:
 
         try:
             directory = RemoteDirectoryFactory.get_directory(self.url)
-            root_listing = directory.list_dir("")
-            self.crawled_paths.append("")
+            path, root_listing = directory.list_dir("")
+            self.crawled_paths.append(path)
             directory.close()
         except TimeoutError:
             return CrawlResult(0, "timeout")
@@ -136,9 +141,9 @@ class RemoteDirectoryCrawler:
                 break
 
             try:
-                if path not in self.crawled_paths:
-                    self.crawled_paths.append(path)
-                    listing = directory.list_dir(path)
+                path_id, listing = directory.list_dir(path)
+                if len(listing) > 0 and path_id not in self.crawled_paths:
+                    self.crawled_paths.append(path_id)
                     timeout_retries = RemoteDirectoryCrawler.MAX_TIMEOUT_RETRIES
 
                     for f in listing:
@@ -148,6 +153,9 @@ class RemoteDirectoryCrawler:
                             files_q.put(f)
                     import sys
                     print("LISTED " + repr(path) + "dirs:" + str(in_q.qsize()))
+                else:
+                    pass
+                    # print("SKIPPED: " + path + ", dropped " + str(len(listing)))
             except TooManyConnectionsError:
                 print("Too many connections")
                 # Kill worker and resubmit listing task
