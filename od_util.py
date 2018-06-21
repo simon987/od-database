@@ -1,5 +1,5 @@
 import requests
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 import os
 import validators
@@ -163,8 +163,7 @@ def is_od(url):
 
     try:
         if url.startswith("ftp://"):
-            url = url[6:-1]  # Remove schema and trailing slash
-            ftp = FTP(url)
+            ftp = FTP(urlparse(url).netloc)
             ftp.login()
             ftp.close()
             return True
