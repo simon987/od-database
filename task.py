@@ -204,7 +204,7 @@ class TaskDispatcher:
         queued_tasks = dict()
         pool = ThreadPoolExecutor(max_workers=10)
         crawl_servers = self.db.get_crawl_servers()
-        responses = list(pool.map(lambda server: server.fetch_queued_tasks()))
+        responses = list(pool.map(lambda s: s.fetch_queued_tasks(), crawl_servers))
         pool.shutdown()
 
         for i, server in enumerate(crawl_servers):
