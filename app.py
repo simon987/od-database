@@ -410,7 +410,6 @@ def admin_crawl_logs():
     if "username" in session:
 
         results = taskDispatcher.get_task_logs_by_server()
-        print(results)
 
         return render_template("crawl_logs.html", logs=results)
     else:

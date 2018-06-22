@@ -1,6 +1,6 @@
 import os
 import ujson
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 from timeout_decorator.timeout_decorator import TimeoutError
 from threading import Thread
 from queue import Queue, Empty
@@ -150,7 +150,7 @@ class RemoteDirectoryCrawler:
 
                     for f in listing:
                         if f.is_dir:
-                            in_q.put(os.path.join(f.path, f.name, ""))
+                            in_q.put(urljoin(f.path, f.name, ""))
                         else:
                             files_q.put(f)
                     import sys

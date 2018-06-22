@@ -1,3 +1,4 @@
+import config
 from crawl_server.database import TaskManagerDatabase, Task, TaskResult
 from multiprocessing import Manager, Pool
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -59,7 +60,7 @@ class TaskManager:
 
         print("Starting task " + task.url)
 
-        crawler = RemoteDirectoryCrawler(task.url, 20)
+        crawler = RemoteDirectoryCrawler(task.url, config.CRAWL_SERVER_THREADS)
         crawl_result = crawler.crawl_directory("./crawled/" + str(task.website_id) + ".json")
         del crawler
 

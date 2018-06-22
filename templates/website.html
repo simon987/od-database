@@ -5,7 +5,7 @@
 {% block body %}
     <div class="container">
         <div class="card">
-            <div class="card-header">Information for {{ website.url }}</div>
+            <div class="card-header">Information for {{ website.url | truncate(80) }}</div>
             <div class="card-body">
 
                 <div id="chart-wrapper" style="margin-bottom: 1em">
@@ -15,35 +15,40 @@
                     <script src="/static/js/report.js"></script>
                 </div>
 
-                <table class="table">
-                    <tr>
-                        <th>Base url</th>
-                        <td id="baseUrl"></td>
-                    </tr>
+                <div class="table-responsive">
+                    <table class="table">
+                        <tr>
+                            <th>Base url</th>
+                            <td id="baseUrl"></td>
+                        </tr>
 
-                    <tr>
-                        <th>File count</th>
-                        <td id="fileCount"></td>
-                    </tr>
+                        <tr>
+                            <th>File count</th>
+                            <td id="fileCount"></td>
+                        </tr>
 
-                    <tr>
-                        <th>Total size</th>
-                        <td id="totalSize"></td>
-                    </tr>
+                        <tr>
+                            <th>Total size</th>
+                            <td id="totalSize"></td>
+                        </tr>
 
-                    <tr>
-                        <th>Last updated</th>
-                        <td id="reportTime"></td>
-                    </tr>
-                </table>
+                        <tr>
+                            <th>Last updated</th>
+                            <td id="reportTime"></td>
+                        </tr>
+                    </table>
+                </div>
 
                 <hr>
                 <a href="/website/{{ website.id }}/links" class="btn btn-shadow btn-primary">Link list</a>
                 <a href="/website/{{ website.id }}/json_chart" class="btn btn-shadow btn-primary">Summary (JSON)</a>
                 {% if "username" in session %}
-                    <a href="/website/{{ website.id }}/clear" class="btn btn-danger"><i class="fas fa-exclamation"></i> Clear</a>
-                    <a href="/website/{{ website.id }}/delete" class="btn btn-danger"><i class="fas fa-trash"></i> Delete</a>
-                    <a href="/website/{{ website.id }}/rescan" class="btn btn-secondary"><i class="fas fa-redo"></i> rescan</a>
+                    <a href="/website/{{ website.id }}/clear" class="btn btn-danger"><i class="fas fa-exclamation"></i>
+                        Clear</a>
+                    <a href="/website/{{ website.id }}/delete" class="btn btn-danger"><i class="fas fa-trash"></i>
+                        Delete</a>
+                    <a href="/website/{{ website.id }}/rescan" class="btn btn-secondary"><i class="fas fa-redo"></i>
+                        rescan</a>
                 {% endif %}
             </div>
         </div>

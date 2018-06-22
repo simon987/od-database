@@ -7,22 +7,26 @@ Assuming you have Python 3 and git installed:
 ```bash
 git clone https://github.com/simon987/od-database
 cd od-database
-pip3 install -r requirements.txt
+sudo pip3 install -r requirements.txt
 ```
-Create `/config.py` and fill out the parameters. Empty config:
+Create `/config.py` and fill out the parameters. Sample config:
 ```python
 CAPTCHA_SITE_KEY = ""
 CAPTCHA_SECRET_KEY = ""
 FLASK_SECRET = ""
-USE_SSL = True
 RESULTS_PER_PAGE = (25, 50, 100, 250, 500, 1000)
-HEADERS = {}
+CRAWL_SERVER_HEADERS = {}
+CRAWL_SERVER_TOKEN = ""
+CRAWL_SERVER_PORT = 5001
+CRAWL_SERVER_PROCESSES = 3
+CRAWL_SERVER_THREADS = 20
+
 ```
 
-## Running
+## Running the crawl server
 ```bash
-python3 app.py
+cd od-database
+export PYTHONPATH=$(pwd)
+cd crawl_server
+python3 server.py
 ```
-You should be able to connect with your browser at `https://localhost:12345`
-
-*_Note: To use SSL you have to put the appropriate certificates in /certificates/_

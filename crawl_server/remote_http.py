@@ -71,7 +71,11 @@ class HttpDirectory(RemoteDirectory):
         "?DA",
         "?ND",
         "?C=N&O=A",
-        "?C=N&O=A"
+        "?C=N&O=A",
+        "?M=A",
+        "?N=D",
+        "?S=A",
+        "?D=A",
     )
     FILE_NAME_BLACKLIST = (
         "Parent Directory",

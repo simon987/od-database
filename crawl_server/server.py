@@ -9,7 +9,7 @@ auth = HTTPTokenAuth(scheme="Token")
 
 token = config.CRAWL_SERVER_TOKEN
 
-tm = TaskManager("tm_db.sqlite3", 32)
+tm = TaskManager("tm_db.sqlite3", config.CRAWL_SERVER_PROCESSES)
 
 
 @auth.verify_token

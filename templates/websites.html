@@ -18,7 +18,7 @@
 
                     {% for website in websites %}
                         <tr>
-                            <td><a title="Click for stats & link list" href="/website/{{ website[0] }}">{{ website[1] }}</a></td>
+                            <td><a title="Click for stats & link list" href="/website/{{ website[0] }}">{{ website[1] | truncate(70) }}</a></td>
                             <td>{{ website[2] }}</td>
                         </tr>
                     {% endfor %}
