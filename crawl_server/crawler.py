@@ -1,7 +1,6 @@
 import os
 import ujson
 from urllib.parse import urlparse, urljoin
-from timeout_decorator.timeout_decorator import TimeoutError
 from threading import Thread
 from queue import Queue, Empty
 

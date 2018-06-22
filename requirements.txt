@@ -14,5 +14,4 @@ elasticsearch
 python-dateutil
 flask_httpauth
 ujson
-timeout_decorator
 urllib3
