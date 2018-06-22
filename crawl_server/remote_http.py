@@ -73,6 +73,11 @@ class HttpDirectory(RemoteDirectory):
         "?C=N&O=A",
         "?C=N&O=A"
     )
+    FILE_NAME_BLACKLIST = (
+        "Parent Directory",
+        "../"
+
+    )
     MAX_RETRIES = 3
 
     def __init__(self, url):
@@ -114,8 +119,8 @@ class HttpDirectory(RemoteDirectory):
                 urls_to_request.append(urljoin(path_url, anchor.href))
 
         for file in self.request_files(urls_to_request):
-            files.append(file)
             path_identifier.update(bytes(file))
+            files.append(file)
 
         return path_identifier.hexdigest(), files
 
@@ -197,7 +202,7 @@ class HttpDirectory(RemoteDirectory):
 
     @staticmethod
     def _should_ignore(base_url, link: Anchor):
-        if link.text == "../" or link.href == "../" or link.href == "./" or link.href == "" \
+        if link.text in HttpDirectory.FILE_NAME_BLACKLIST or link.href in ("../", "./", "") \
                 or link.href.endswith(HttpDirectory.BLACK_LIST):
             return True
 

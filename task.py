@@ -1,5 +1,3 @@
-import random
-
 from apscheduler.schedulers.background import BackgroundScheduler
 from search.search import ElasticSearchEngine
 from crawl_server.database import Task, TaskResult
@@ -180,7 +178,7 @@ class TaskDispatcher:
 
         queued_tasks_by_server = self._get_current_tasks_by_server()
         server_with_most_free_slots = None
-        most_free_slots = 0
+        most_free_slots = -10000
 
         for server in queued_tasks_by_server:
             free_slots = server.slots - len(queued_tasks_by_server[server])
@@ -188,12 +186,11 @@ class TaskDispatcher:
                 server_with_most_free_slots = server
                 most_free_slots = free_slots
 
-        if server_with_most_free_slots:
-            print("Dispatching task to '" +
-                  server_with_most_free_slots.name + "' " +
-                  str(most_free_slots) + " free out of " + str(server_with_most_free_slots.slots))
+        print("Dispatching task to '" +
+              server_with_most_free_slots.name + "' " +
+              str(most_free_slots) + " free out of " + str(server_with_most_free_slots.slots))
 
-        return self.db.get_crawl_servers()[0]
+        return server_with_most_free_slots
 
     def get_queued_tasks(self) -> list:
 

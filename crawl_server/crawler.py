@@ -87,8 +87,8 @@ class RemoteDirectoryCrawler:
         try:
             try:
                 directory = RemoteDirectoryFactory.get_directory(self.url)
-                path, root_listing = directory.list_dir("")
-                self.crawled_paths.append(path)
+                path_id, root_listing = directory.list_dir(urlparse(self.url).path)
+                self.crawled_paths.append(path_id)
                 directory.close()
             except TimeoutError:
                 return CrawlResult(0, "timeout")
