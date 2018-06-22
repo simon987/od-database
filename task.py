@@ -194,7 +194,7 @@ class TaskDispatcher:
 
     def get_queued_tasks(self) -> list:
 
-        queued_tasks_by_server = self._get_current_tasks_by_server()
+        queued_tasks_by_server = self._get_queued_tasks_by_server()
         for queued_tasks in queued_tasks_by_server.values():
             for task in queued_tasks:
                 yield task
