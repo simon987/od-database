@@ -163,14 +163,6 @@ class RemoteDirectoryCrawler:
                 directory.close()
                 in_q.put(path)
                 break
-            except TimeoutError:
-                if timeout_retries > 0:
-                    timeout_retries -= 1
-                    # TODO: Remove debug info
-                    print("TIMEOUT, " + str(timeout_retries) + " retries left")
-                    in_q.put(path)
-                else:
-                    print("Dropping listing for " + path)
             finally:
                 in_q.task_done()
 

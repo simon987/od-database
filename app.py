@@ -447,10 +447,24 @@ def admin_delete_crawl_server(server_id):
         abort(403)
 
 
+@app.route("/crawl_server/<int:server_id>/update", methods=["POST"])
+def admin_update_crawl_server(server_id):
+
+    crawl_servers = db.get_crawl_servers()
+    for server in crawl_servers:
+        if server.id == server_id:
+
+            new_slots = request.form.get("slots") if "slots" in request.form else server.slots
+            new_name = request.form.get("name") if "name" in request.form else server.name
+            new_url = request.form.get("url") if "url" in request.form else server.url
+
+            db.update_crawl_server(server_id, new_url, new_name, new_slots)
+            flash("Updated crawl server", "success")
+            return redirect("/dashboard")
+
+    flash("Couldn't find crawl server with this id: " + str(server_id), "danger")
+    return redirect("/dashboard")
+
+
 if __name__ == '__main__':
-    if config.USE_SSL:
-        context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-        context.load_cert_chain('certificates/cert.pem', 'certificates/privkey.pem')
-        app.run("0.0.0.0", port=12345, ssl_context=context, threaded=True)
-    else:
-        app.run("0.0.0.0", port=12345, threaded=True)
+    app.run("0.0.0.0", port=12345, threaded=True)

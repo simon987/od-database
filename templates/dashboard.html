@@ -22,7 +22,7 @@
                         <tr>
                             <td>{{ server.url }}</td>
                             <td>{{ server.name }}</td>
-                            <td>{{ server.slots }}</td>
+                            <td id="slots-{{ server.id }}" onclick="changeSlots({{ server.id }})">{{ server.slots }}</td>
                             <td><a class="btn btn-danger" href="/crawl_server/{{ server.id }}/delete">Delete</a></td>
                         </tr>
                     {% endfor %}
@@ -127,4 +127,32 @@
             </div>
         </div>
     </div>
+    <script>
+
+    function changeSlots(id) {
+
+        let slotsElem = document.getElementById("slots-" + id);
+        let parent = slotsElem.parentNode;
+
+        let td = document.createElement("td");
+        let form = document.createElement("form");
+        form.setAttribute("action", "/crawl_server/" + id + "/update");
+        form.setAttribute("method", "post");
+
+        let slotsInput = document.createElement("input");
+        slotsInput.setAttribute("class", "form-control");
+        slotsInput.setAttribute("name", "slots");
+        form.appendChild(slotsInput);
+        td.appendChild(form);
+
+        parent.insertBefore(td, slotsElem);
+        slotsElem.remove();
+
+        slotsInput.focus();
+        slotsInput.addEventListener("focusout", function () {
+            form.submit();
+        });
+    }
+
+    </script>
 {% endblock body %}

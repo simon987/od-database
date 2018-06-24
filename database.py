@@ -304,6 +304,14 @@ class Database:
 
             return [task.CrawlServer(r[0], r[1], r[2], r[3], r[4]) for r in cursor.fetchall()]
 
+    def update_crawl_server(self, server_id, url, name, slots):
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("UPDATE CrawlServer SET url=?, name=?, slots=? WHERE id=?", (url, name, slots, server_id))
+            conn.commit()
+
 
 
 
