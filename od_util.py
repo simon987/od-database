@@ -7,6 +7,9 @@ import re
 from ftplib import FTP
 import config
 
+import urllib3
+urllib3.disable_warnings()
+
 
 def truncate_path(path, max_len):
     pattern = re.compile(r"/?.*?/")
@@ -170,7 +173,7 @@ def is_od(url):
             ftp.close()
             return True
         elif config.SUBMIT_HTTP:
-            r = requests.get(url, timeout=30, allow_redirects=False)
+            r = requests.get(url, timeout=30, allow_redirects=False, verify=False)
             if r.status_code != 200:
                 print("No redirects allowed!")
                 return False

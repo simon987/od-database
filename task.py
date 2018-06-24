@@ -174,17 +174,16 @@ class TaskDispatcher:
         for server in self.db.get_crawl_servers():
             for task in server.fetch_completed_tasks():
                 print("Completed task")
-                # All files are overwritten
-                self.search.delete_docs(task.website_id)
-                file_list = server.fetch_website_files(task.website_id)
-                if file_list:
+                if task.file_count:
+                    # All files are overwritten
+                    self.search.delete_docs(task.website_id)
+                    file_list = server.fetch_website_files(task.website_id)
                     self.search.import_json(file_list, task.website_id)
+                    # File list is safe to delete once indexed
+                    server.free_website_files(task.website_id)
 
                 # Update last_modified date for website
                 self.db.update_website_date_if_exists(task.website_id)
-
-                # File list is safe to delete once indexed
-                server.free_website_files(task.website_id)
 
     def dispatch_task(self, task: Task):
         self._get_available_crawl_server().queue_task(task)
@@ -207,7 +206,7 @@ class TaskDispatcher:
 
         return server_with_most_free_slots
 
-    def get_queued_tasks(self) -> list:
+    def get_queued_tasks(self):
 
         queued_tasks_by_server = self._get_queued_tasks_by_server()
         for queued_tasks in queued_tasks_by_server.values():

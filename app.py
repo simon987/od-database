@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, request, flash, abort, Respo
 import json
 import os
 import time
-import ssl
+import itertools
 from database import Database, Website, InvalidQueryException
 from flask_recaptcha import ReCaptcha
 import od_util
@@ -126,24 +126,45 @@ def admin_redispatch_queued():
         abort(404)
 
 
+def get_empty_websites():
+
+    current_tasks = itertools.chain(taskDispatcher.get_queued_tasks(), taskDispatcher.get_current_tasks())
+
+    queued_websites = [task.website_id for task in current_tasks]
+    all_websites = db.get_all_websites()
+    non_queued_websites = list(set(all_websites).difference(queued_websites))
+
+    return searchEngine.are_empty(non_queued_websites)
+
+
 @app.route("/website/delete_empty")
 def admin_delete_empty_website():
     """Delete websites with no associated files that are not queued"""
 
     if "username" in session:
 
-        current_tasks = taskDispatcher.get_queued_tasks() + taskDispatcher.get_current_tasks()
-        queued_websites = [task.website_id for task in current_tasks]
-        all_websites = db.get_all_websites()
-        non_queued_websites = list(set(all_websites).difference(queued_websites))
-
-        empty_websites = searchEngine.are_empty(non_queued_websites)
+        empty_websites = get_empty_websites()
 
         for website in empty_websites:
             #db.delete_website(website)
             pass
 
         flash("Deleted: " + repr(list(empty_websites)), "success")
+        return redirect("/dashboard")
+
+    else:
+        abort(403)
+
+
+@app.route("/website/queue_empty")
+def admin_queue_empty_websites():
+    if "username" in session:
+
+        for website_id in get_empty_websites():
+            website = db.get_website_by_id(website_id)
+            task = Task(website.id, website.url, 1)
+            taskDispatcher.dispatch_task(task)
+        flash("Dispatched empty websites", "success")
         return redirect("/dashboard")
 
     else:
