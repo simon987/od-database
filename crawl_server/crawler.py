@@ -129,7 +129,6 @@ class RemoteDirectoryCrawler:
     def _process_listings(self, url: str, in_q: Queue, files_q: Queue):
 
         directory = RemoteDirectoryFactory.get_directory(url)
-        timeout_retries = RemoteDirectoryCrawler.MAX_TIMEOUT_RETRIES
 
         while directory:
             try:
@@ -145,7 +144,6 @@ class RemoteDirectoryCrawler:
                 path_id, listing = directory.list_dir(path)
                 if len(listing) > 0 and path_id not in self.crawled_paths:
                     self.crawled_paths.append(path_id)
-                    timeout_retries = RemoteDirectoryCrawler.MAX_TIMEOUT_RETRIES
 
                     for f in listing:
                         if f.is_dir:

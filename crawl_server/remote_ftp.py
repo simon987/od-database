@@ -14,11 +14,15 @@ class FtpDirectory(RemoteDirectory):
 
     SCHEMES = ("ftp", )
 
+    CANCEL_LISTING_CODE = (
+        550,  # Forbidden
+    )
+
     def __init__(self, url):
 
         host = urlparse(url).netloc
         super().__init__(host)
-        self.max_attempts = 3
+        self.max_attempts = 2
         self.ftp = None
         self.stop_when_connected()
 
@@ -69,13 +73,18 @@ class FtpDirectory(RemoteDirectory):
             except ftputil.error.ParserError as e:
                 print("TODO: fix parsing error: " + e.strerror + " @ " + str(e.file_name))
                 break
-            except ftputil.error.FTPOSError as e:
-                if e.strerror == "timed out":
-                    failed_attempts += 1
-                    continue
             except ftputil.error.FTPError as e:
+                if e.errno in FtpDirectory.CANCEL_LISTING_CODE:
+                    break
+                failed_attempts += 1
+                print(str(e.strerror) + "errno" + str(e.errno))
+                print("Error - reconnecting")
+                self.stop_when_connected()
+            except ftputil.error.PermanentError as e:
                 if e.errno == 530:
                     raise TooManyConnectionsError()
+                print(str(e.strerror) + "errno" + str(e.errno))
+                break
             except Exception as e:
                 # TODO remove that debug info
                 print("ERROR:" + str(e))

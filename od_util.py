@@ -5,6 +5,7 @@ import os
 import validators
 import re
 from ftplib import FTP
+import config
 
 
 def truncate_path(path, max_len):
@@ -162,12 +163,12 @@ def is_od(url):
         return False
 
     try:
-        if url.startswith("ftp://"):
+        if url.startswith("ftp://") and config.SUBMIT_FTP:
             ftp = FTP(urlparse(url).netloc)
             ftp.login()
             ftp.close()
             return True
-        else:
+        elif config.SUBMIT_HTTP:
             r = requests.get(url, timeout=30, allow_redirects=False)
             if r.status_code != 200:
                 print("No redirects allowed!")
