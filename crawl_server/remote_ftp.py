@@ -6,7 +6,6 @@ import time
 import ftputil
 import ftputil.error
 from ftputil.session import session_factory
-import random
 from crawl_server.crawler import RemoteDirectory, File, TooManyConnectionsError
 
 
@@ -30,7 +29,6 @@ class FtpDirectory(RemoteDirectory):
         self.ftp = ftputil.FTPHost(self.base_url, "anonymous", "od-database", session_factory=session_factory(
             use_passive_mode=True
         ))
-        self.ftp.keep_alive()
         self.ftp._session.timeout = 30
 
     def stop_when_connected(self):
