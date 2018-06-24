@@ -22,31 +22,31 @@ class FtpDirectory(RemoteDirectory):
 
         host = urlparse(url).netloc
         super().__init__(host)
-        self.max_attempts = 2
+        self.max_attempts = 3
         self.ftp = None
         self.stop_when_connected()
 
     def _connect(self):
         self.ftp = ftputil.FTPHost(self.base_url, "anonymous", "od-database", session_factory=session_factory(
-            use_passive_mode=False
+            use_passive_mode=True
         ))
-        self.ftp._session.timeout = 40
+        self.ftp._session.timeout = 1
 
     def stop_when_connected(self):
         failed_attempts = 0
         while failed_attempts < self.max_attempts:
             try:
                 self._connect()
-                break
+                return True
             except ftputil.error.FTPError as e:
 
                 if e.errno == 530 or e.errno == 421:
-                    print("Cancel connection - too many connections")
                     break
 
                 failed_attempts += 1
                 print("Connection error; reconnecting..." + e.strerror + " " + str(e.errno))
-                time.sleep(2 * random.uniform(0.5, 1.5))
+                time.sleep(2)
+        return False
 
     def list_dir(self, path):
         if not self.ftp:
@@ -59,15 +59,16 @@ class FtpDirectory(RemoteDirectory):
                 file_names = self.ftp.listdir(path)
 
                 for file_name in file_names:
-                        stat = self.try_stat(os.path.join(path, file_name))
-                        is_dir = self.ftp.path.isdir(os.path.join(path, file_name))
+                        file_path = os.path.join(path, file_name)
+                        stat = self.try_stat(file_path)
+                        is_dir = self.ftp.path.isdir(file_path)
 
                         results.append(File(
-                            name=file_name,
+                            name=os.path.join(file_name, "") if is_dir else file_name,
                             mtime=stat.st_mtime,
                             size=-1 if is_dir else stat.st_size,
                             is_dir=is_dir,
-                            path=path
+                            path=path.strip("/") if not is_dir else path
                         ))
                 return path, results
             except ftputil.error.ParserError as e:
@@ -77,21 +78,29 @@ class FtpDirectory(RemoteDirectory):
                 if e.errno in FtpDirectory.CANCEL_LISTING_CODE:
                     break
                 failed_attempts += 1
-                print(str(e.strerror) + "errno" + str(e.errno))
-                print("Error - reconnecting")
-                self.stop_when_connected()
+                self.reconnect()
             except ftputil.error.PermanentError as e:
                 if e.errno == 530:
                     raise TooManyConnectionsError()
-                print(str(e.strerror) + "errno" + str(e.errno))
-                break
+                if e.errno is None:
+                    failed_attempts += 1
+                    self.reconnect()
+                else:
+                    print(str(e.strerror) + " errno:" + str(e.errno))
+                    break
             except Exception as e:
-                # TODO remove that debug info
-                print("ERROR:" + str(e))
-                print(type(e))
-                raise e
+                failed_attempts += 1
+                self.reconnect()
+                print(e)
 
         return path, []
+
+    def reconnect(self):
+
+        if self.ftp:
+            self.ftp.close()
+            time.sleep(8)
+            self.stop_when_connected()
 
     def try_stat(self, path):
 

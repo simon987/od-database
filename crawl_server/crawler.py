@@ -87,7 +87,10 @@ class RemoteDirectoryCrawler:
             try:
                 directory = RemoteDirectoryFactory.get_directory(self.url)
                 path_id, root_listing = directory.list_dir(urlparse(self.url).path)
-                self.crawled_paths.append(path_id)
+                if root_listing:
+                    self.crawled_paths.append(path_id)
+                else:
+                    return CrawlResult(0, "empty")
                 directory.close()
             except TimeoutError:
                 return CrawlResult(0, "timeout")
@@ -132,9 +135,10 @@ class RemoteDirectoryCrawler:
 
         while directory:
             try:
-                path = in_q.get(timeout=300)
+                path = in_q.get(timeout=150)
             except Empty:
                 directory.close()
+                print("Directory timed out")
                 break
 
             if path is None:
@@ -147,7 +151,7 @@ class RemoteDirectoryCrawler:
 
                     for f in listing:
                         if f.is_dir:
-                            in_q.put(urljoin(f.path, f.name, ""))
+                            in_q.put(urljoin(f.path, f.name))
                         else:
                             files_q.put(f)
                     import sys
