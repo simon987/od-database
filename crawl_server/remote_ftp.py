@@ -30,7 +30,8 @@ class FtpDirectory(RemoteDirectory):
         self.ftp = ftputil.FTPHost(self.base_url, "anonymous", "od-database", session_factory=session_factory(
             use_passive_mode=True
         ))
-        self.ftp._session.timeout = 1
+        self.ftp.keep_alive()
+        self.ftp._session.timeout = 30
 
     def stop_when_connected(self):
         failed_attempts = 0
@@ -96,10 +97,8 @@ class FtpDirectory(RemoteDirectory):
         return path, []
 
     def reconnect(self):
-
         if self.ftp:
             self.ftp.close()
-            time.sleep(8)
             self.stop_when_connected()
 
     def try_stat(self, path):

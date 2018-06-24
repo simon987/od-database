@@ -83,6 +83,7 @@ category_map = {
     'ppm': 'image', 'xpm': 'image', 'xbm': 'image',
     'rgb': 'image', 'svg': 'image', 'psd': 'image',
     'yuv': 'image', 'ai': 'image', 'eps': 'image',
+    'bw': 'image',
     # Archive category
     'ar': 'archive', 'cpio': 'archive', 'shar': 'archive',
     'iso': 'archive', 'lbr': 'archive', 'mar': 'archive',

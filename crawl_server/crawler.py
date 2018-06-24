@@ -138,7 +138,6 @@ class RemoteDirectoryCrawler:
                 path = in_q.get(timeout=150)
             except Empty:
                 directory.close()
-                print("Directory timed out")
                 break
 
             if path is None:
