@@ -113,6 +113,19 @@ def websites():
     return render_template("websites.html", websites=db.get_websites(100, page))
 
 
+@app.route("/website/redispatch_queued")
+def admin_redispatch_queued():
+
+    if "username" in session:
+
+        count = taskDispatcher.redispatch_queued()
+        flash("Re-dispatched " + str(count) + " tasks", "success")
+        return redirect("/dashboard")
+
+    else:
+        abort(404)
+
+
 @app.route("/website/delete_empty")
 def admin_delete_empty_website():
     """Delete websites with no associated files that are not queued"""
@@ -127,7 +140,8 @@ def admin_delete_empty_website():
         empty_websites = searchEngine.are_empty(non_queued_websites)
 
         for website in empty_websites:
-            db.delete_website(website)
+            #db.delete_website(website)
+            pass
 
         flash("Deleted: " + repr(list(empty_websites)), "success")
         return redirect("/dashboard")

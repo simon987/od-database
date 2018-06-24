@@ -90,6 +90,14 @@ def get_task_logs():
     return Response(json_str, mimetype="application/json")
 
 
+@app.route("/task/pop_all")
+@auth.login_required
+def pop_queued_tasks():
+
+    json_str = json.dumps([task.to_json() for task in tm.pop_tasks()])
+    return Response(json_str, mimetype="application/json")
+
+
 @app.route("/stats/")
 @auth.login_required
 def get_stats():

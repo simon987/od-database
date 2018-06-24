@@ -143,6 +143,21 @@ class CrawlServer:
         except ConnectionError:
             return {}
 
+    def pop_queued_tasks(self):
+        try:
+            r = requests.get(self.url + "/task/pop_all", headers=self._generate_headers(), verify=False)
+
+            if r.status_code != 200:
+                print("Problem while popping tasks for '" + self.name + "': " + str(r.status_code))
+                print(r.text)
+
+            return [
+                Task(t["website_id"], t["url"], t["priority"], t["callback_type"], t["callback_args"])
+                for t in json.loads(r.text)
+            ]
+        except ConnectionError:
+            return []
+
 
 class TaskDispatcher:
 
@@ -176,7 +191,7 @@ class TaskDispatcher:
 
     def _get_available_crawl_server(self) -> CrawlServer:
 
-        queued_tasks_by_server = self._get_current_tasks_by_server()
+        queued_tasks_by_server = self._get_queued_tasks_by_server()
         server_with_most_free_slots = None
         most_free_slots = -10000
 
@@ -253,3 +268,15 @@ class TaskDispatcher:
                 stats[server.name] = server_stats
 
         return stats
+
+    def redispatch_queued(self) -> int:
+
+        counter = 0
+        for server in self.db.get_crawl_servers():
+            for task in server.pop_queued_tasks():
+                self.dispatch_task(task)
+                counter += 1
+
+        return counter
+
+

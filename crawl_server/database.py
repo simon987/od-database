@@ -83,6 +83,16 @@ class TaskManagerDatabase:
             else:
                 return None
 
+    def pop_all_tasks(self):
+
+        tasks = self.get_tasks()
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("DELETE FROM Queue")
+            return tasks
+
     def put_task(self, task: Task):
 
         with sqlite3.connect(self.db_path) as conn:

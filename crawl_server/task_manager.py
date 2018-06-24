@@ -27,6 +27,9 @@ class TaskManager:
     def get_tasks(self):
         return self.db.get_tasks()
 
+    def pop_tasks(self):
+        return self.db.pop_all_tasks()
+
     def get_current_tasks(self):
         return self.current_tasks
 
