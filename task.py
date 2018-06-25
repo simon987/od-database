@@ -38,7 +38,7 @@ class CrawlServer:
         except ConnectionError:
             return False
 
-    def fetch_completed_tasks(self) -> list:
+    def pop_completed_tasks(self) -> list:
 
         try:
             r = requests.get(self.url + "/task/completed", headers=self._generate_headers(), verify=False)
@@ -113,36 +113,6 @@ class CrawlServer:
             print(e)
             return False
 
-    def fetch_crawl_logs(self):
-
-        try:
-            r = requests.get(self.url + "/task/logs/", headers=self._generate_headers(), verify=False)
-
-            if r.status_code != 200:
-                print("Problem while fetching crawl logs for '" + self.name + "': " + str(r.status_code))
-                print(r.text)
-                return []
-
-            return [
-                TaskResult(r["status_code"], r["file_count"], r["start_time"],
-                           r["end_time"], r["website_id"], r["indexed_time"])
-                for r in json.loads(r.text)]
-        except ConnectionError:
-            return []
-
-    def fetch_stats(self):
-        try:
-            r = requests.get(self.url + "/stats/", headers=self._generate_headers(), verify=False)
-
-            if r.status_code != 200:
-                print("Problem while fetching stats for '" + self.name + "': " + str(r.status_code))
-                print(r.text)
-                return []
-
-            return json.loads(r.text)
-        except ConnectionError:
-            return {}
-
     def pop_queued_tasks(self):
         try:
             r = requests.get(self.url + "/task/pop_all", headers=self._generate_headers(), verify=False)
@@ -172,8 +142,11 @@ class TaskDispatcher:
     def check_completed_tasks(self):
 
         for server in self.db.get_crawl_servers():
-            for task in server.fetch_completed_tasks():
+            for task in server.pop_completed_tasks():
                 print("Completed task")
+
+                task.server_id = server.id
+
                 if task.file_count:
                     # All files are overwritten
                     self.search.delete_docs(task.website_id)
@@ -184,6 +157,8 @@ class TaskDispatcher:
 
                 # Update last_modified date for website
                 self.db.update_website_date_if_exists(task.website_id)
+
+                self.db.log_result(task)
 
     def dispatch_task(self, task: Task):
         self._get_available_crawl_server().queue_task(task)
@@ -247,26 +222,6 @@ class TaskDispatcher:
                 current_tasks[server] = responses[i]
 
         return current_tasks
-
-    def get_task_logs_by_server(self) -> dict:
-
-        task_logs = dict()
-
-        for server in self.db.get_crawl_servers():
-            task_logs[server.name] = server.fetch_crawl_logs()
-
-        return task_logs
-
-    def get_stats_by_server(self) -> dict:
-
-        stats = dict()
-
-        for server in self.db.get_crawl_servers():
-            server_stats = server.fetch_stats()
-            if server_stats:
-                stats[server.name] = server_stats
-
-        return stats
 
     def redispatch_queued(self) -> int:
 

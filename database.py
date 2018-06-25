@@ -1,10 +1,12 @@
 import sqlite3
 import datetime
+from collections import defaultdict
 from urllib.parse import urlparse
 import os
 import bcrypt
 import uuid
 import task
+from crawl_server.database import TaskResult
 
 
 class InvalidQueryException(Exception):
@@ -312,6 +314,46 @@ class Database:
             cursor.execute("UPDATE CrawlServer SET url=?, name=?, slots=? WHERE id=?", (url, name, slots, server_id))
             conn.commit()
 
+    def log_result(self, result: TaskResult):
+
+        with sqlite3.connect(self.db_path) as conn:
+
+            cursor = conn.cursor()
+
+            cursor.execute("INSERT INTO TaskResult "
+                           "(server, website_id, status_code, file_count, start_time, end_time) "
+                           "VALUES (?,?,?,?,?,?)",
+                           (result.server_id, result.website_id, result.status_code,
+                            result.file_count, result.start_time, result.end_time))
+            conn.commit()
+
+    def get_crawl_logs(self):
+
+        with sqlite3.connect(self.db_path, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT website_id, status_code, file_count, start_time, end_time, indexed_time, S.name "
+                           "FROM TaskResult INNER JOIN CrawlServer S on TaskResult.server = S.id "
+                           "ORDER BY end_time DESC")
+        return [TaskResult(r[1], r[2], r[3].timestamp(), r[4].timestamp(),
+                           r[0], r[5].timestamp() if r[5] else None, r[6]) for r in cursor.fetchall()]
+
+    def get_stats_by_server(self):
+
+        stats = dict()
+        task_results = self.get_crawl_logs()
+
+        for server in self.get_crawl_servers():
+            task_count = sum(1 for result in task_results if result.server_name == server.name)
+            if task_count > 0:
+                stats[server.name] = dict()
+                stats[server.name]["file_count"] = sum(result.file_count for result in task_results if result.server_name == server.name)
+                stats[server.name]["time"] = sum((result.end_time - result.start_time) for result in task_results if result.server_name == server.name)
+                stats[server.name]["task_count"] = task_count
+                stats[server.name]["time_avg"] = stats[server.name]["time"] / task_count
+                stats[server.name]["file_count_avg"] = stats[server.name]["file_count"] / task_count
+
+        return stats
 
 
 

@@ -50,7 +50,7 @@ def downloads():
 
 @app.route("/stats")
 def stats_page():
-    crawl_server_stats = taskDispatcher.get_stats_by_server()
+    crawl_server_stats = db.get_stats_by_server()
     return render_template("stats.html", crawl_server_stats=crawl_server_stats)
 
 
@@ -444,7 +444,7 @@ def admin_del_token():
 def admin_crawl_logs():
     if "username" in session:
 
-        results = taskDispatcher.get_task_logs_by_server()
+        results = db.get_crawl_logs()
 
         return render_template("crawl_logs.html", logs=results)
     else:

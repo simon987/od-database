@@ -30,4 +30,17 @@ CREATE TABLE CrawlServer (
   name TEXT,
   token TEXT,
   slots INTEGER
-)
+);
+
+CREATE TABLE TaskResult (
+  id INTEGER PRIMARY KEY,
+  server INT,
+  website_id INT,
+  status_code TEXT,
+  file_count INT,
+  start_time TIMESTAMP,
+  end_time TIMESTAMP,
+  indexed_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (server) REFERENCES CrawlServer(id)
+);

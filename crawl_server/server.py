@@ -98,12 +98,5 @@ def pop_queued_tasks():
     return Response(json_str, mimetype="application/json")
 
 
-@app.route("/stats/")
-@auth.login_required
-def get_stats():
-    json_str = json.dumps(tm.get_stats())
-    return Response(json_str, mimetype="application/json")
-
-
 if __name__ == "__main__":
     app.run(port=config.CRAWL_SERVER_PORT, host="0.0.0.0", ssl_context="adhoc")

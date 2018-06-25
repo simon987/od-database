@@ -5,13 +5,15 @@ import sqlite3
 
 class TaskResult:
 
-    def __init__(self, status_code=None, file_count=0, start_time=0, end_time=0, website_id=0, indexed_time=0):
+    def __init__(self, status_code=None, file_count=0, start_time=0,
+                 end_time=0, website_id=0, indexed_time=0, server_name=""):
         self.status_code = status_code
         self.file_count = file_count
         self.start_time = start_time
         self.end_time = end_time
         self.website_id = website_id
         self.indexed_time = indexed_time
+        self.server_name = server_name
 
     def to_json(self):
         return {
@@ -139,11 +141,3 @@ class TaskManagerDatabase:
 
         return [TaskResult(r[0], r[1], r[2], r[3], r[4]) for r in db_result]
 
-    def get_all_results(self):
-
-        with sqlite3.connect(self.db_path, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES) as conn:
-            cursor = conn.cursor()
-
-            cursor.execute("SELECT website_id, status_code, file_count, start_time, end_time, indexed_time "
-                           "FROM TaskResult ORDER BY id ASC")
-        return [TaskResult(r[1], r[2], r[3].timestamp(), r[4].timestamp(), r[0], r[5].timestamp() if r[5] else None) for r in cursor.fetchall()]
