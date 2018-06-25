@@ -1,3 +1,4 @@
+from crawl_server import logger
 from urllib.parse import unquote, urljoin
 import os
 from html.parser import HTMLParser
@@ -18,6 +19,9 @@ class Anchor:
     def __init__(self):
         self.text = None
         self.href = None
+
+    def __str__(self):
+        return "<" + self.href + ", " + str(self.text).strip() + ">"
 
 
 class HTMLAnchorParser(HTMLParser):
@@ -46,7 +50,7 @@ class HTMLAnchorParser(HTMLParser):
                 self.current_anchor = None
 
     def error(self, message):
-        pass
+        logger.debug("HTML Parser error: " + message)
 
     def feed(self, data):
         self.anchors.clear()
@@ -181,7 +185,6 @@ class HttpDirectory(RemoteDirectory):
                         # Unsupported encoding
                         yield chunk.decode("utf-8", errors="ignore")
                 r.close()
-                del r
                 break
             except RequestException:
                 self.session.close()
@@ -208,7 +211,7 @@ class HttpDirectory(RemoteDirectory):
 
     @staticmethod
     def _should_ignore(base_url, link: Anchor):
-        if link.text in HttpDirectory.FILE_NAME_BLACKLIST or link.href in ("../", "./", "") \
+        if link.text in HttpDirectory.FILE_NAME_BLACKLIST or link.href in ("../", "./", "", "..", "../../") \
                 or link.href.endswith(HttpDirectory.BLACK_LIST):
             return True
 
@@ -217,7 +220,12 @@ class HttpDirectory(RemoteDirectory):
         if not full_url.startswith(base_url):
             return True
 
+        # Ignore parameters in url
+        if "?" in link.href:
+            return True
+
     def close(self):
         self.session.close()
+        logger.debug("Closing HTTPRemoteDirectory for " + self.base_url)
 
 

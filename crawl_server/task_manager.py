@@ -1,10 +1,10 @@
+from crawl_server import logger
 import config
 from crawl_server.database import TaskManagerDatabase, Task, TaskResult
 from multiprocessing import Manager, Pool
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 from crawl_server.crawler import RemoteDirectoryCrawler
-from crawl_server.callbacks import PostCrawlCallbackFactory
 
 
 class TaskManager:
@@ -41,7 +41,7 @@ class TaskManager:
         if len(self.current_tasks) <= self.max_processes:
             task = self.db.pop_task()
             if task:
-                print("pooled " + task.url)
+                logger.info("Submitted " + task.url + " to process pool")
                 self.current_tasks.append(task)
 
                 self.pool.apply_async(
@@ -58,7 +58,7 @@ class TaskManager:
         result.start_time = datetime.utcnow()
         result.website_id = task.website_id
 
-        print("Starting task " + task.url)
+        logger.info("Starting task " + task.url)
 
         crawler = RemoteDirectoryCrawler(task.url, config.CRAWL_SERVER_THREADS)
         crawl_result = crawler.crawl_directory("./crawled/" + str(task.website_id) + ".json")
@@ -68,18 +68,18 @@ class TaskManager:
         result.status_code = crawl_result.status_code
 
         result.end_time = datetime.utcnow()
-        print("End task " + task.url)
+        logger.info("End task " + task.url)
 
-        callback = PostCrawlCallbackFactory.get_callback(task)
-        if callback:
-            callback.run()
-            print("Executed callback")
+        # TODO: Figure out the callbacks
+        # callback = PostCrawlCallbackFactory.get_callback(task)
+        # if callback:
+        #     callback.run()
 
         return result, db_path, current_tasks
 
     @staticmethod
     def task_error(result):
-        print("TASK ERROR")
+        logger.error("Uncaught exception during a task: ")
         raise result
 
     @staticmethod
@@ -87,14 +87,12 @@ class TaskManager:
 
         task_result, db_path, current_tasks = result
 
-        print(task_result.status_code)
-        print(task_result.file_count)
-        print(task_result.start_time)
-        print(task_result.end_time)
+        logger.info("Task completed, logger result to database")
+        logger.info("Status code: " + task_result.status_code)
+        logger.info("File count: " + str(task_result.file_count))
 
         db = TaskManagerDatabase(db_path)
         db.log_result(task_result)
-        print("Logged result to DB")
 
         for i, task in enumerate(current_tasks):
             if task.website_id == task_result.website_id:

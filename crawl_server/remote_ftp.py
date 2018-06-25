@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-
+from crawl_server import logger
 from urllib.parse import urlparse
 import os
 import time
@@ -36,6 +36,7 @@ class FtpDirectory(RemoteDirectory):
         while failed_attempts < self.max_attempts:
             try:
                 self._connect()
+                logger.debug("New FTP connection @ " + self.base_url)
                 return True
             except ftputil.error.FTPError as e:
 
@@ -71,7 +72,7 @@ class FtpDirectory(RemoteDirectory):
                         ))
                 return path, results
             except ftputil.error.ParserError as e:
-                print("TODO: fix parsing error: " + e.strerror + " @ " + str(e.file_name))
+                logger.error("TODO: fix parsing error: " + e.strerror + " @ " + str(e.file_name))
                 break
             except ftputil.error.FTPError as e:
                 if e.errno in FtpDirectory.CANCEL_LISTING_CODE:
@@ -90,14 +91,15 @@ class FtpDirectory(RemoteDirectory):
             except Exception as e:
                 failed_attempts += 1
                 self.reconnect()
-                print(e)
+                logger.error("Exception while processing FTP listing for " + self.base_url + ": " + str(e))
 
         return path, []
 
     def reconnect(self):
         if self.ftp:
             self.ftp.close()
-            self.stop_when_connected()
+            success = self.stop_when_connected()
+            logger.debug("Reconnecting to FTP server " + self.base_url + (" (OK)" if success else " (ERR)"))
 
     def try_stat(self, path):
 
@@ -105,11 +107,12 @@ class FtpDirectory(RemoteDirectory):
             return self.ftp.stat(path)
         except ftputil.error.ParserError as e:
             # TODO: Try to parse it ourselves?
-            print("Could not parse " + path + " " + e.strerror)
+            logger.error("Exception while parsing FTP listing for " + self.base_url + path + " " + e.strerror)
             return None
 
     def close(self):
         if self.ftp:
             self.ftp.close()
             self.ftp = None
+        logger.debug("Closing FtpRemoteDirectory for " + self.base_url)
 

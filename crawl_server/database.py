@@ -1,3 +1,4 @@
+from crawl_server import logger
 import os
 import json
 import sqlite3
@@ -59,6 +60,7 @@ class TaskManagerDatabase:
 
         if not os.path.exists(db_path):
             self.init_database()
+            logger.info("Initialised database")
 
     def init_database(self):
 

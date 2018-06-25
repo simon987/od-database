@@ -32,7 +32,8 @@ class CrawlServer:
         print("Sending task to crawl server " + self.url)
         try:
             payload = json.dumps(task.to_json())
-            r = requests.post(self.url + "/task/put", headers=self._generate_headers(), data=payload, verify=False)
+            r = requests.post(self.url + "/task/put", headers=self._generate_headers(), data=payload, verify=False,
+                              timeout=5)
             print(r)  # TODO: If the task could not be added, fallback to another server
             return r.status_code == 200
         except ConnectionError:
@@ -41,7 +42,7 @@ class CrawlServer:
     def pop_completed_tasks(self) -> list:
 
         try:
-            r = requests.get(self.url + "/task/completed", headers=self._generate_headers(), verify=False)
+            r = requests.get(self.url + "/task/completed", headers=self._generate_headers(), verify=False, timeout=5)
             if r.status_code != 200:
                 print("Problem while fetching completed tasks for '" + self.name + "': " + str(r.status_code))
                 print(r.text)
@@ -56,7 +57,7 @@ class CrawlServer:
     def fetch_queued_tasks(self):
 
         try:
-            r = requests.get(self.url + "/task/", headers=self._generate_headers(), verify=False)
+            r = requests.get(self.url + "/task/", headers=self._generate_headers(), verify=False, timeout=5)
 
             if r.status_code != 200:
                 print("Problem while fetching queued tasks for '" + self.name + "' " + str(r.status_code))
@@ -73,7 +74,7 @@ class CrawlServer:
     def fetch_current_tasks(self):
 
         try:
-            r = requests.get(self.url + "/task/current", headers=self._generate_headers(), verify=False)
+            r = requests.get(self.url + "/task/current", headers=self._generate_headers(), verify=False, timeout=5)
 
             if r.status_code != 200:
                 print("Problem while fetching current tasks for '" + self.name + "' " + str(r.status_code))

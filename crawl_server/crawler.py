@@ -3,6 +3,7 @@ import ujson
 from urllib.parse import urlparse, urljoin
 from threading import Thread
 from queue import Queue, Empty
+from crawl_server import logger
 
 
 class TooManyConnectionsError(Exception):
@@ -86,6 +87,7 @@ class RemoteDirectoryCrawler:
         try:
             try:
                 directory = RemoteDirectoryFactory.get_directory(self.url)
+                logger.info("Crawling directory " + self.url + " with " + str(type(directory)))
                 path_id, root_listing = directory.list_dir(urlparse(self.url).path)
                 if root_listing:
                     self.crawled_paths.append(path_id)
@@ -115,7 +117,7 @@ class RemoteDirectoryCrawler:
 
             in_q.join()
             files_q.join()
-            print("Done")
+            logger.info("Crawling for " + self.url + " done, waiting for threads to terminate...")
 
             # Kill threads
             for _ in threads:
@@ -153,13 +155,11 @@ class RemoteDirectoryCrawler:
                             in_q.put(urljoin(f.path, f.name))
                         else:
                             files_q.put(f)
-                    import sys
-                    print("LISTED " + repr(path) + "dirs:" + str(in_q.qsize()))
+                    logger.debug("LISTED " + self.url + path)
                 else:
-                    pass
-                    # print("SKIPPED: " + path + ", dropped " + str(len(listing)))
+                    logger.debug("Dropped " + self.url + path + " (was empty or already crawled)")
             except TooManyConnectionsError:
-                print("Too many connections")
+                logger.debug("Too many connections, this thread will be killed and path resubmitted")
                 # Kill worker and resubmit listing task
                 directory.close()
                 in_q.put(path)
@@ -178,6 +178,7 @@ class RemoteDirectoryCrawler:
                 try:
                     file = files_q.get(timeout=800)
                 except Empty:
+                    logger.error("File writer thread timed out")
                     break
 
                 if file is None:
@@ -188,7 +189,7 @@ class RemoteDirectoryCrawler:
                 files_q.task_done()
 
         files_written.append(counter)
-        print("File writer done")
+        logger.info("File writer thread done")
 
 
 
