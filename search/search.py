@@ -103,13 +103,13 @@ class ElasticSearchEngine(SearchEngine):
                         }
                     }
                 }
-            }, index=self.index_name)
+            }, index=self.index_name, request_timeout=40)
         except elasticsearch.exceptions.ConflictError:
             print("Error: multiple delete tasks at the same time")
 
     def import_json(self, in_lines, website_id: int):
 
-        import_every = 5000
+        import_every = 2500
 
         docs = []
 
@@ -168,7 +168,8 @@ class ElasticSearchEngine(SearchEngine):
                     "path": {"pre_tags": ["<mark>"], "post_tags": ["</mark>"]}
                 }
             },
-            "size": per_page, "from": min(page * per_page, 10000 - per_page)}, index=self.index_name)
+            "size": per_page, "from": min(page * per_page, 10000 - per_page)},
+            index=self.index_name, request_timeout=30)
 
         return page
 
@@ -203,7 +204,7 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
-        }, index=self.index_name)
+        }, index=self.index_name, request_timeout=30)
 
         stats = dict()
         stats["total_size"] = result["aggregations"]["total_size"]["value"]
@@ -225,7 +226,7 @@ class ElasticSearchEngine(SearchEngine):
                                         "website_id": website_id}
                                 }
                             },
-                            index=self.index_name)
+                            index=self.index_name, request_timeout=30)
         for hit in hits:
             src = hit["_source"]
             yield base_url + src["path"] + ("/" if src["path"] != "" else "") + src["name"] + \
@@ -259,7 +260,7 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
-        }, index=self.index_name)
+        }, index=self.index_name, request_timeout=30)
 
         total_stats = self.es.search(body={
             "query": {
@@ -278,7 +279,7 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
-        }, index=self.index_name)
+        }, index=self.index_name, request_timeout=30)
 
         size_and_date_histogram = self.es.search(body={
             "query": {
@@ -318,7 +319,7 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
-        }, index=self.index_name)
+        }, index=self.index_name, request_timeout=30)
 
         website_scatter = self.es.search(body={
             "query": {
@@ -344,9 +345,9 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
-        }, index=self.index_name)
+        }, index=self.index_name, request_timeout=30)
 
-        es_stats = self.es.indices.stats(self.index_name)
+        es_stats = self.es.indices.stats(self.index_name, request_timeout=30)
 
         stats = dict()
         stats["es_index_size"] = es_stats["indices"][self.index_name]["total"]["store"]["size_in_bytes"]
@@ -402,13 +403,10 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
-        }, index=self.index_name)
+        }, index=self.index_name, request_timeout=30)
 
         non_empty_websites = [bucket["key"] for bucket in result["aggregations"]["websites"]["buckets"]]
 
         for website in websites:
             if website not in non_empty_websites:
                 yield website
-
-
-
