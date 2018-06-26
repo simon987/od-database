@@ -85,6 +85,7 @@ class HttpDirectory(RemoteDirectory):
     )
     FILE_NAME_BLACKLIST = (
         "Parent Directory",
+        " Parent Directory"
         "../"
 
     )
