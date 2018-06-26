@@ -169,6 +169,12 @@ a:hover {
     color: inherit;
 }
 
+.input-group-text {
+    border: 1px solid #282b30;
+    background-color: #686d75;
+    color: #e9ecef;
+}
+
 .nav-tabs .nav-link {
     border-color: transparent;
 }

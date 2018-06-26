@@ -12,9 +12,12 @@
                 <form action="/search">
 
                     <div class="form-row">
+
+                        {# Query #}
                         <div class="form-group col-md-7">
-                            <input class="form-control" name="q" id="q" placeholder="Full-text Query" value="{{ q }}">
+                            <input class="form-control" name="q" id="q" placeholder="Query" value="{{ q }}">
                         </div>
+                        {# Sort order #}
                         <div class="form-group col-md-3">
                             <select class="form-control" name="sort_order" title="Sort order">
                                 <option disabled>Select sort order</option>
@@ -26,6 +29,7 @@
                                 <option value="none" {{ "selected" if sort_order == "none" else "" }}>No order (faster)</option>
                             </select>
                         </div>
+                        {# Results per page #}
                         <div class="form-group col-md-2">
                             <select class="form-control" name="per_page" title="Results per page">
                                 <option disabled>Results per page</option>
@@ -34,6 +38,21 @@
                                 {% endfor %}
                             </select>
                         </div>
+                    </div>
+                    {# Filters #}
+                    <span class="text-muted">Filters</span>
+                    <div class="form-row">
+
+                        {# File extension #}
+                        <div class="form-group col-md-6">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">.</div>
+                                </div>
+                                <input name="ext" placeholder="Extensions, comma-separated" class="form-control" value="{{ extensions }}">
+                            </div>
+                        </div>
+
                     </div>
 
                     <input class="btn btn-primary btn-shadow" type="submit" value="Search">
@@ -88,11 +107,11 @@
                         </table>
                     </div>
                     {% if results["hits"]["total"] > (p + 1) * per_page %}
-                        <a href="/search?q={{ q }}&p={{ p + 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}"
+                        <a href="/search?q={{ q }}&p={{ p + 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}&ext={{ extensions }}"
                            class="btn btn-primary" style="float: right">Next</a>
                     {% endif %}
                     {% if p > 0 %}
-                        <a href="/search?q={{ q }}&p={{ p - 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}"
+                        <a href="/search?q={{ q }}&p={{ p - 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}&ext={{ extensions }}"
                            class="btn btn-primary">Previous</a>
                     {% endif %}
 

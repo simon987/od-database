@@ -231,9 +231,13 @@ def search():
     per_page = int(per_page) if per_page.isdigit() else "50"
     per_page = per_page if per_page in config.RESULTS_PER_PAGE else 50
 
+    extensions = request.args.get("ext") if "ext" in request.args else ""
+    extensions = [ext.strip().strip(".") for ext in extensions.split(",")] if extensions else []
+    print(extensions)
+
     if len(q) >= 3:
         try:
-            hits = searchEngine.search(q, page, per_page, sort_order)
+            hits = searchEngine.search(q, page, per_page, sort_order, extensions)
             hits = db.join_website_on_search_result(hits)
         except InvalidQueryException as e:
             flash("<strong>Invalid query:</strong> " + str(e), "warning")
@@ -243,7 +247,8 @@ def search():
 
     return render_template("search.html",
                            results=hits, q=q, p=page, sort_order=sort_order,
-                           per_page=per_page, results_set=config.RESULTS_PER_PAGE)
+                           per_page=per_page, results_set=config.RESULTS_PER_PAGE,
+                           extensions=",".join(extensions))
 
 
 @app.route("/contribute")
