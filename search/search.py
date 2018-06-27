@@ -330,15 +330,15 @@ class ElasticSearchEngine(SearchEngine):
                 "sizes": {
                     "histogram": {
                         "field": "size",
-                        "interval": 10000000,  # 10Mb
-                        "min_doc_count": 5
+                        "interval": 50000000,  # 50Mb
+                        "min_doc_count": 100
                     }
                 },
                 "dates": {
                     "date_histogram": {
                         "field": "mtime",
                         "interval": "1y",
-                        "min_doc_count": 5,
+                        "min_doc_count": 100,
                         "format": "yyyy"
                     }
                 }

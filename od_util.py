@@ -45,6 +45,8 @@ category_map = {
     'torrent': 'application', 'rpm': 'application', 'deb': 'application',
     'atr': 'application', 'class': 'application', 'ttf': 'application',
     'img': 'application', 'msi': 'application', 'run': 'application',
+    'drpm': 'application', 'udeb': 'application', 'patch': 'application',
+    'nes': 'application', 'ebuild': 'application', 'scr': 'application',
     # Text category
     'java': 'text', 'cpp': 'text', 'rb': 'text',
     'bat': 'text', 'latex': 'text', 'xml': 'text',
@@ -59,6 +61,7 @@ category_map = {
     'cbz': 'text', 'docx': 'text', 'mobi': 'text',
     'chm': 'text', 'xlsx': "text", 'djvu': 'text',
     'rtf': 'text', 'log': 'text', 'md': 'text',
+    'dsc': 'text', 'info': 'text',
     # Video category
     '3g2': 'video', '3gp': 'video', 'asf': 'video',
     'asx': 'video', 'avi': 'video', 'flv': 'video',
@@ -68,7 +71,8 @@ category_map = {
     'mp4': 'video', 'mpa': 'video', 'mpe': 'video',
     'mpeg': 'video', 'mpg': 'video', 'mkv': 'video',
     'wmv': 'video', 'm4s': 'video', 'ogv': 'video',
-    'm4b': 'video', 'm4v': 'video',
+    'm4b': 'video', 'm4v': 'video', 'ts': 'video',
+
     # Audio category
     'wav': 'audio', 'snd': 'audio', 'mp2': 'audio',
     'aif': 'audio', 'iff': 'audio', 'm4a': 'audio',
@@ -86,7 +90,7 @@ category_map = {
     'ppm': 'image', 'xpm': 'image', 'xbm': 'image',
     'rgb': 'image', 'svg': 'image', 'psd': 'image',
     'yuv': 'image', 'ai': 'image', 'eps': 'image',
-    'bw': 'image',
+    'bw': 'image', 'hdr': 'image',
     # Archive category
     'ar': 'archive', 'cpio': 'archive', 'shar': 'archive',
     'iso': 'archive', 'lbr': 'archive', 'mar': 'archive',
@@ -119,6 +123,7 @@ category_map = {
     'zipx': 'archive', 'zoo': 'archive', 'zpaq': 'archive',
     'zz': 'archive', 'xpi': 'archive', 'tgz': 'archive',
     'tbz': 'archive', 'tar': 'archive', 'bz': 'archive',
+    'diz': 'archive',
 }
 
 colors = {

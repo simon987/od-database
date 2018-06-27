@@ -72,7 +72,7 @@ function drawWebsiteScatter(rData) {
             },
             tooltips: {
                 callbacks: {
-                    label: function(tooltipItem, data) {
+                    label: function (tooltipItem, data) {
                         return data.labels[tooltipItem.index];
                     }
                 }
@@ -91,7 +91,7 @@ function drawSizeHistogram(rData) {
 
         let slice = rData["sizes_histogram"][i];
         dataSet.push(slice[1]);
-        labels.push("[" + humanFileSize(slice[0]) + ", " + humanFileSize(slice[0] + 10000000) + "]")
+        labels.push("[" + humanFileSize(slice[0]) + ", " + humanFileSize(slice[0] + 50000000) + "]")
     }
 
     let ctx = document.getElementById('sizeHistogram').getContext('2d');
@@ -292,38 +292,31 @@ function getRandomTintOfColor(color) {
 }
 
 category_map = {
-
-    //Application category
-    'bcpio': 'application', 'bin': 'application',
-    'cdf': 'application', 'csh': 'application',
-    'dll': 'application', 'doc': 'application',
-    'dot': 'application', 'dvi': 'application',
-    'eml': 'application', 'exe': 'application',
-    'hdf': 'application', 'man': 'application',
-    'me': 'application', 'mht': 'application',
-    'mhtml': 'application', 'mif': 'application',
-    'ms': 'application', 'nc': 'application',
-    'nws': 'application', 'o': 'application',
-    'obj': 'application', 'oda': 'application',
-    'p12': 'application', 'p7c': 'application',
-    'pfx': 'application', 'tr': 'application',
-    'ppa': 'application', 'pps': 'application',
-    'ppt': 'application', 'ps': 'application',
-    'pwz': 'application', 'pyc': 'application',
-    'pyo': 'application', 'ram': 'application',
-    'rdf': 'application', 'roff': 'application',
-    'sh': 'application', 'so': 'application',
-    'src': 'application', 'sv4cpio': 'application',
-    'sv4crc': 'application', 't': 'application',
-    'tcl': 'application', 'tex': 'application',
-    'texi': 'application', 'texinfo': 'application',
-    'ustar': 'application', 'wiz': 'application',
-    'wsdl': 'application', 'xlb': 'application',
-    'xls': 'application', 'xpdl': 'application',
-    'xsl': 'application', 'torrent': 'application',
-    'deb': 'application', 'rpm': 'application',
-    'atr': 'application',
-    //Text category
+    // Application category
+    'bcpio': 'application', 'bin': 'application', 'cdf': 'application',
+    'csh': 'application', 'dll': 'application', 'doc': 'application',
+    'dot': 'application', 'dvi': 'application', 'eml': 'application',
+    'exe': 'application', 'hdf': 'application',
+    'man': 'application', 'me': 'application', 'mht': 'application',
+    'mhtml': 'application', 'mif': 'application', 'ms': 'application',
+    'nc': 'application', 'nws': 'application', 'o': 'application',
+    'obj': 'application', 'oda': 'application', 'p12': 'application',
+    'p7c': 'application', 'pfx': 'application', 'tr': 'application',
+    'ppa': 'application', 'pps': 'application', 'ppt': 'application',
+    'ps': 'application', 'pwz': 'application', 'pyc': 'application',
+    'pyo': 'application', 'ram': 'application', 'rdf': 'application',
+    'roff': 'application', 'sh': 'application', 'so': 'application',
+    'src': 'application', 'sv4cpio': 'application', 'sv4crc': 'application',
+    't': 'application', 'tcl': 'application', 'tex': 'application',
+    'texi': 'application', 'texinfo': 'application', 'ustar': 'application',
+    'wiz': 'application', 'wsdl': 'application', 'xlb': 'application',
+    'xls': 'application', 'xpdl': 'application', 'xsl': 'application',
+    'torrent': 'application', 'rpm': 'application', 'deb': 'application',
+    'atr': 'application', 'class': 'application', 'ttf': 'application',
+    'img': 'application', 'msi': 'application', 'run': 'application',
+    'drpm': 'application', 'udeb': 'application', 'patch': 'application',
+    'nes': 'application', 'ebuild': 'application', 'scr': 'application',
+    // Text category
     'java': 'text', 'cpp': 'text', 'rb': 'text',
     'bat': 'text', 'latex': 'text', 'xml': 'text',
     'etx': 'text', 'htm': 'text', 'c': 'text',
@@ -333,8 +326,12 @@ category_map = {
     'h': 'text', 'tsv': 'text', 'rtx': 'text',
     'sgm': 'text', 'sgml': 'text', 'txt': 'text',
     'vcf': 'text', 'pdf': 'text', 'epub': 'text',
-    'srt': 'text', 'cbr': 'text', 'inc': 'text',
-    //Video category
+    'srt': 'text', 'inc': 'text', 'php': 'text',
+    'cbz': 'text', 'docx': 'text', 'mobi': 'text',
+    'chm': 'text', 'xlsx': "text", 'djvu': 'text',
+    'rtf': 'text', 'log': 'text', 'md': 'text',
+    'dsc': 'text', 'info': 'text',
+    // Video category
     '3g2': 'video', '3gp': 'video', 'asf': 'video',
     'asx': 'video', 'avi': 'video', 'flv': 'video',
     'swf': 'video', 'vob:': 'video', 'qt': 'video',
@@ -342,14 +339,17 @@ category_map = {
     'm3u': 'video', 'm3u8': 'video', 'movie': 'video',
     'mp4': 'video', 'mpa': 'video', 'mpe': 'video',
     'mpeg': 'video', 'mpg': 'video', 'mkv': 'video',
-    'wmv': 'video', 'm4s': 'video', 'm4v': 'video',
-    'mp4a': 'video',
+    'wmv': 'video', 'm4s': 'video', 'ogv': 'video',
+    'm4b': 'video', 'm4v': 'video', 'ts': 'video',
+
     // Audio category
     'wav': 'audio', 'snd': 'audio', 'mp2': 'audio',
     'aif': 'audio', 'iff': 'audio', 'm4a': 'audio',
     'mid': 'audio', 'midi': 'audio', 'mp3': 'audio',
     'wma': 'audio', 'ra': 'audio', 'aifc': 'audio',
     'aiff': 'audio', 'au': 'audio', 'flac': 'audio',
+    'ogg': 'audio', 'oga': 'audio', 'mka': 'video',
+    'ac3': 'audio',
     // Image category
     'bmp': 'image', 'gif': 'image', 'jpg': 'image',
     'xwd': 'image', 'tif': 'image', 'tiff': 'image',
@@ -359,6 +359,7 @@ category_map = {
     'ppm': 'image', 'xpm': 'image', 'xbm': 'image',
     'rgb': 'image', 'svg': 'image', 'psd': 'image',
     'yuv': 'image', 'ai': 'image', 'eps': 'image',
+    'bw': 'image', 'hdr': 'image',
     // Archive category
     'ar': 'archive', 'cpio': 'archive', 'shar': 'archive',
     'iso': 'archive', 'lbr': 'archive', 'mar': 'archive',
@@ -390,7 +391,8 @@ category_map = {
     'xp3': 'archive', 'yz1': 'archive', 'zip': 'archive',
     'zipx': 'archive', 'zoo': 'archive', 'zpaq': 'archive',
     'zz': 'archive', 'xpi': 'archive', 'tgz': 'archive',
-    'tbz': 'archive',
+    'tbz': 'archive', 'tar': 'archive', 'bz': 'archive',
+    'diz': 'archive',
 };
 
 colors_map = {
