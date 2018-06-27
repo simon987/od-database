@@ -29,6 +29,11 @@
                     <input title="File size" id="sizeSlider">
                     <input type="hidden" name="size_min" id="sizeMin" value="{{ size_min }}">
                     <input type="hidden" name="size_max" id="sizeMax" value="{{ size_max }}">
+                    {# Date #}
+                    <div class="text-muted" style="text-align: center">File date</div>
+                    <input title="File date" id="dateSlider">
+                    <input type="hidden" name="date_min" id="dateMin" value="{{ date_min }}">
+                    <input type="hidden" name="date_max" id="dateMax" value="{{ date_max }}">
 
                     <div class="form-row">
                         {# File extension #}
@@ -151,11 +156,11 @@
                         </table>
                     </div>
                     {% if results["hits"]["total"] > (p + 1) * per_page %}
-                        <a href="/search?q={{ q }}&p={{ p + 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}&ext={{ extensions }}&size_min={{ size_min }}&size_max={{ size_max }}{{ "&field_path=on" if field_path else "" }}{{ "&field_name=on" if field_name else "" }}{{ "&field_trigram" if field_trigram else "" }}"
+                        <a href="/search?q={{ q }}&p={{ p + 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}&ext={{ extensions }}&size_min={{ size_min }}&size_max={{ size_max }}{{ "&field_path" if field_path else "" }}{{ "&field_name" if field_name else "" }}{{ "&field_trigram" if field_trigram else "" }}&date_min={{ date_min }}&date_max={{ date_max }}"
                            class="btn btn-primary" style="float: right">Next</a>
                     {% endif %}
                     {% if p > 0 %}
-                        <a href="/search?q={{ q }}&p={{ p - 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}&ext={{ extensions }}&size_min={{ size_min }}&size_max={{ size_max }}{{ "&field_path=on" if field_path else "" }}{{ "&field_name=on" if field_name else "" }}{{ "&field_trigram" if field_trigram else "" }}"
+                        <a href="/search?q={{ q }}&p={{ p - 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}&ext={{ extensions }}&size_min={{ size_min }}&size_max={{ size_max }}{{ "&field_path" if field_path else "" }}{{ "&field_name" if field_name else "" }}{{ "&field_trigram" if field_trigram else "" }}&date_min={{ date_min }}&date_max={{ date_max }}"
                            class="btn btn-primary">Previous</a>
                     {% endif %}
 
@@ -178,7 +183,7 @@
             });
 
             //Size slider
-            var slider = $("#sizeSlider").ionRangeSlider({
+            $("#sizeSlider").ionRangeSlider({
                 type: "double",
                 grid: false,
                 force_edges: true,
@@ -208,6 +213,27 @@
 
                     document.getElementById("sizeMin").value = size_min;
                     document.getElementById("sizeMax").value = size_max;
+                }
+            });
+            //Date slider
+            $("#dateSlider").ionRangeSlider({
+                type: "double",
+                grid: false,
+                force_edges: true,
+                min: 0,
+                max: Math.floor(Date.now()/1000),
+                from: {{ date_min if date_min else 0 }},
+                to: {{ date_max if date_max else "self.max"}},
+                min_interval: 3600 * 24 * 7,
+                step: 3600 * 24,
+                drag_interval: true,
+                prettify: function (num) {
+                    let date = (new Date(num*1000));
+                    return date.getUTCFullYear() + "-" + ("0" + (date.getUTCMonth()+1)).slice(-2) + "-" + ("0" + date.getUTCDate()).slice(-2)
+                },
+                onFinish: function (e) {
+                    document.getElementById("dateMin").value = e.from;
+                    document.getElementById("dateMax").value = e.to >= e.max ? null : e.to;
                 }
             });
 

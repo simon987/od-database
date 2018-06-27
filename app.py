@@ -240,6 +240,11 @@ def search():
     size_max = request.args.get("size_max") if "size_max" in request.args else "size_max"
     size_max = int(size_max) if size_max.isdigit() else 0
 
+    date_min = request.args.get("date_min") if "date_min" in request.args else "date_min"
+    date_min = int(date_min) if date_min.isdigit() else 0
+    date_max = request.args.get("date_max") if "date_max" in request.args else "date_max"
+    date_max = int(date_max) if date_max.isdigit() else 0
+
     match_all = "all" in request.args
 
     field_name = "field_name" in request.args
@@ -260,7 +265,8 @@ def search():
 
     if len(q) >= 3:
         try:
-            hits = searchEngine.search(q, page, per_page, sort_order, extensions, size_min, size_max, match_all, fields)
+            hits = searchEngine.search(q, page, per_page, sort_order,
+                                       extensions, size_min, size_max, match_all, fields, date_min, date_max)
             hits = db.join_website_on_search_result(hits)
         except InvalidQueryException as e:
             flash("<strong>Invalid query:</strong> " + str(e), "warning")
@@ -277,7 +283,8 @@ def search():
                            extensions=",".join(extensions),
                            size_min=size_min, size_max=size_max,
                            match_all=match_all,
-                           field_trigram=field_trigram, field_path=field_path, field_name=field_name)
+                           field_trigram=field_trigram, field_path=field_path, field_name=field_name,
+                           date_min=date_min, date_max=date_max)
 
 
 @app.route("/contribute")

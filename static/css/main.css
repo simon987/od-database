@@ -216,3 +216,16 @@ a:hover {
 .irs {
     margin-bottom: 1em;
 }
+
+.github-banner {
+    position: absolute;
+    top: 0;
+    right: 0;
+    border: 0;
+}
+
+@media (max-width: 990px) {
+    .github-banner {
+        display: none;
+    }
+}

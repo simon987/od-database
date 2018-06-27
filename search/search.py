@@ -16,7 +16,7 @@ class SearchEngine:
     def import_json(self, in_str: str, website_id: int):
         raise NotImplementedError
 
-    def search(self, query, page, per_page, sort_order, extension, size_min, size_max, match_all, fields) -> {}:
+    def search(self, query, page, per_page, sort_order, extension, size_min, size_max, match_all, fields, date_min, date_max) -> {}:
         raise NotImplementedError
 
     def reset(self):
@@ -142,7 +142,7 @@ class ElasticSearchEngine(SearchEngine):
         action_string = '{"index":{}}\n'
         return "\n".join("".join([action_string, ujson.dumps(doc)]) for doc in docs)
 
-    def search(self, query, page, per_page, sort_order, extensions, size_min, size_max, match_all, fields) -> {}:
+    def search(self, query, page, per_page, sort_order, extensions, size_min, size_max, match_all, fields, date_min, date_max) -> {}:
 
         filters = []
         if extensions:
@@ -156,6 +156,17 @@ class ElasticSearchEngine(SearchEngine):
                 size_filer["gte"] = size_min
             if size_max:
                 size_filer["lte"] = size_max
+
+            filters.append(new_filter)
+
+        if date_min > 0 or date_max:
+            date_filer = dict()
+            new_filter = {"range": {"mtime": date_filer}}
+
+            if date_min > 0:
+                date_filer["gte"] = date_min
+            if date_max:
+                date_filer["lte"] = date_max
 
             filters.append(new_filter)
 
