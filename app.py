@@ -253,6 +253,11 @@ def search():
         fields.append("name.nGram^2")
 
     if len(q) >= 3:
+
+        db.log_search(request.remote_addr,
+                      request.headers["X-Forwarded-For"] if "X-Forwarded-For" in request.headers else None,
+                      q, extensions, page)
+
         try:
             hits = searchEngine.search(q, page, per_page, sort_order,
                                        extensions, size_min, size_max, match_all, fields, date_min, date_max)
@@ -260,12 +265,9 @@ def search():
         except InvalidQueryException as e:
             flash("<strong>Invalid query:</strong> " + str(e), "warning")
             return redirect("/search")
+
     else:
         hits = None
-
-    db.log_search(request.remote_addr,
-                  request.headers["X-Forwarded-For"] if "X-Forwarded-For" in request.headers else None,
-                  q, extensions, page)
 
     return render_template("search.html",
                            results=hits,
