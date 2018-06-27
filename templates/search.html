@@ -52,8 +52,11 @@
                                 <input name="ext" placeholder="Extensions, comma-separated" class="form-control" value="{{ extensions }}">
                             </div>
                         </div>
-
                     </div>
+                    {# Size #}
+                    <input title="File size" id="sizeSlider">
+                    <input type="hidden" name="size_min" id="sizeMin" value="{{ size_min }}">
+                    <input type="hidden" name="size_max" id="sizeMax" value="{{ size_max }}">
 
                     <input class="btn btn-primary btn-shadow" type="submit" value="Search">
 
@@ -64,6 +67,8 @@
         {% if results and results["hits"]["total"] > 0 %}
             <div class="card">
                 <div class="card-body">
+
+                    <span class="text-muted">{{ results["hits"]["total"] }} result(s) in {{ results["took"] }}ms</span>
 
                     <div class="table-responsive">
                         <table class="table">
@@ -107,11 +112,11 @@
                         </table>
                     </div>
                     {% if results["hits"]["total"] > (p + 1) * per_page %}
-                        <a href="/search?q={{ q }}&p={{ p + 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}&ext={{ extensions }}"
+                        <a href="/search?q={{ q }}&p={{ p + 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}&ext={{ extensions }}&size_min={{ size_min }}&size_max={{ size_max }}"
                            class="btn btn-primary" style="float: right">Next</a>
                     {% endif %}
                     {% if p > 0 %}
-                        <a href="/search?q={{ q }}&p={{ p - 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}&ext={{ extensions }}"
+                        <a href="/search?q={{ q }}&p={{ p - 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}&ext={{ extensions }}&size_min={{ size_min }}&size_max={{ size_max }}"
                            class="btn btn-primary">Previous</a>
                     {% endif %}
 
@@ -124,6 +129,7 @@
         {% endif %}
 
 
+        <script src="/static/js/report.js"></script>
         <script>
             $('[data-toggle="popover"]').popover({
                 trigger: "focus",
@@ -131,6 +137,41 @@
                 placement: "right",
                 html: true
             });
+
+            //Size slider
+            var slider = $("#sizeSlider").ionRangeSlider({
+                type: "double",
+                grid: false,
+                force_edges: true,
+                min: 0,
+                max: 3684.03149864,
+                from: {{ size_min ** (1 / 3) if size_min else 0 }},
+                to: {{ (size_max ** (1 / 3)) if size_max else 3684.03149864}},
+                min_interval: 5,
+                drag_interval: true,
+                prettify: function (num) {
+
+                    if(num === 0) {
+                        return "0 B"
+                    } else if (num >= 3684) {
+                        return humanFileSize(num * num * num) + "+";
+                    }
+
+                    return humanFileSize(num * num * num)
+                },
+                onFinish: function(e) {
+                    let size_min = (e.from * e.from * e.from);
+                    let size_max = (e.to * e.to * e.to);
+
+                    if (e.to >=  3684) {
+                        size_max = null;
+                    }
+
+                    document.getElementById("sizeMin").value = size_min;
+                    document.getElementById("sizeMax").value = size_max;
+                }
+            });
+
         </script>
     </div>
 

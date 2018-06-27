@@ -196,3 +196,23 @@ a:hover {
 * {
     outline: none;
 }
+
+#sizeSlider {
+    width: 100%;
+}
+
+.irs-single, .irs-from, .irs-to {
+    font-size: 13px;
+}
+
+.irs-slider {
+    cursor: col-resize;
+}
+
+.custom-select {
+    overflow: auto;
+}
+
+.irs {
+    margin-bottom: 1em;
+}

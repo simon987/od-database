@@ -231,13 +231,17 @@ def search():
     per_page = int(per_page) if per_page.isdigit() else "50"
     per_page = per_page if per_page in config.RESULTS_PER_PAGE else 50
 
-    extensions = request.args.get("ext") if "ext" in request.args else ""
+    extensions = request.args.get("ext") if "ext" in request.args else None
     extensions = [ext.strip().strip(".") for ext in extensions.split(",")] if extensions else []
-    print(extensions)
+
+    size_min = request.args.get("size_min") if "size_min" in request.args else "size_min"
+    size_min = int(size_min) if size_min.isdigit() else 0
+    size_max = request.args.get("size_max") if "size_max" in request.args else "size_max"
+    size_max = int(size_max) if size_max.isdigit() else 0
 
     if len(q) >= 3:
         try:
-            hits = searchEngine.search(q, page, per_page, sort_order, extensions)
+            hits = searchEngine.search(q, page, per_page, sort_order, extensions, size_min, size_max)
             hits = db.join_website_on_search_result(hits)
         except InvalidQueryException as e:
             flash("<strong>Invalid query:</strong> " + str(e), "warning")
@@ -248,7 +252,7 @@ def search():
     return render_template("search.html",
                            results=hits, q=q, p=page, sort_order=sort_order,
                            per_page=per_page, results_set=config.RESULTS_PER_PAGE,
-                           extensions=",".join(extensions))
+                           extensions=",".join(extensions), size_min=size_min, size_max=size_max)
 
 
 @app.route("/contribute")
