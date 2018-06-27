@@ -39,7 +39,6 @@ def datetime_format(value, format='%Y-%m-%d %H:%M:%S'):
 
 @app.route("/dl")
 def downloads():
-
     try:
         export_file_stats = os.stat("static/out.csv.xz")
     except FileNotFoundError:
@@ -64,7 +63,6 @@ def stats_json():
 
 @app.route("/get_export")
 def get_export():
-
     if os.path.exists("static/out.csv.xz"):
         return send_from_directory("static", "out.csv.xz", as_attachment=True, mimetype="application/x-xz")
     return abort(404)
@@ -72,7 +70,6 @@ def get_export():
 
 @app.route("/website/<int:website_id>/")
 def website_info(website_id):
-
     website = db.get_website_by_id(website_id)
 
     if website:
@@ -84,7 +81,6 @@ def website_info(website_id):
 @app.route("/website/<int:website_id>/json_chart")
 @cache.memoize(30)
 def website_json_chart(website_id):
-
     website = db.get_website_by_id(website_id)
 
     if website:
@@ -98,7 +94,6 @@ def website_json_chart(website_id):
 
 @app.route("/website/<int:website_id>/links")
 def website_links(website_id):
-
     website = db.get_website_by_id(website_id)
 
     if website:
@@ -116,7 +111,6 @@ def websites():
 
 @app.route("/website/redispatch_queued")
 def admin_redispatch_queued():
-
     if "username" in session:
 
         count = taskDispatcher.redispatch_queued()
@@ -128,7 +122,6 @@ def admin_redispatch_queued():
 
 
 def get_empty_websites():
-
     current_tasks = itertools.chain(taskDispatcher.get_queued_tasks(), taskDispatcher.get_current_tasks())
 
     queued_websites = [task.website_id for task in current_tasks]
@@ -147,7 +140,7 @@ def admin_delete_empty_website():
         empty_websites = get_empty_websites()
 
         for website in empty_websites:
-            #db.delete_website(website)
+            # db.delete_website(website)
             pass
 
         flash("Deleted: " + repr(list(empty_websites)), "success")
@@ -174,7 +167,6 @@ def admin_queue_empty_websites():
 
 @app.route("/website/<int:website_id>/clear")
 def admin_clear_website(website_id):
-
     if "username" in session:
 
         searchEngine.delete_docs(website_id)
@@ -186,7 +178,6 @@ def admin_clear_website(website_id):
 
 @app.route("/website/<int:website_id>/delete")
 def admin_delete_website(website_id):
-
     if "username" in session:
 
         searchEngine.delete_docs(website_id)
@@ -200,7 +191,6 @@ def admin_delete_website(website_id):
 
 @app.route("/website/<int:website_id>/rescan")
 def admin_rescan_website(website_id):
-
     if "username" in session:
 
         website = db.get_website_by_id(website_id)
@@ -221,7 +211,6 @@ def admin_rescan_website(website_id):
 
 @app.route("/search")
 def search():
-
     q = request.args.get("q") if "q" in request.args else ""
     sort_order = request.args.get("sort_order") if "sort_order" in request.args else "score"
 
@@ -274,6 +263,10 @@ def search():
     else:
         hits = None
 
+    db.log_search(request.remote_addr,
+                  request.headers["X-Forwarded-For"] if "X-Forwarded-For" in request.headers else None,
+                  q, extensions, page)
+
     return render_template("search.html",
                            results=hits,
                            q=q,
@@ -294,7 +287,6 @@ def contribute():
 
 @app.route("/")
 def home():
-
     stats = searchEngine.get_global_stats()
     stats["website_count"] = len(db.get_all_websites())
     current_websites = ", ".join(task.url for task in taskDispatcher.get_current_tasks())
@@ -308,7 +300,6 @@ def submit():
 
 
 def try_enqueue(url):
-
     url = os.path.join(url, "")
     website = db.get_website_by_url(url)
 
@@ -323,16 +314,15 @@ def try_enqueue(url):
         return "<strong>Error:</strong> Invalid url. Make sure to include the appropriate scheme.", "danger"
 
     if db.is_blacklisted(url):
-
         return "<strong>Error:</strong> " \
-              "Sorry, this website has been blacklisted. If you think " \
-              "this is an error, please <a href='/contribute'>contact me</a>.", "danger"
+               "Sorry, this website has been blacklisted. If you think " \
+               "this is an error, please <a href='/contribute'>contact me</a>.", "danger"
 
     if not od_util.is_od(url):
         return "<strong>Error:</strong>" \
-              "The anti-spam algorithm determined that the submitted url is not " \
-              "an open directory or the server is not responding. If you think " \
-              "this is an error, please <a href='/contribute'>contact me</a>.", "danger"
+               "The anti-spam algorithm determined that the submitted url is not " \
+               "an open directory or the server is not responding. If you think " \
+               "this is an error, please <a href='/contribute'>contact me</a>.", "danger"
 
     web_id = db.insert_website(Website(url, str(request.remote_addr), str(request.user_agent)))
 
@@ -346,42 +336,45 @@ def try_enqueue(url):
 def enqueue():
     # if recaptcha.verify():
 
-        url = os.path.join(request.form.get("url"), "")
-        message, msg_type = try_enqueue(url)
-        flash(message, msg_type)
+    url = os.path.join(request.form.get("url"), "")
+    message, msg_type = try_enqueue(url)
+    flash(message, msg_type)
 
-        return redirect("/submit")
-    # else:
-    #     flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
-    #     return redirect("/submit")
+    return redirect("/submit")
+
+
+# else:
+#     flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
+#     return redirect("/submit")
 
 
 @app.route("/enqueue_bulk", methods=["POST"])
 def enqueue_bulk():
     # if recaptcha.verify():
 
-        urls = request.form.get("urls")
-        if urls:
-            urls = urls.split()
+    urls = request.form.get("urls")
+    if urls:
+        urls = urls.split()
 
-            if 0 < len(urls) <= 1000000000000:
+        if 0 < len(urls) <= 1000000000000:
 
-                for url in urls:
-                    url = os.path.join(url, "")
-                    message, msg_type = try_enqueue(url)
-                    message += ' <span class="badge badge-' + msg_type + '">' + url + '</span>'
-                    flash(message, msg_type)
-                return redirect("/submit")
+            for url in urls:
+                url = os.path.join(url, "")
+                message, msg_type = try_enqueue(url)
+                message += ' <span class="badge badge-' + msg_type + '">' + url + '</span>'
+                flash(message, msg_type)
+            return redirect("/submit")
 
-            else:
-                flash("Too few or too many urls, please submit 1-10 urls", "danger")
-                return redirect("/submit")
         else:
-            return abort(500)
+            flash("Too few or too many urls, please submit 1-10 urls", "danger")
+            return redirect("/submit")
+    else:
+        return abort(500)
 
-    # else:
-    #     flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
-    #     return redirect("/submit")
+
+# else:
+#     flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
+#     return redirect("/submit")
 
 
 @app.route("/admin")
@@ -393,7 +386,6 @@ def admin_login_form():
 
 @app.route("/login", methods=["POST"])
 def admin_login():
-
     if recaptcha.verify():
 
         username = request.form.get("username")
@@ -448,7 +440,6 @@ def admin_blacklist_add():
 @app.route("/blacklist/<int:blacklist_id>/delete")
 def admin_blacklist_remove(blacklist_id):
     if "username" in session:
-
         db.remove_blacklist_website(blacklist_id)
         flash("Removed blacklist item", "success")
         return redirect("/dashboard")
@@ -525,11 +516,9 @@ def admin_delete_crawl_server(server_id):
 
 @app.route("/crawl_server/<int:server_id>/update", methods=["POST"])
 def admin_update_crawl_server(server_id):
-
     crawl_servers = db.get_crawl_servers()
     for server in crawl_servers:
         if server.id == server_id:
-
             new_slots = request.form.get("slots") if "slots" in request.form else server.slots
             new_name = request.form.get("name") if "name" in request.form else server.name
             new_url = request.form.get("url") if "url" in request.form else server.url

@@ -44,3 +44,14 @@ CREATE TABLE TaskResult (
 
   FOREIGN KEY (server) REFERENCES CrawlServer(id)
 );
+
+
+CREATE TABLE SearchLogEntry (
+  id INTEGER PRIMARY KEY,
+  search_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  remote_addr TEXT,
+  forwarded_for TEXT,
+  query TEXT,
+  extensions TEXT,
+  page INT
+);

@@ -355,6 +355,15 @@ class Database:
 
         return stats
 
+    def log_search(self, remote_addr, forwarded_for, q, exts, page):
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("INSERT INTO SearchLogEntry (remote_addr, forwarded_for, query, extensions, page) VALUES "
+                           "(?,?,?,?,?)", (remote_addr, forwarded_for, q, ",".join(exts), page))
+
+            conn.commit()
 
 
 
