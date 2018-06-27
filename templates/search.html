@@ -14,13 +14,59 @@
                     <div class="form-row">
 
                         {# Query #}
-                        <div class="form-group col-md-7">
+                        <div class="input-group form-group">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    <label for="matchAll" style="margin-bottom: 0">Match any word&nbsp</label>
+                                    <input title="Toggle between 'match all words' and 'match any word'" type="checkbox" id="matchAll" name="all" {{ "checked" if match_all }}>
+                                </div>
+                            </div>
                             <input class="form-control" name="q" id="q" placeholder="Query" value="{{ q }}">
                         </div>
-                        {# Sort order #}
+                    </div>
+                    {# Size #}
+                    <div class="text-muted" style="text-align: center">File size</div>
+                    <input title="File size" id="sizeSlider">
+                    <input type="hidden" name="size_min" id="sizeMin" value="{{ size_min }}">
+                    <input type="hidden" name="size_max" id="sizeMax" value="{{ size_max }}">
+
+                    <div class="form-row">
+                        {# File extension #}
+                        <div class="form-group col-md-6">
+                            <div class="text-muted">File extension</div>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">.</div>
+                                </div>
+                                <input name="ext" placeholder="Extensions, comma-separated" class="form-control"
+                                       value="{{ extensions }}">
+                            </div>
+                        </div>
+                        {# Fields #}
+                        <div class="col-md-5" style="margin-left: 1em">
+                            <div class="text-muted">Search in</div>
+                            <div class="form-group form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="field_name" name="field_name"{{ "checked" if field_name else ""}}>
+                                <label class="form-check-label" for="field_name">name</label>
+                            </div>
+                            <div class="form-group form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="field_trigram" name="field_trigram"{{ "checked" if field_trigram else ""}}>
+                                <label class="form-check-label" for="field_trigram">name.trigram</label>
+                            </div>
+                            <div class="form-group form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="field_path" name="field_path" {{ "checked" if field_path else ""}}>
+                                <label class="form-check-label" for="field_path">path</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-muted">Display options</div>
+                    <div class="form-row">
+
                         <div class="form-group col-md-3">
+                            {# Sort order #}
                             <select class="form-control" name="sort_order" title="Sort order">
-                                <option disabled>Select sort order</option>
+                                <option disabled>Sort order</option>
                                 <option value="score" {{ "selected" if sort_order == "score" else "" }}>Relevance </option>
                                 <option value="size_asc" {{ "selected" if sort_order == "size_asc" else "" }}>Size ascending </option>
                                 <option value="size_dsc" {{ "selected" if sort_order == "size_dsc" else "" }}>Size descending</option>
@@ -38,27 +84,12 @@
                                 {% endfor %}
                             </select>
                         </div>
-                    </div>
-                    {# Filters #}
-                    <span class="text-muted">Filters</span>
-                    <div class="form-row">
 
-                        {# File extension #}
-                        <div class="form-group col-md-6">
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <div class="input-group-text">.</div>
-                                </div>
-                                <input name="ext" placeholder="Extensions, comma-separated" class="form-control" value="{{ extensions }}">
-                            </div>
+                        {# Search button #}
+                        <div class="form-group col-md-7">
+                            <input class="btn btn-primary btn-shadow" type="submit" value="Search" style="float: right">
                         </div>
                     </div>
-                    {# Size #}
-                    <input title="File size" id="sizeSlider">
-                    <input type="hidden" name="size_min" id="sizeMin" value="{{ size_min }}">
-                    <input type="hidden" name="size_max" id="sizeMax" value="{{ size_max }}">
-
-                    <input class="btn btn-primary btn-shadow" type="submit" value="Search">
 
                 </form>
             </div>
@@ -76,7 +107,14 @@
 
                             {% for hit in results["hits"]["hits"] %}
                                 {% set src = hit["_source"] %}
-                                {% set hl_name = hit["highlight"]["name"][0] if "name" in hit["highlight"] else src["name"] %}
+                                {% if "name" in hit["highlight"] %}
+                                    {% set hl_name = hit["highlight"]["name"][0] %}
+                                {% elif "name.nGram" in hit["highlight"] %}
+                                    {% set hl_name = hit["highlight"]["name.nGram"][0] %}
+                                {% else %}
+                                    {% set hl_name = src["name"] %}
+                                {% endif %}
+
                                 {% set hl_path = hit["highlight"]["path"][0] if "path" in hit["highlight"] else src["path"] %}
 
                                 <tr>
@@ -98,7 +136,8 @@
                                         {% endif %}
                                         {# File path #}
                                         <div class="text-muted" title="{{ path }}" style="font-size: 10px;">
-                                            <a title="See files from this website" href="/website/{{ src["website_id"] }}">{{ src["website_url"] }}</a>{{ hl_path|safe }}
+                                            <a title="See files from this website"
+                                               href="/website/{{ src["website_id"] }}">{{ src["website_url"] }}</a>{{ hl_path|safe }}
                                         </div>
                                     </td>
                                     {# File size & date #}
@@ -112,11 +151,11 @@
                         </table>
                     </div>
                     {% if results["hits"]["total"] > (p + 1) * per_page %}
-                        <a href="/search?q={{ q }}&p={{ p + 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}&ext={{ extensions }}&size_min={{ size_min }}&size_max={{ size_max }}"
+                        <a href="/search?q={{ q }}&p={{ p + 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}&ext={{ extensions }}&size_min={{ size_min }}&size_max={{ size_max }}{{ "&field_path=on" if field_path else "" }}{{ "&field_name=on" if field_name else "" }}{{ "&field_trigram" if field_trigram else "" }}"
                            class="btn btn-primary" style="float: right">Next</a>
                     {% endif %}
                     {% if p > 0 %}
-                        <a href="/search?q={{ q }}&p={{ p - 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}&ext={{ extensions }}&size_min={{ size_min }}&size_max={{ size_max }}"
+                        <a href="/search?q={{ q }}&p={{ p - 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}&ext={{ extensions }}&size_min={{ size_min }}&size_max={{ size_max }}{{ "&field_path=on" if field_path else "" }}{{ "&field_name=on" if field_name else "" }}{{ "&field_trigram" if field_trigram else "" }}"
                            class="btn btn-primary">Previous</a>
                     {% endif %}
 
@@ -151,7 +190,7 @@
                 drag_interval: true,
                 prettify: function (num) {
 
-                    if(num === 0) {
+                    if (num === 0) {
                         return "0 B"
                     } else if (num >= 3684) {
                         return humanFileSize(num * num * num) + "+";
@@ -159,11 +198,11 @@
 
                     return humanFileSize(num * num * num)
                 },
-                onFinish: function(e) {
+                onFinish: function (e) {
                     let size_min = (e.from * e.from * e.from);
                     let size_max = (e.to * e.to * e.to);
 
-                    if (e.to >=  3684) {
+                    if (e.to >= 3684) {
                         size_max = null;
                     }
 

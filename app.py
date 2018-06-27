@@ -10,6 +10,7 @@ import config
 from flask_caching import Cache
 from task import TaskDispatcher, Task, CrawlServer
 from search.search import ElasticSearchEngine
+from jinja2 import Undefined
 
 app = Flask(__name__)
 recaptcha = ReCaptcha(app=app,
@@ -239,9 +240,27 @@ def search():
     size_max = request.args.get("size_max") if "size_max" in request.args else "size_max"
     size_max = int(size_max) if size_max.isdigit() else 0
 
+    match_all = "all" in request.args
+
+    field_name = "field_name" in request.args
+    field_trigram = "field_trigram" in request.args
+    field_path = "field_path" in request.args
+
+    if not field_name and not field_trigram and not field_path:
+        # If no fields are selected, search in all
+        field_name = field_path = field_trigram = True
+
+    fields = []
+    if field_path:
+        fields.append("path")
+    if field_name:
+        fields.append("name^5")
+    if field_trigram:
+        fields.append("name.nGram^2")
+
     if len(q) >= 3:
         try:
-            hits = searchEngine.search(q, page, per_page, sort_order, extensions, size_min, size_max)
+            hits = searchEngine.search(q, page, per_page, sort_order, extensions, size_min, size_max, match_all, fields)
             hits = db.join_website_on_search_result(hits)
         except InvalidQueryException as e:
             flash("<strong>Invalid query:</strong> " + str(e), "warning")
@@ -250,9 +269,15 @@ def search():
         hits = None
 
     return render_template("search.html",
-                           results=hits, q=q, p=page, sort_order=sort_order,
-                           per_page=per_page, results_set=config.RESULTS_PER_PAGE,
-                           extensions=",".join(extensions), size_min=size_min, size_max=size_max)
+                           results=hits,
+                           q=q,
+                           p=page, per_page=per_page,
+                           sort_order=sort_order,
+                           results_set=config.RESULTS_PER_PAGE,
+                           extensions=",".join(extensions),
+                           size_min=size_min, size_max=size_max,
+                           match_all=match_all,
+                           field_trigram=field_trigram, field_path=field_path, field_name=field_name)
 
 
 @app.route("/contribute")

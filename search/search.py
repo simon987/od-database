@@ -16,7 +16,7 @@ class SearchEngine:
     def import_json(self, in_str: str, website_id: int):
         raise NotImplementedError
 
-    def search(self, query, page, per_page, sort_order, extension, size_min, size_max) -> {}:
+    def search(self, query, page, per_page, sort_order, extension, size_min, size_max, match_all, fields) -> {}:
         raise NotImplementedError
 
     def reset(self):
@@ -142,7 +142,7 @@ class ElasticSearchEngine(SearchEngine):
         action_string = '{"index":{}}\n'
         return "\n".join("".join([action_string, ujson.dumps(doc)]) for doc in docs)
 
-    def search(self, query, page, per_page, sort_order, extensions, size_min, size_max) -> {}:
+    def search(self, query, page, per_page, sort_order, extensions, size_min, size_max, match_all, fields) -> {}:
 
         filters = []
         if extensions:
@@ -167,8 +167,8 @@ class ElasticSearchEngine(SearchEngine):
                     "must": {
                         "multi_match": {
                             "query": query,
-                            "fields": ["name^5", "name.nGram^2", "path"],
-                            "operator": "or"
+                            "fields": fields,
+                            "operator": "or" if match_all else "and"
                         }
                     },
                     "filter": filters
