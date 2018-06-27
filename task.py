@@ -2,7 +2,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from search.search import ElasticSearchEngine
 from crawl_server.database import Task, TaskResult
 import requests
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, ReadTimeout
 import json
 import database
 from concurrent.futures import ThreadPoolExecutor
@@ -36,7 +36,7 @@ class CrawlServer:
                               timeout=5)
             print(r)  # TODO: If the task could not be added, fallback to another server
             return r.status_code == 200
-        except ConnectionError:
+        except (ConnectionError, ReadTimeout):
             return False
 
     def pop_completed_tasks(self) -> list:
@@ -50,7 +50,7 @@ class CrawlServer:
             return [
                 TaskResult(r["status_code"], r["file_count"], r["start_time"], r["end_time"], r["website_id"])
                 for r in json.loads(r.text)]
-        except ConnectionError:
+        except (ConnectionError, ReadTimeout):
             print("Crawl server cannot be reached @ " + self.url)
             return []
 
@@ -68,7 +68,7 @@ class CrawlServer:
                 Task(t["website_id"], t["url"], t["priority"], t["callback_type"], t["callback_args"])
                 for t in json.loads(r.text)
             ]
-        except ConnectionError:
+        except (ConnectionError, ReadTimeout):
             return None
 
     def fetch_current_tasks(self):
@@ -85,7 +85,7 @@ class CrawlServer:
                 Task(t["website_id"], t["url"], t["priority"], t["callback_type"], t["callback_args"])
                 for t in json.loads(r.text)
             ]
-        except ConnectionError:
+        except (ConnectionError, ReadTimeout):
             return None
 
     def fetch_website_files(self, website_id) -> str:
@@ -101,7 +101,7 @@ class CrawlServer:
 
             for line in r.iter_lines(chunk_size=1024 * 256):
                 yield line
-        except ConnectionError:
+        except (ConnectionError, ReadTimeout):
             return ""
 
     def free_website_files(self, website_id) -> bool:
@@ -110,7 +110,7 @@ class CrawlServer:
             r = requests.get(self.url + "/file_list/" + str(website_id) + "/free", headers=self._generate_headers(),
                              verify=False)
             return r.status_code == 200
-        except ConnectionError as e:
+        except (ConnectionError, ReadTimeout) as e:
             print(e)
             return False
 
@@ -126,7 +126,7 @@ class CrawlServer:
                 Task(t["website_id"], t["url"], t["priority"], t["callback_type"], t["callback_args"])
                 for t in json.loads(r.text)
             ]
-        except ConnectionError:
+        except (ConnectionError, ReadTimeout):
             return []
 
 
