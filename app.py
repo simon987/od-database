@@ -233,7 +233,7 @@ def search():
     per_page = per_page if per_page in config.RESULTS_PER_PAGE else 50
 
     extensions = request.args.get("ext") if "ext" in request.args else None
-    extensions = [ext.strip().strip(".") for ext in extensions.split(",")] if extensions else []
+    extensions = [ext.strip().strip(".").lower() for ext in extensions.split(",")] if extensions else []
 
     size_min = request.args.get("size_min") if "size_min" in request.args else "size_min"
     size_min = int(size_min) if size_min.isdigit() else 0
