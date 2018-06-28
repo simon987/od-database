@@ -10,7 +10,6 @@ import config
 from flask_caching import Cache
 from task import TaskDispatcher, Task, CrawlServer
 from search.search import ElasticSearchEngine
-from jinja2 import Undefined
 
 app = Flask(__name__)
 recaptcha = ReCaptcha(app=app,

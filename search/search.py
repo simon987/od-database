@@ -16,7 +16,8 @@ class SearchEngine:
     def import_json(self, in_str: str, website_id: int):
         raise NotImplementedError
 
-    def search(self, query, page, per_page, sort_order, extension, size_min, size_max, match_all, fields, date_min, date_max) -> {}:
+    def search(self, query, page, per_page, sort_order, extension, size_min, size_max, match_all, fields, date_min,
+               date_max) -> {}:
         raise NotImplementedError
 
     def reset(self):
@@ -142,7 +143,8 @@ class ElasticSearchEngine(SearchEngine):
         action_string = '{"index":{}}\n'
         return "\n".join("".join([action_string, ujson.dumps(doc)]) for doc in docs)
 
-    def search(self, query, page, per_page, sort_order, extensions, size_min, size_max, match_all, fields, date_min, date_max) -> {}:
+    def search(self, query, page, per_page, sort_order, extensions, size_min, size_max, match_all, fields, date_min,
+               date_max) -> {}:
 
         filters = []
         if extensions:
@@ -264,16 +266,18 @@ class ElasticSearchEngine(SearchEngine):
         size_per_ext = self.es.search(body={
             "query": {
                 "bool": {
-                    "must_not": {
-                        "term": {"size": -1}
-                    }
+                    "filter": [
+                        {"range": {
+                            "size": {"gte": 0, "lte": (1000000000000 - 1)}  # 0-1TB
+                        }}
+                    ]
                 }
             },
             "aggs": {
                 "ext_group": {
                     "terms": {
                         "field": "ext",
-                        "size": 20
+                        "size": 40
                     },
                     "aggs": {
                         "size": {
@@ -285,14 +289,17 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
+
         }, index=self.index_name, request_timeout=30)
 
         total_stats = self.es.search(body={
             "query": {
                 "bool": {
-                    "must_not": {
-                        "term": {"size": -1}
-                    }
+                    "filter": [
+                        {"range": {
+                            "size": {"gte": 0, "lte": (1000000000000 - 1)}  # 0-1TB
+                        }}
+                    ]
                 }
             },
             "aggs": {
@@ -304,23 +311,19 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
+
         }, index=self.index_name, request_timeout=30)
 
         size_and_date_histogram = self.es.search(body={
             "query": {
                 "bool": {
-                    "must_not": {
-                        "term": {"size": -1},
-                    },
                     "filter": [
+                        {"range": {
+                            "size": {"gte": 0, "lte": (1000000000000 - 1)}  # 0-1TB
+                        }},
                         {"range": {
                             "mtime": {
                                 "gt": 0  # 1970-01-01
-                            }
-                        }},
-                        {"range": {
-                            "size": {
-                                "gt": 0
                             }
                         }}
                     ]
@@ -349,9 +352,11 @@ class ElasticSearchEngine(SearchEngine):
         website_scatter = self.es.search(body={
             "query": {
                 "bool": {
-                    "must_not": {
-                        "term": {"size": -1},
-                    }
+                    "filter": [
+                        {"range": {
+                            "size": {"gte": 0, "lte": (1000000000000 - 1)}  # 0-1TB
+                        }}
+                    ]
                 }
             },
             "aggs": {
@@ -379,7 +384,9 @@ class ElasticSearchEngine(SearchEngine):
         stats["es_search_count"] = es_stats["indices"][self.index_name]["total"]["search"]["query_total"]
         stats["es_search_time"] = es_stats["indices"][self.index_name]["total"]["search"]["query_time_in_millis"]
         stats["es_search_time_avg"] = stats["es_search_time"] / (
+
             stats["es_search_count"] if stats["es_search_count"] != 0 else 1)
+
         stats["total_count"] = total_stats["hits"]["total"]
         stats["total_size"] = total_stats["aggregations"]["file_stats"]["sum"]
         stats["size_avg"] = total_stats["aggregations"]["file_stats"]["avg"]
@@ -398,40 +405,40 @@ class ElasticSearchEngine(SearchEngine):
 
         return stats
 
-    def stream_all_docs(self):
 
-        return helpers.scan(query={
-            "query": {
-                "match_all": {}
-            }
-        }, scroll="5m", client=self.es, index=self.index_name)
+def stream_all_docs(self):
+    return helpers.scan(query={
+        "query": {
+            "match_all": {}
+        }
+    }, scroll="5m", client=self.es, index=self.index_name)
 
-    def are_empty(self, websites):
 
-        result = self.es.search(body={
-            "query": {
-                "bool": {
-                    "filter": {
-                        "terms": {
-                            "website_id": websites
-                        },
-                    }
-                }
-            },
-            "aggs": {
-                "websites": {
+def are_empty(self, websites):
+    result = self.es.search(body={
+        "query": {
+            "bool": {
+                "filter": {
                     "terms": {
-                        "field": "website_id",
-                        "size": 100000,
-                        "min_doc_count": 1
-                    }
+                        "website_id": websites
+                    },
                 }
-            },
-            "size": 0
-        }, index=self.index_name, request_timeout=30)
+            }
+        },
+        "aggs": {
+            "websites": {
+                "terms": {
+                    "field": "website_id",
+                    "size": 100000,
+                    "min_doc_count": 1
+                }
+            }
+        },
+        "size": 0
+    }, index=self.index_name, request_timeout=30)
 
-        non_empty_websites = [bucket["key"] for bucket in result["aggregations"]["websites"]["buckets"]]
+    non_empty_websites = [bucket["key"] for bucket in result["aggregations"]["websites"]["buckets"]]
 
-        for website in websites:
-            if website not in non_empty_websites:
-                yield website
+    for website in websites:
+        if website not in non_empty_websites:
+            yield website
