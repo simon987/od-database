@@ -406,39 +406,39 @@ class ElasticSearchEngine(SearchEngine):
         return stats
 
 
-def stream_all_docs(self):
-    return helpers.scan(query={
-        "query": {
-            "match_all": {}
-        }
-    }, scroll="5m", client=self.es, index=self.index_name)
+    def stream_all_docs(self):
+        return helpers.scan(query={
+            "query": {
+                "match_all": {}
+            }
+        }, scroll="5m", client=self.es, index=self.index_name)
 
 
-def are_empty(self, websites):
-    result = self.es.search(body={
-        "query": {
-            "bool": {
-                "filter": {
+    def are_empty(self, websites):
+        result = self.es.search(body={
+            "query": {
+                "bool": {
+                    "filter": {
+                        "terms": {
+                            "website_id": websites
+                        },
+                    }
+                }
+            },
+            "aggs": {
+                "websites": {
                     "terms": {
-                        "website_id": websites
-                    },
+                        "field": "website_id",
+                        "size": 100000,
+                        "min_doc_count": 1
+                    }
                 }
-            }
-        },
-        "aggs": {
-            "websites": {
-                "terms": {
-                    "field": "website_id",
-                    "size": 100000,
-                    "min_doc_count": 1
-                }
-            }
-        },
-        "size": 0
-    }, index=self.index_name, request_timeout=30)
+            },
+            "size": 0
+        }, index=self.index_name, request_timeout=30)
 
-    non_empty_websites = [bucket["key"] for bucket in result["aggregations"]["websites"]["buckets"]]
+        non_empty_websites = [bucket["key"] for bucket in result["aggregations"]["websites"]["buckets"]]
 
-    for website in websites:
-        if website not in non_empty_websites:
-            yield website
+        for website in websites:
+            if website not in non_empty_websites:
+                yield website
