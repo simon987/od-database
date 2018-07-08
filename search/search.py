@@ -405,14 +405,12 @@ class ElasticSearchEngine(SearchEngine):
 
         return stats
 
-
     def stream_all_docs(self):
         return helpers.scan(query={
             "query": {
                 "match_all": {}
             }
         }, scroll="5m", client=self.es, index=self.index_name)
-
 
     def are_empty(self, websites):
         result = self.es.search(body={

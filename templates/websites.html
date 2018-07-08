@@ -6,7 +6,28 @@
 {% block body %}
     <div class="container">
         <div class="card">
-            <div class="card-header">Last updated websites</div>
+            <div class="card-header">Go to website</div>
+            <div class="card-body">
+
+                <a class="btn btn-secondary" href="/website/random">Go to random website</a>
+                <hr>
+                <h3>Website search</h3>
+                <form>
+                    <div class="form-row">
+                        <div class="col-md-11">
+                            <input class="form-control" placeholder="URL" name="url" value="{{ url }}">
+                        </div>
+                        <div class="col-md-1">
+                            <input class="btn btn-primary" type="submit" value="Search">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">Websites</div>
             <div class="card-body">
                 <table class="table table-striped">
                     <thead>
@@ -23,6 +44,12 @@
                         </tr>
                     {% endfor %}
                 </table>
+                {% if websites|length == per_page %}
+                    <a href="/website?url={{ url }}&p={{ p + 1 }}" class="btn btn-primary" style="float: right">Next</a>
+                {% endif %}
+                {% if p > 0 %}
+                    <a href="/website?url={{ url }}&p={{ p - 1 }}" class="btn btn-primary">Previous</a>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -1,5 +1,6 @@
 from flask import Flask, render_template, redirect, request, flash, abort, Response, send_from_directory, session
 import json
+from urllib.parse import urlparse
 import os
 import time
 import itertools
@@ -105,7 +106,26 @@ def website_links(website_id):
 @app.route("/website/")
 def websites():
     page = int(request.args.get("p")) if "p" in request.args else 0
-    return render_template("websites.html", websites=db.get_websites(100, page))
+    url = request.args.get("url") if "url" in request.args else ""
+    if url:
+        parsed_url = urlparse(url)
+        if parsed_url.scheme:
+            search_term = (parsed_url.scheme + "://" + parsed_url.netloc)
+        else:
+            flash("Sorry, I was not able to parse this url format. "
+                  "Make sure you include the appropriate scheme (http/https/ftp)", "warning")
+            search_term = ""
+    else:
+        search_term = url
+
+    return render_template("websites.html",
+                           websites=db.get_websites(10, page, search_term),
+                           p=page, url=search_term, per_page=10)
+
+
+@app.route("/website/random")
+def random_website():
+    return redirect("/website/" + str(db.get_random_website_id()))
 
 
 @app.route("/website/redispatch_queued")

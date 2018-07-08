@@ -104,15 +104,24 @@ class Database:
             else:
                 return None
 
-    def get_websites(self, per_page, page: int):
+    def get_websites(self, per_page, page: int, url):
         """Get all websites"""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
 
             cursor.execute("SELECT Website.id, Website.url, Website.last_modified FROM Website "
-                           "ORDER BY last_modified DESC LIMIT ? OFFSET ?", (per_page, page * per_page))
+                           "WHERE Website.url LIKE ?"
+                           "ORDER BY last_modified DESC LIMIT ? OFFSET ?", (url + "%", per_page, page * per_page))
 
             return cursor.fetchall()
+
+    def get_random_website_id(self):
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM Website WHERE id >= (abs(random()) % (SELECT max(id) FROM Website)) LIMIT 1;")
+
+            return cursor.fetchone()[0]
 
     def website_exists(self, url):
         """Check if an url or the parent directory of an url already exists"""
