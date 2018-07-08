@@ -119,8 +119,8 @@ def websites():
         search_term = url
 
     return render_template("websites.html",
-                           websites=db.get_websites(10, page, search_term),
-                           p=page, url=search_term, per_page=10)
+                           websites=db.get_websites(50, page, search_term),
+                           p=page, url=search_term, per_page=50)
 
 
 @app.route("/website/random")
