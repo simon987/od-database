@@ -105,6 +105,7 @@ class HttpDirectory(RemoteDirectory):
         path_url = urljoin(self.base_url, path, "")
         body = self._stream_body(path_url)
         if not body:
+            logger.info("No body returned @ " + path_url)
             return None, None
         anchors = self._parse_links(body)
 

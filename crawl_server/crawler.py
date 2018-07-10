@@ -92,6 +92,7 @@ class RemoteDirectoryCrawler:
                 if root_listing:
                     self.crawled_paths.append(path_id)
                 else:
+                    logger.info("No files in root listing for " + self.url)
                     return CrawlResult(0, "empty")
                 directory.close()
             except TimeoutError:

@@ -180,7 +180,7 @@ def is_od(url):
         elif config.SUBMIT_HTTP:
             r = requests.get(url, timeout=30, allow_redirects=False, verify=False)
             if r.status_code != 200:
-                print("No redirects allowed!")
+                # print("No redirects allowed!")
                 return False
             soup = BeautifulSoup(r.text, "lxml")
 
@@ -189,20 +189,54 @@ def is_od(url):
             script_tags = len(list(soup.find_all("script")))
 
             if external_links > 11:
-                print("Too many external links!")
+                # print("Too many external links!")
                 return False
 
             if link_tags > 5:
-                print("Too many link tags!")
+                # print("Too many link tags!")
                 return False
 
             if script_tags > 7:
-                print("Too many script tags!")
+                # print("Too many script tags!")
                 return False
 
             return True
 
     except Exception as e:
-        print(e)
+        # print(e)
         return False
 
+
+def has_parent_dir(url):
+
+    parsed_url = urlparse(url)
+
+    if parsed_url.path == "/":
+        return False
+
+    parent_url = urljoin(url, "../")
+    try:
+        r = requests.get(parent_url, timeout=30, allow_redirects=False, verify=False)
+        if r.status_code != 200:
+            return False
+        soup = BeautifulSoup(r.text, "lxml")
+
+        for anchor in soup.find_all("a"):
+            if anchor.get("href") and anchor.get("href").endswith("/") and urljoin(parent_url, anchor.get("href")) == url:
+                # The parent page exists, and has a link to the child directory
+                return is_od(parent_url)
+
+    except:
+        return False
+
+    # Parent page exists, but does not have a link to the child directory
+    return False
+
+
+def get_top_directory(url):
+    if url.startswith("ftp://"):
+        return url
+
+    while has_parent_dir(url):
+        url = urljoin(url, "../")
+    return url

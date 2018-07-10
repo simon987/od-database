@@ -322,17 +322,18 @@ def submit():
 
 def try_enqueue(url):
     url = os.path.join(url, "")
-    website = db.get_website_by_url(url)
+    url = od_util.get_top_directory(url)
 
+    if not od_util.is_valid_url(url):
+        return "<strong>Error:</strong> Invalid url. Make sure to include the appropriate scheme.", "warning"
+
+    website = db.get_website_by_url(url)
     if website:
         return "Website already exists", "danger"
 
     website = db.website_exists(url)
     if website:
         return "A parent directory of this url has already been posted", "danger"
-
-    if not od_util.is_valid_url(url):
-        return "<strong>Error:</strong> Invalid url. Make sure to include the appropriate scheme.", "danger"
 
     if db.is_blacklisted(url):
         return "<strong>Error:</strong> " \
