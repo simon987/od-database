@@ -1,4 +1,5 @@
 import elasticsearch
+import time
 from elasticsearch import helpers
 import os
 import ujson
@@ -107,6 +108,9 @@ class ElasticSearchEngine(SearchEngine):
             }, index=self.index_name, request_timeout=40)
         except elasticsearch.exceptions.ConflictError:
             print("Error: multiple delete tasks at the same time")
+        except elasticsearch.exceptions.ConnectionTimeout:
+            print("Timeout during delete!")
+            time.sleep(30)
 
     def import_json(self, in_lines, website_id: int):
 
