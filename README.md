@@ -31,3 +31,34 @@ export PYTHONPATH=$(pwd)
 cd crawl_server
 python3 server.py
 ```
+## Running the web server (development)
+```bash
+cd od-database
+python3 app.py
+```
+
+## Running the web server with nginx (production)
+* Install dependencies:
+```bash
+sudo apt install build-essential python-dev
+sudo pip install uwsgi
+```
+* Adjust the path in `od-database.ini`
+* Configure nginx (on Debian 9: `/etc/nginx/sites-enabled/default`):
+```nginx
+server {
+        ...
+
+        include uwsgi_params;
+        location / {
+                uwsgi_pass 127.0.0.1:3031;
+        }
+        
+        ...
+}
+```
+* Start uwsgi:
+```bash
+uwsgi od-database.ini
+```
+
