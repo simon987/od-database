@@ -25,9 +25,11 @@
                                 <input class="form-control" name="url" id="url" placeholder="URL">
                             </div>
                             <div class="row">
-                                <div class="col">
-{#                                    {{ recaptcha.get_code()|safe }}#}
-                                </div>
+                                {% if show_captcha %}
+                                    <div class="col">
+                                        {{ recaptcha.get_code()|safe }}
+                                    </div>
+                                {% endif %}
                                 <div class="col">
                                     <input class="btn btn-primary" type="submit" value="Submit" title="Submit open directory">
                                 </div>
@@ -42,9 +44,11 @@
                                 <textarea class="form-control" name="urls" id="urls" rows="10" placeholder="One URL per line, max. 10"></textarea>
                             </div>
                             <div class="row">
-                                <div class="col">
-{#                                    {{ recaptcha.get_code()|safe }}#}
-                                </div>
+                                {% if show_captcha %}
+                                    <div class="col">
+                                        {{ recaptcha.get_code()|safe }}
+                                    </div>
+                                {% endif %}
                                 <div class="col">
                                     <input class="btn btn-primary" type="submit" value="Submit" title="Submit open directories">
                                 </div>

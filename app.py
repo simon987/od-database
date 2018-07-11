@@ -13,9 +13,12 @@ from task import TaskDispatcher, Task, CrawlServer
 from search.search import ElasticSearchEngine
 
 app = Flask(__name__)
-recaptcha = ReCaptcha(app=app,
-                      site_key=config.CAPTCHA_SITE_KEY,
-                      secret_key=config.CAPTCHA_SECRET_KEY)
+if config.CAPTCHA_SUBMIT or config.CAPTCHA_LOGIN:
+    recaptcha = ReCaptcha(app=app,
+                          site_key=config.CAPTCHA_SITE_KEY,
+                          secret_key=config.CAPTCHA_SECRET_KEY)
+else:
+    recaptcha = None
 app.secret_key = config.FLASK_SECRET
 db = Database("db.sqlite3")
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
@@ -317,7 +320,7 @@ def home():
 @app.route("/submit")
 def submit():
     queued_websites = taskDispatcher.get_queued_tasks()
-    return render_template("submit.html", queue=queued_websites, recaptcha=recaptcha)
+    return render_template("submit.html", queue=queued_websites, recaptcha=recaptcha, show_captcha=config.CAPTCHA_SUBMIT)
 
 
 def try_enqueue(url):
@@ -356,59 +359,56 @@ def try_enqueue(url):
 
 @app.route("/enqueue", methods=["POST"])
 def enqueue():
-    # if recaptcha.verify():
+    if not config.CAPTCHA_SUBMIT or recaptcha.verify():
 
-    url = os.path.join(request.form.get("url"), "")
-    message, msg_type = try_enqueue(url)
-    flash(message, msg_type)
+        url = os.path.join(request.form.get("url"), "")
+        message, msg_type = try_enqueue(url)
+        flash(message, msg_type)
 
-    return redirect("/submit")
+        return redirect("/submit")
 
-
-# else:
-#     flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
-#     return redirect("/submit")
+    else:
+        flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
+        return redirect("/submit")
 
 
 @app.route("/enqueue_bulk", methods=["POST"])
 def enqueue_bulk():
-    # if recaptcha.verify():
+    if not config.CAPTCHA_SUBMIT or recaptcha.verify():
 
-    urls = request.form.get("urls")
-    if urls:
-        urls = urls.split()
+        urls = request.form.get("urls")
+        if urls:
+            urls = urls.split()
 
-        if 0 < len(urls) <= 1000000000000:
+            if 0 < len(urls) <= 1000000000000:
 
-            for url in urls:
-                url = os.path.join(url, "")
-                message, msg_type = try_enqueue(url)
-                message += ' <span class="badge badge-' + msg_type + '">' + url + '</span>'
-                flash(message, msg_type)
-            return redirect("/submit")
+                for url in urls:
+                    url = os.path.join(url, "")
+                    message, msg_type = try_enqueue(url)
+                    message += ' <span class="badge badge-' + msg_type + '">' + url + '</span>'
+                    flash(message, msg_type)
+                return redirect("/submit")
 
+            else:
+                flash("Too few or too many urls, please submit 1-10 urls", "danger")
+                return redirect("/submit")
         else:
-            flash("Too few or too many urls, please submit 1-10 urls", "danger")
-            return redirect("/submit")
+            return abort(500)
     else:
-        return abort(500)
-
-
-# else:
-#     flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
-#     return redirect("/submit")
+        flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
+        return redirect("/submit")
 
 
 @app.route("/admin")
 def admin_login_form():
     if "username" in session:
         return redirect("/dashboard")
-    return render_template("admin.html", recaptcha=recaptcha)
+    return render_template("admin.html", recaptcha=recaptcha, show_captcha=config.CAPTCHA_LOGIN)
 
 
 @app.route("/login", methods=["POST"])
 def admin_login():
-    if recaptcha.verify():
+    if not config.CAPTCHA_LOGIN or recaptcha.verify():
 
         username = request.form.get("username")
         password = request.form.get("password")

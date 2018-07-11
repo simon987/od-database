@@ -15,7 +15,9 @@
                         <input class="form-control" name="password" placeholder="Password" type="password">
                     </div>
 
-                    {{ recaptcha.get_code()|safe }}
+                    {% if show_captcha %}
+                        {{ recaptcha.get_code()|safe }}
+                    {% endif %}
 
                     <input type="submit" value="Login">
 

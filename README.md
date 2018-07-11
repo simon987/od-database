@@ -11,16 +11,27 @@ sudo pip3 install -r requirements.txt
 ```
 Create `/config.py` and fill out the parameters. Sample config:
 ```python
+# Leave default values for no CAPTCHAs
+CAPTCHA_LOGIN = False
+CAPTCHA_SUBMIT = False
 CAPTCHA_SITE_KEY = ""
 CAPTCHA_SECRET_KEY = ""
+
+# Flask secret key for sessions
 FLASK_SECRET = ""
 RESULTS_PER_PAGE = (25, 50, 100, 250, 500, 1000)
+# Headers for http crawler
 HEADERS = {}
+# Token for the crawl server, used by the server to communicate to the crawl server
 CRAWL_SERVER_TOKEN = ""
 CRAWL_SERVER_PORT = 5001
+# Number of crawler instances (one per task)
 CRAWL_SERVER_PROCESSES = 3
+# Number of threads per crawler instance
 CRAWL_SERVER_THREADS = 20
+# Allow ftp websites in /submit
 SUBMIT_FTP = False
+# Allow http(s) websites in /submit
 SUBMIT_HTTP = True
 ```
 
