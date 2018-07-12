@@ -114,7 +114,8 @@ class ElasticSearchEngine(SearchEngine):
 
     def import_json(self, in_lines, website_id: int):
 
-        import_every = 2500
+        import_every = 1000
+        cooldown_time = 0.250
 
         docs = []
 
@@ -129,6 +130,8 @@ class ElasticSearchEngine(SearchEngine):
             if len(docs) >= import_every:
                 self._index(docs)
                 docs.clear()
+                time.sleep(cooldown_time)
+
         if docs:
             self._index(docs)
 
@@ -264,8 +267,6 @@ class ElasticSearchEngine(SearchEngine):
                   ("." if src["ext"] != "" else "") + src["ext"]
 
     def get_global_stats(self):
-
-        # TODO: mem cache this
 
         size_per_ext = self.es.search(body={
             "query": {

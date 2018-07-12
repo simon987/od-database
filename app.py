@@ -58,6 +58,7 @@ def stats_page():
 
 
 @app.route("/stats/json_chart")
+@cache.cached(240)
 def stats_json():
     stats = searchEngine.get_global_stats()
     db.join_website_on_stats(stats)
@@ -82,7 +83,7 @@ def website_info(website_id):
 
 
 @app.route("/website/<int:website_id>/json_chart")
-@cache.memoize(30)
+@cache.memoize(60)
 def website_json_chart(website_id):
     website = db.get_website_by_id(website_id)
 
@@ -310,6 +311,7 @@ def contribute():
 
 
 @app.route("/")
+@cache.cached(240)
 def home():
     stats = searchEngine.get_global_stats()
     stats["website_count"] = len(db.get_all_websites())
@@ -393,7 +395,8 @@ def enqueue_bulk():
                 flash("Too few or too many urls, please submit 1-10 urls", "danger")
                 return redirect("/submit")
         else:
-            return abort(500)
+            flash("Too few or too many urls, please submit 1-10 urls", "danger")
+            return redirect("/submit")
     else:
         flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
         return redirect("/submit")
