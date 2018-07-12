@@ -105,10 +105,10 @@ class ElasticSearchEngine(SearchEngine):
                         }
                     }
                 }
-            }, index=self.index_name, request_timeout=40)
+            }, index=self.index_name, request_timeout=200)
         except elasticsearch.exceptions.ConflictError:
             print("Error: multiple delete tasks at the same time")
-        except elasticsearch.exceptions.ConnectionTimeout:
+        except Exception:
             print("Timeout during delete!")
             time.sleep(30)
 
