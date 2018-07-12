@@ -238,7 +238,7 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
-        }, index=self.index_name, request_timeout=30)
+        }, index=self.index_name, request_timeout=20)
 
         stats = dict()
         stats["total_size"] = result["aggregations"]["total_size"]["value"]
@@ -260,7 +260,7 @@ class ElasticSearchEngine(SearchEngine):
                                         "website_id": website_id}
                                 }
                             },
-                            index=self.index_name, request_timeout=30)
+                            index=self.index_name, request_timeout=20)
         for hit in hits:
             src = hit["_source"]
             yield base_url + src["path"] + ("/" if src["path"] != "" else "") + src["name"] + \
@@ -295,7 +295,7 @@ class ElasticSearchEngine(SearchEngine):
             },
             "size": 0
 
-        }, index=self.index_name, request_timeout=30)
+        }, index=self.index_name, request_timeout=20)
 
         total_stats = self.es.search(body={
             "query": {
@@ -317,7 +317,7 @@ class ElasticSearchEngine(SearchEngine):
             },
             "size": 0
 
-        }, index=self.index_name, request_timeout=30)
+        }, index=self.index_name, request_timeout=20)
 
         size_and_date_histogram = self.es.search(body={
             "query": {
@@ -352,7 +352,7 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
-        }, index=self.index_name, request_timeout=30)
+        }, index=self.index_name, request_timeout=20)
 
         website_scatter = self.es.search(body={
             "query": {
@@ -380,9 +380,9 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
-        }, index=self.index_name, request_timeout=30)
+        }, index=self.index_name, request_timeout=20)
 
-        es_stats = self.es.indices.stats(self.index_name, request_timeout=30)
+        es_stats = self.es.indices.stats(self.index_name, request_timeout=20)
 
         stats = dict()
         stats["es_index_size"] = es_stats["indices"][self.index_name]["total"]["store"]["size_in_bytes"]

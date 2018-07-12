@@ -288,6 +288,10 @@ def search():
         except InvalidQueryException as e:
             flash("<strong>Invalid query:</strong> " + str(e), "warning")
             return redirect("/search")
+        except Exception:
+            flash("Query failed, this could mean that the search server is overloaded or is not reachable. "
+                  "Please try again later", "danger")
+            hits = None
 
     else:
         hits = None
@@ -313,9 +317,13 @@ def contribute():
 @app.route("/")
 @cache.cached(240)
 def home():
-    stats = searchEngine.get_global_stats()
-    stats["website_count"] = len(db.get_all_websites())
-    current_websites = ", ".join(task.url for task in taskDispatcher.get_current_tasks())
+    try:
+        stats = searchEngine.get_global_stats()
+        stats["website_count"] = len(db.get_all_websites())
+        current_websites = ", ".join(task.url for task in taskDispatcher.get_current_tasks())
+    except:
+        stats = {}
+        current_websites = None
     return render_template("home.html", stats=stats, current_websites=current_websites)
 
 
