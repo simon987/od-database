@@ -1,4 +1,4 @@
-from crawl_server.database import Task
+from tasks import Task
 from crawl_server.reddit_bot import RedditBot
 import praw
 

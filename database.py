@@ -1,13 +1,11 @@
 import sqlite3
+import json
 import datetime
-from collections import defaultdict
 from urllib.parse import urlparse
 import os
 import bcrypt
 import uuid
-import task
-from crawl_server.database import TaskResult
-
+import tasks
 
 class InvalidQueryException(Exception):
     pass
@@ -29,11 +27,37 @@ class Website:
         self.id = website_id
 
 
-class ApiToken:
+class ApiClient:
 
-    def __init__(self, token, description):
+    def __init__(self, token, name):
         self.token = token
-        self.description = description
+        self.name = name
+
+
+class Task:
+
+    def __init__(self, website_id: int, url: str, priority: int = 1,
+                 callback_type: str = None, callback_args: str = None):
+        self.website_id = website_id
+        self.url = url
+        self.priority = priority
+        self.callback_type = callback_type
+        self.callback_args = json.loads(callback_args) if callback_args else {}
+
+    def to_json(self):
+        return {
+            "website_id": self.website_id,
+            "url": self.url,
+            "priority": self.priority,
+            "callback_type": self.callback_type,
+            "callback_args": json.dumps(self.callback_args)
+        }
+
+    def __str__(self):
+        return json.dumps(self.to_json())
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class Database:
@@ -171,21 +195,22 @@ class Database:
             cursor.execute("INSERT INTO Admin (username, password) VALUES (?,?)", (username, hashed_pw))
             conn.commit()
 
-    def check_api_token(self, token) -> bool:
+    def check_api_token(self, token) -> str:
 
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
 
-            cursor.execute("SELECT token FROM ApiToken WHERE token=?", (token, ))
-            return cursor.fetchone() is not None
+            cursor.execute("SELECT name FROM ApiClient WHERE token=?", (token, ))
+            result = cursor.fetchone()
+            return result[0] if result else None
 
-    def generate_api_token(self, description: str) -> str:
+    def generate_api_token(self, name: str) -> str:
 
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
 
             token = str(uuid.uuid4())
-            cursor.execute("INSERT INTO ApiToken (token, description) VALUES (?, ?)", (token, description))
+            cursor.execute("INSERT INTO ApiClient (token, name) VALUES (?, ?)", (token, name))
             conn.commit()
 
             return token
@@ -195,16 +220,16 @@ class Database:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
 
-            cursor.execute("SELECT * FROM ApiToken")
+            cursor.execute("SELECT token, name FROM ApiClient")
 
-            return [ApiToken(x[0], x[1]) for x in cursor.fetchall()]
+            return [ApiClient(x[0], x[1]) for x in cursor.fetchall()]
 
     def delete_token(self, token: str) -> None:
 
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
 
-            cursor.execute("DELETE FROM ApiToken WHERE token=?", (token, ))
+            cursor.execute("DELETE FROM ApiClient WHERE token=?", (token, ))
             conn.commit()
 
     def get_all_websites(self) -> dict:
@@ -289,41 +314,7 @@ class Database:
             cursor.execute("SELECT * FROM BlacklistedWebsite")
             return [BlacklistedWebsite(r[0], r[1]) for r in cursor.fetchall()]
 
-    def add_crawl_server(self, server: task.CrawlServer):
-
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-
-            cursor.execute("INSERT INTO CrawlServer (url, name, slots, token) VALUES (?,?,?,?)",
-                           (server.url, server.name, server.slots, server.token))
-            conn.commit()
-
-    def remove_crawl_server(self, server_id):
-
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-
-            cursor.execute("DELETE FROM CrawlServer WHERE id=?", (server_id, ))
-            conn.commit()
-
-    def get_crawl_servers(self) -> list:
-
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-
-            cursor.execute("SELECT url, name, slots, token, id FROM CrawlServer")
-
-            return [task.CrawlServer(r[0], r[1], r[2], r[3], r[4]) for r in cursor.fetchall()]
-
-    def update_crawl_server(self, server_id, url, name, slots):
-
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-
-            cursor.execute("UPDATE CrawlServer SET url=?, name=?, slots=? WHERE id=?", (url, name, slots, server_id))
-            conn.commit()
-
-    def log_result(self, result: TaskResult):
+    def log_result(self, result):
 
         with sqlite3.connect(self.db_path) as conn:
 
@@ -338,29 +329,27 @@ class Database:
 
     def get_crawl_logs(self):
 
-        with sqlite3.connect(self.db_path, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES) as conn:
+        with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
 
-            cursor.execute("SELECT website_id, status_code, file_count, start_time, end_time, indexed_time, S.name "
-                           "FROM TaskResult INNER JOIN CrawlServer S on TaskResult.server = S.id "
-                           "ORDER BY end_time DESC")
-        return [TaskResult(r[1], r[2], r[3].timestamp(), r[4].timestamp(),
-                           r[0], r[5].timestamp() if r[5] else None, r[6]) for r in cursor.fetchall()]
+            cursor.execute("SELECT website_id, status_code, file_count, start_time, end_time, server "
+                           "FROM TaskResult ORDER BY end_time DESC")
+        return [tasks.TaskResult(r[1], r[2], r[3], r[4], r[0], r[5]) for r in cursor.fetchall()]
 
-    def get_stats_by_server(self):
+    def get_stats_by_crawler(self):
 
         stats = dict()
         task_results = self.get_crawl_logs()
 
-        for server in self.get_crawl_servers():
-            task_count = sum(1 for result in task_results if result.server_name == server.name)
+        for crawler in self.get_tokens():
+            task_count = sum(1 for result in task_results if result.server_name == crawler.name)
             if task_count > 0:
-                stats[server.name] = dict()
-                stats[server.name]["file_count"] = sum(result.file_count for result in task_results if result.server_name == server.name)
-                stats[server.name]["time"] = sum((result.end_time - result.start_time) for result in task_results if result.server_name == server.name)
-                stats[server.name]["task_count"] = task_count
-                stats[server.name]["time_avg"] = stats[server.name]["time"] / task_count
-                stats[server.name]["file_count_avg"] = stats[server.name]["file_count"] / task_count
+                stats[crawler.name] = dict()
+                stats[crawler.name]["file_count"] = sum(result.file_count for result in task_results if result.server_name == crawler.name)
+                stats[crawler.name]["time"] = sum((result.end_time - result.start_time) for result in task_results if result.server_name == crawler.name)
+                stats[crawler.name]["task_count"] = task_count
+                stats[crawler.name]["time_avg"] = stats[crawler.name]["time"] / task_count
+                stats[crawler.name]["file_count_avg"] = stats[crawler.name]["file_count"] / task_count
 
         return stats
 
@@ -374,8 +363,61 @@ class Database:
 
             conn.commit()
 
+    def put_task(self, task: Task) -> None:
 
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
 
+            cursor.execute("INSERT INTO Queue (website_id, url, priority, callback_type, callback_args) "
+                           "VALUES (?,?,?,?,?)",
+                           (task.website_id, task.url, task.priority,
+                            task.callback_type, json.dumps(task.callback_args)))
+            conn.commit()
+
+    def get_tasks(self) -> list:
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT website_id, url, priority, callback_type, callback_args FROM Queue "
+                           "WHERE assigned_crawler is NULL ")
+            db_tasks = cursor.fetchall()
+
+            return [Task(t[0], t[1], t[2], t[3], t[4]) for t in db_tasks]
+
+    def pop_task(self, name) -> Task:
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT id, website_id, url, priority, callback_type, callback_args "
+                           "FROM Queue WHERE assigned_crawler is NULL "
+                           "ORDER BY priority DESC, Queue.id ASC LIMIT 1")
+            task = cursor.fetchone()
+
+            if task:
+                cursor.execute("UPDATE Queue SET assigned_crawler=? WHERE id=?", (name, task[0],))
+                conn.commit()
+                return Task(task[1], task[2], task[3], task[4], task[5])
+            else:
+                return None
+
+    def complete_task(self, website_id: int, name: str) -> Task:
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT id, website_id, url, priority, callback_type, callback_args FROM "
+                           "Queue WHERE website_id=? AND assigned_crawler=?", (website_id, name))
+
+            task = cursor.fetchone()
+
+            if task:
+                cursor.execute("DELETE FROM Queue WHERE website_id=? AND assigned_crawler=?", (website_id, name))
+                conn.commit()
+                return Task(task[1], task[2], task[3], task[4], task[5])
+            else:
+                return None
 
 
 

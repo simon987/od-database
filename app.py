@@ -3,13 +3,14 @@ import json
 from urllib.parse import urlparse
 import os
 import time
+import datetime
 import itertools
 from database import Database, Website, InvalidQueryException
 from flask_recaptcha import ReCaptcha
 import od_util
 import config
 from flask_caching import Cache
-from task import TaskDispatcher, Task, CrawlServer
+from tasks import TaskManager, Task, TaskResult
 from search.search import ElasticSearchEngine
 
 app = Flask(__name__)
@@ -26,18 +27,23 @@ app.jinja_env.globals.update(truncate_path=od_util.truncate_path)
 app.jinja_env.globals.update(get_color=od_util.get_color)
 app.jinja_env.globals.update(get_mime=od_util.get_category)
 
-taskDispatcher = TaskDispatcher()
+taskManager = TaskManager()
 searchEngine = ElasticSearchEngine("od-database")
 
 
 @app.template_filter("date_format")
-def datetime_format(value, format='%Y-%m-%d'):
+def date_format(value, format='%Y-%m-%d'):
     return time.strftime(format, time.gmtime(value))
 
 
 @app.template_filter("datetime_format")
 def datetime_format(value, format='%Y-%m-%d %H:%M:%S'):
     return time.strftime(format, time.gmtime(value))
+
+
+@app.template_filter("from_timestamp")
+def from_timestamp(value):
+    return datetime.datetime.fromtimestamp(value)
 
 
 @app.route("/dl")
@@ -53,7 +59,7 @@ def downloads():
 
 @app.route("/stats")
 def stats_page():
-    crawl_server_stats = db.get_stats_by_server()
+    crawl_server_stats = db.get_stats_by_crawler()
     return render_template("stats.html", crawl_server_stats=crawl_server_stats)
 
 
@@ -136,7 +142,7 @@ def random_website():
 def admin_redispatch_queued():
     if "username" in session:
 
-        count = taskDispatcher.redispatch_queued()
+        count = taskManager.redispatch_queued()
         flash("Re-dispatched " + str(count) + " tasks", "success")
         return redirect("/dashboard")
 
@@ -145,7 +151,7 @@ def admin_redispatch_queued():
 
 
 def get_empty_websites():
-    current_tasks = itertools.chain(taskDispatcher.get_queued_tasks(), taskDispatcher.get_current_tasks())
+    current_tasks = taskManager.get_queued_tasks()
 
     queued_websites = [task.website_id for task in current_tasks]
     all_websites = db.get_all_websites()
@@ -180,7 +186,7 @@ def admin_queue_empty_websites():
         for website_id in get_empty_websites():
             website = db.get_website_by_id(website_id)
             task = Task(website.id, website.url, 1)
-            taskDispatcher.dispatch_task(task)
+            taskManager.queue_task(task)
         flash("Dispatched empty websites", "success")
         return redirect("/dashboard")
 
@@ -221,7 +227,7 @@ def admin_rescan_website(website_id):
         if website:
             priority = request.args.get("priority") if "priority" in request.args else 1
             task = Task(website_id, website.url, priority)
-            taskDispatcher.dispatch_task(task)
+            taskManager.queue_task(task)
 
             flash("Enqueued rescan task", "success")
         else:
@@ -320,16 +326,14 @@ def home():
     try:
         stats = searchEngine.get_global_stats()
         stats["website_count"] = len(db.get_all_websites())
-        current_websites = ", ".join(task.url for task in taskDispatcher.get_current_tasks())
     except:
         stats = {}
-        current_websites = None
-    return render_template("home.html", stats=stats, current_websites=current_websites)
+    return render_template("home.html", stats=stats)
 
 
 @app.route("/submit")
 def submit():
-    queued_websites = taskDispatcher.get_queued_tasks()
+    queued_websites = taskManager.get_queued_tasks()
     return render_template("submit.html", queue=queued_websites, recaptcha=recaptcha, show_captcha=config.CAPTCHA_SUBMIT)
 
 
@@ -362,7 +366,7 @@ def try_enqueue(url):
     web_id = db.insert_website(Website(url, str(request.remote_addr), str(request.user_agent)))
 
     task = Task(web_id, url, priority=1)
-    taskDispatcher.dispatch_task(task)
+    taskManager.queue_task(task)
 
     return "The website has been added to the queue", "success"
 
@@ -450,9 +454,8 @@ def admin_dashboard():
 
         tokens = db.get_tokens()
         blacklist = db.get_blacklist()
-        crawl_servers = db.get_crawl_servers()
 
-        return render_template("dashboard.html", api_tokens=tokens, blacklist=blacklist, crawl_servers=crawl_servers)
+        return render_template("dashboard.html", api_tokens=tokens, blacklist=blacklist)
     else:
         return abort(403)
 
@@ -516,52 +519,59 @@ def admin_crawl_logs():
         return abort(403)
 
 
-@app.route("/crawl_server/add", methods=["POST"])
-def admin_add_crawl_server():
-    if "username" in session:
+@app.route("/api/task/get", methods=["POST"])
+def api_get_task():
+    token = request.form.get("token")
+    name = db.check_api_token(token)
 
-        server = CrawlServer(
-            request.form.get("url"),
-            request.form.get("name"),
-            request.form.get("slots"),
-            request.form.get("token")
-        )
+    if name:
+        task = db.pop_task(name)
 
-        db.add_crawl_server(server)
-        flash("Added crawl server", "success")
-        return redirect("/dashboard")
-
+        if task:
+            print("Assigning task " + str(task.website_id) + " to " + name)
+            return Response(str(task), mimetype="application/json")
+        else:
+            return abort(404)
     else:
         return abort(403)
 
 
-@app.route("/crawl_server/<int:server_id>/delete")
-def admin_delete_crawl_server(server_id):
-    if "username" in session:
+@app.route("/api/task/complete", methods=["POST"])
+def api_complete_task():
+    token = request.form.get("token")
+    tr = json.loads(request.form.get("result"))
+    print(tr)
+    task_result = TaskResult(tr["status_code"], tr["file_count"], tr["start_time"], tr["end_time"], tr["website_id"])
 
-        db.remove_crawl_server(server_id)
-        flash("Deleted crawl server", "success")
-        return redirect("/dashboard")
+    name = db.check_api_token(token)
 
-    else:
-        abort(403)
+    if name:
+        print("Task for " + str(task_result.website_id) + " completed by " + name)
+        task = db.complete_task(task_result.website_id, name)
 
+        if task:
 
-@app.route("/crawl_server/<int:server_id>/update", methods=["POST"])
-def admin_update_crawl_server(server_id):
-    crawl_servers = db.get_crawl_servers()
-    for server in crawl_servers:
-        if server.id == server_id:
-            new_slots = request.form.get("slots") if "slots" in request.form else server.slots
-            new_name = request.form.get("name") if "name" in request.form else server.name
-            new_url = request.form.get("url") if "url" in request.form else server.url
+            if "file_list" in request.files:
+                file = request.files['file_list']
+                filename = "./tmp/" + str(task_result.website_id) + ".json"
+                print("Saving temp file " + filename + " ...")
+                file.save(filename)
+                print("Done")
+            else:
+                filename = None
 
-            db.update_crawl_server(server_id, new_url, new_name, new_slots)
-            flash("Updated crawl server", "success")
-            return redirect("/dashboard")
+            taskManager.complete_task(filename, task, task_result, name)
 
-    flash("Couldn't find crawl server with this id: " + str(server_id), "danger")
-    return redirect("/dashboard")
+            if os.path.exists(filename):
+                os.remove(filename)
+
+            # TODO: handle callback here
+            return "Successfully logged task result and indexed files"
+
+        else:
+            print("ERROR: " + name + " indicated that task for " + str(task_result.website_id) +
+                  " was completed but there is no such task in the database.")
+            print("No such task")
 
 
 if __name__ == '__main__':

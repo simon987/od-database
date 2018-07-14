@@ -14,27 +14,14 @@ CREATE TABLE Admin (
   password TEXT
 );
 
-CREATE TABLE ApiToken (
-  token TEXT PRIMARY KEY NOT NULL,
-  description TEXT
-);
-
 CREATE TABLE BlacklistedWebsite (
   id INTEGER PRIMARY KEY NOT NULL,
   url TEXT
 );
 
-CREATE TABLE CrawlServer (
-  id INTEGER PRIMARY KEY NOT NULL,
-  url TEXT,
-  name TEXT,
-  token TEXT,
-  slots INTEGER
-);
-
 CREATE TABLE TaskResult (
   id INTEGER PRIMARY KEY,
-  server INT,
+  server TEXT,
   website_id INT,
   status_code TEXT,
   file_count INT,
@@ -42,7 +29,12 @@ CREATE TABLE TaskResult (
   end_time TIMESTAMP,
   indexed_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-  FOREIGN KEY (server) REFERENCES CrawlServer(id)
+  FOREIGN KEY (server) REFERENCES ApiClient(name)
+);
+
+CREATE TABLE ApiClient (
+  name TEXT PRIMARY KEY NOT NULL,
+  token TEXT NOT NULL
 );
 
 
@@ -54,4 +46,16 @@ CREATE TABLE SearchLogEntry (
   query TEXT,
   extensions TEXT,
   page INT
+);
+
+CREATE TABLE Queue (
+  id INTEGER PRIMARY KEY,
+  website_id INTEGER,
+  url TEXT,
+  priority INTEGER,
+  callback_type TEXT,
+  callback_args TEXT,
+  assigned_crawler TEXT NULL DEFAULT NULL,
+
+  FOREIGN KEY (assigned_crawler) REFERENCES ApiClient(name)
 );

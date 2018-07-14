@@ -7,57 +7,15 @@
             <div class="card-header">Dashboard</div>
             <div class="card-body">
 
-            <a href="/logs">Logs</a>
-            <br>
-            <hr>
-                <h3>Crawl servers</h3>
-                <table class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th>Url</th>
-                        <th>Name</th>
-                        <th>Slots</th>
-                        <th>Action</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for server in crawl_servers %}
-                        <tr>
-                            <td>{{ server.url }}</td>
-                            <td>{{ server.name }}</td>
-                            <td id="slots-{{ server.id }}" onclick="changeSlots({{ server.id }})">{{ server.slots }}</td>
-                            <td><a class="btn btn-danger" href="/crawl_server/{{ server.id }}/delete">Delete</a></td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                <form action="/crawl_server/add" method="post">
-                    <div class="form-row">
-                        <div class="col col-md-3">
-                            <input class="form-control" name="url" placeholder="Url">
-                        </div>
-                        <div class="col col-md-3">
-                            <input class="form-control" name="name" placeholder="Name">
-                        </div>
-                        <div class="col col-md-2">
-                            <input class="form-control" name="token" placeholder="Token">
-                        </div>
-                        <div class="col col-md-2">
-                            <input class="form-control" name="slots" placeholder="Slots" type="number">
-                        </div>
-                        <div class="col col-md-2">
-                            <input type="submit" class="form-control btn btn-primary" value="Add server">
-                        </div>
-                    </div>
-                </form>
+                <a href="/logs">Logs</a>
                 <br>
                 <hr>
                 <h3>API Keys</h3>
                 <table class="table table-striped">
                     <thead>
                     <tr>
-                        <th>Description</th>
-                        <th>Key</th>
+                        <th>Name</th>
+                        <th>Token</th>
                         <th>Action</th>
                     </tr>
                     </thead>
@@ -65,7 +23,7 @@
                     <tbody>
                     {% for token in api_tokens %}
                         <tr>
-                            <td>{{ token.description }}</td>
+                            <td>{{ token.name }}</td>
                             <td><code>{{ token.token }}</code></td>
                             <td>
                                 <form action="/del_token" method="post">
@@ -122,7 +80,8 @@
                 <hr>
                 <h3>Misc actions</h3>
 
-                <a class="btn btn-danger" href="/website/delete_empty">Delete websites with no associated files that are not queued</a>
+                <a class="btn btn-danger" href="/website/delete_empty">Delete websites with no associated files that are
+                    not queued</a>
                 <a class="btn btn-danger" href="/website/redispatch_queued">Re-dispatch queued tasks</a>
                 <a class="btn btn-danger" href="/website/queue_empty">Re-queue websites with no associated files</a>
 
@@ -133,30 +92,30 @@
     </div>
     <script>
 
-    function changeSlots(id) {
+        function changeSlots(id) {
 
-        let slotsElem = document.getElementById("slots-" + id);
-        let parent = slotsElem.parentNode;
+            let slotsElem = document.getElementById("slots-" + id);
+            let parent = slotsElem.parentNode;
 
-        let td = document.createElement("td");
-        let form = document.createElement("form");
-        form.setAttribute("action", "/crawl_server/" + id + "/update");
-        form.setAttribute("method", "post");
+            let td = document.createElement("td");
+            let form = document.createElement("form");
+            form.setAttribute("action", "/crawl_server/" + id + "/update");
+            form.setAttribute("method", "post");
 
-        let slotsInput = document.createElement("input");
-        slotsInput.setAttribute("class", "form-control");
-        slotsInput.setAttribute("name", "slots");
-        form.appendChild(slotsInput);
-        td.appendChild(form);
+            let slotsInput = document.createElement("input");
+            slotsInput.setAttribute("class", "form-control");
+            slotsInput.setAttribute("name", "slots");
+            form.appendChild(slotsInput);
+            td.appendChild(form);
 
-        parent.insertBefore(td, slotsElem);
-        slotsElem.remove();
+            parent.insertBefore(td, slotsElem);
+            slotsElem.remove();
 
-        slotsInput.focus();
-        slotsInput.addEventListener("focusout", function () {
-            form.submit();
-        });
-    }
+            slotsInput.focus();
+            slotsInput.addEventListener("focusout", function () {
+                form.submit();
+            });
+        }
 
     </script>
 {% endblock body %}

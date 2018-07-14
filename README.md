@@ -22,9 +22,6 @@ FLASK_SECRET = ""
 RESULTS_PER_PAGE = (25, 50, 100, 250, 500, 1000)
 # Headers for http crawler
 HEADERS = {}
-# Token for the crawl server, used by the server to communicate to the crawl server
-CRAWL_SERVER_TOKEN = ""
-CRAWL_SERVER_PORT = 5001
 # Number of crawler instances (one per task)
 CRAWL_SERVER_PROCESSES = 3
 # Number of threads per crawler instance
@@ -33,6 +30,9 @@ CRAWL_SERVER_THREADS = 20
 SUBMIT_FTP = False
 # Allow http(s) websites in /submit
 SUBMIT_HTTP = True
+
+SERVER_URL = "http://localhost/api"
+API_TOKEN = "5817926d-f2f9-4422-a411-a98f1bfe4b6c"
 ```
 
 ## Running the crawl server

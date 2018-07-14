@@ -91,8 +91,8 @@ def make_wide_filesystem(count=100000):
             os.mkdir(new_path)
 
 
-# dump_local_filesystem("/mnt/")
-index_file_list("local_filesystem.json", 4)
+dump_local_filesystem("/mnt/")
+# index_file_list("local_filesystem.json", 4)
 # random_searches(100000)
 # dump_random_files(20000 * 100000)
 # make_wide_filesystem(10000)

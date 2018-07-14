@@ -115,7 +115,7 @@ class ElasticSearchEngine(SearchEngine):
     def import_json(self, in_lines, website_id: int):
 
         import_every = 1000
-        cooldown_time = 0.5
+        cooldown_time = 1
 
         docs = []
 

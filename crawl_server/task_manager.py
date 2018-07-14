@@ -1,6 +1,8 @@
 from crawl_server import logger
+from tasks import TaskResult, Task
 import config
-from crawl_server.database import TaskManagerDatabase, Task, TaskResult
+import requests
+import json
 from multiprocessing import Manager, Pool
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
@@ -9,9 +11,7 @@ from crawl_server.crawler import RemoteDirectoryCrawler
 
 class TaskManager:
 
-    def __init__(self, db_path, max_processes=2):
-        self.db_path = db_path
-        self.db = TaskManagerDatabase(db_path)
+    def __init__(self, max_processes=2):
         self.pool = Pool(maxtasksperchild=1, processes=max_processes)
         self.max_processes = max_processes
         manager = Manager()
@@ -21,41 +21,68 @@ class TaskManager:
         scheduler.add_job(self.execute_queued_task, "interval", seconds=1)
         scheduler.start()
 
-    def put_task(self, task: Task):
-        self.db.put_task(task)
+    def fetch_task(self):
+        try:
+            payload = {
+                "token": config.API_TOKEN
+            }
+            r = requests.post(config.SERVER_URL + "/task/get", data=payload)
 
-    def get_tasks(self):
-        return self.db.get_tasks()
+            if r.status_code == 200:
+                text = r.text
+                logger.info("Fetched task from server : " + text)
+                task_json = json.loads(text)
+                return Task(task_json["website_id"], task_json["url"])
 
-    def pop_tasks(self):
-        return self.db.pop_all_tasks()
+            return None
 
-    def get_current_tasks(self):
-        return self.current_tasks
+        except Exception as e:
+            raise e
 
-    def get_non_indexed_results(self):
-        return self.db.get_non_indexed_results()
+    @staticmethod
+    def push_result(task_result: TaskResult):
+
+        try:
+
+            payload = {
+                "token": config.API_TOKEN,
+                "result": json.dumps(task_result.to_json())
+            }
+
+            files = {
+                # "file_list": open("./crawled/" + str(task_result.website_id) + ".json")
+                "file_list": open("./local.json")
+            }
+
+            r = requests.post(config.SERVER_URL + "/task/complete", data=payload, files=files)
+
+            logger.info("RESPONSE: " + r.text)
+
+        except Exception as e:
+            raise e
 
     def execute_queued_task(self):
 
         if len(self.current_tasks) <= self.max_processes:
-            task = self.db.pop_task()
+
+            task = self.fetch_task()
+
             if task:
                 logger.info("Submitted " + task.url + " to process pool")
                 self.current_tasks.append(task)
 
                 self.pool.apply_async(
                     TaskManager.run_task,
-                    args=(task, self.db_path, self.current_tasks),
+                    args=(task, self.current_tasks),
                     callback=TaskManager.task_complete,
                     error_callback=TaskManager.task_error
                 )
 
     @staticmethod
-    def run_task(task, db_path, current_tasks):
+    def run_task(task, current_tasks):
 
         result = TaskResult()
-        result.start_time = datetime.utcnow()
+        result.start_time = datetime.utcnow().timestamp()
         result.website_id = task.website_id
 
         logger.info("Starting task " + task.url)
@@ -67,15 +94,10 @@ class TaskManager:
         result.file_count = crawl_result.file_count
         result.status_code = crawl_result.status_code
 
-        result.end_time = datetime.utcnow()
+        result.end_time = datetime.utcnow().timestamp()
         logger.info("End task " + task.url)
 
-        # TODO: Figure out the callbacks
-        # callback = PostCrawlCallbackFactory.get_callback(task)
-        # if callback:
-        #     callback.run()
-
-        return result, db_path, current_tasks
+        return result, current_tasks
 
     @staticmethod
     def task_error(result):
@@ -85,14 +107,13 @@ class TaskManager:
     @staticmethod
     def task_complete(result):
 
-        task_result, db_path, current_tasks = result
+        task_result, current_tasks = result
 
-        logger.info("Task completed, logger result to database")
+        logger.info("Task completed, sending result to server")
         logger.info("Status code: " + task_result.status_code)
         logger.info("File count: " + str(task_result.file_count))
 
-        db = TaskManagerDatabase(db_path)
-        db.log_result(task_result)
+        TaskManager.push_result(task_result)
 
         for i, task in enumerate(current_tasks):
             if task.website_id == task_result.website_id:
