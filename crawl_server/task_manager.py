@@ -50,8 +50,7 @@ class TaskManager:
             }
 
             files = {
-                # "file_list": open("./crawled/" + str(task_result.website_id) + ".json")
-                "file_list": open("./local.json")
+                "file_list": open("./crawled/" + str(task_result.website_id) + ".json")
             }
 
             r = requests.post(config.SERVER_URL + "/task/complete", data=payload, files=files)
