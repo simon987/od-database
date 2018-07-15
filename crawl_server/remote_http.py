@@ -89,7 +89,7 @@ class HttpDirectory(RemoteDirectory):
         "../"
 
     )
-    MAX_RETRIES = 3
+    MAX_RETRIES = 2
 
     def __init__(self, url):
         super().__init__(url)
@@ -138,7 +138,7 @@ class HttpDirectory(RemoteDirectory):
 
     def request_files(self, urls_to_request: list) -> list:
 
-        if len(urls_to_request) > 3000000:
+        if len(urls_to_request) > 150:
             # Many urls, use multi-threaded solution
             pool = ThreadPool(processes=10)
             files = pool.starmap(HttpDirectory._request_file, zip(repeat(self), urls_to_request))
