@@ -1,4 +1,5 @@
 from flask import Flask, render_template, redirect, request, flash, abort, Response, send_from_directory, session
+from multiprocessing import Pool
 import json
 from urllib.parse import urlparse
 import os
@@ -386,6 +387,12 @@ def enqueue():
         return redirect("/submit")
 
 
+def check_url(url):
+    url = os.path.join(url, "")
+    try_enqueue(url)
+    return None
+
+
 @app.route("/enqueue_bulk", methods=["POST"])
 def enqueue_bulk():
     if not config.CAPTCHA_SUBMIT or recaptcha.verify():
@@ -396,11 +403,12 @@ def enqueue_bulk():
 
             if 0 < len(urls) <= 1000000000000:
 
-                for url in urls:
-                    url = os.path.join(url, "")
-                    message, msg_type = try_enqueue(url)
-                    message += ' <span class="badge badge-' + msg_type + '">' + url + '</span>'
-                    flash(message, msg_type)
+                pool = Pool(processes=4)
+                pool.map(func=check_url, iterable=urls)
+                pool.close()
+
+                flash("Submitted websites to the queue", "success")
+
                 return redirect("/submit")
 
             else:
