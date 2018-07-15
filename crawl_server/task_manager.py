@@ -51,13 +51,16 @@ class TaskManager:
             }
 
             filename = "./crawled/" + str(task_result.website_id) + ".json"
-            files = {
-                "file_list": open(filename)
-            }
+            if os.path.exists(filename):
+                files = {
+                    "file_list": open(filename)
+                }
+            else:
+                files = None
 
             r = requests.post(config.SERVER_URL + "/task/complete", data=payload, files=files)
 
-            print("RESPONSE: " + r.text)
+            logger.info("RESPONSE: " + r.text)
 
             if os.path.exists(filename):
                 os.remove(filename)
@@ -89,17 +92,16 @@ class TaskManager:
         result.start_time = datetime.utcnow().timestamp()
         result.website_id = task.website_id
 
-        print("Starting task " + task.url)
+        logger.info("Starting task " + task.url)
 
         crawler = RemoteDirectoryCrawler(task.url, config.CRAWL_SERVER_THREADS)
         crawl_result = crawler.crawl_directory("./crawled/" + str(task.website_id) + ".json")
-        del crawler
 
         result.file_count = crawl_result.file_count
         result.status_code = crawl_result.status_code
 
         result.end_time = datetime.utcnow().timestamp()
-        print("End task " + task.url)
+        logger.info("End task " + task.url)
 
         return result, current_tasks
 
@@ -113,9 +115,9 @@ class TaskManager:
 
         task_result, current_tasks = result
 
-        print("Task completed, sending result to server")
-        print("Status code: " + task_result.status_code)
-        print("File count: " + str(task_result.file_count))
+        logger.info("Task completed, sending result to server")
+        logger.info("Status code: " + task_result.status_code)
+        logger.info("File count: " + str(task_result.file_count))
 
         TaskManager.push_result(task_result)
 

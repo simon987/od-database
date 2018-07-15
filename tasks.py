@@ -63,9 +63,9 @@ class TaskManager:
 
     def complete_task(self, file_list, task, task_result, crawler_name):
 
-        if file_list:
-            self.search.delete_docs(task_result.website_id)
+        self.search.delete_docs(task_result.website_id)
 
+        if file_list:
             def iter_lines():
 
                 with open(file_list, "r") as f:

@@ -562,7 +562,7 @@ def api_complete_task():
 
             taskManager.complete_task(filename, task, task_result, name)
 
-            if os.path.exists(filename):
+            if filename and os.path.exists(filename):
                 os.remove(filename)
 
             # TODO: handle callback here
