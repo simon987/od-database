@@ -119,7 +119,7 @@ class HttpDirectory(RemoteDirectory):
             if self._isdir(anchor):
 
                 directory = File(
-                    name=anchor.href,
+                    name=anchor.href, # todo handle external links here
                     mtime=0,
                     size=0,
                     path=path,

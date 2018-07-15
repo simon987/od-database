@@ -1,4 +1,5 @@
 from crawl_server import logger
+import os
 from tasks import TaskResult, Task
 import config
 import requests
@@ -49,13 +50,17 @@ class TaskManager:
                 "result": json.dumps(task_result.to_json())
             }
 
+            filename = "./crawled/" + str(task_result.website_id) + ".json"
             files = {
-                "file_list": open("./crawled/" + str(task_result.website_id) + ".json")
+                "file_list": open(filename)
             }
 
             r = requests.post(config.SERVER_URL + "/task/complete", data=payload, files=files)
 
             logger.info("RESPONSE: " + r.text)
+
+            if os.path.exists(filename):
+                os.remove(filename)
 
         except Exception as e:
             raise e
