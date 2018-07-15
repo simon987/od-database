@@ -40,7 +40,7 @@ API_TOKEN = "5817926d-f2f9-4422-a411-a98f1bfe4b6c"
 cd od-database
 export PYTHONPATH=$(pwd)
 cd crawl_server
-python3 server.py
+python3 run.py
 ```
 ## Running the web server (development)
 ```bash
