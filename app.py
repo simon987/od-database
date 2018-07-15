@@ -571,7 +571,7 @@ def api_complete_task():
         else:
             print("ERROR: " + name + " indicated that task for " + str(task_result.website_id) +
                   " was completed but there is no such task in the database.")
-            print("No such task")
+            return "No such task"
 
 
 if __name__ == '__main__':
