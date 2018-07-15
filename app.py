@@ -401,9 +401,9 @@ def enqueue_bulk():
         if urls:
             urls = urls.split()
 
-            if 0 < len(urls) <= 1000000000000:
+            if 0 < len(urls) <= 1000:
 
-                pool = Pool(processes=4)
+                pool = Pool(processes=6)
                 pool.map(func=check_url, iterable=urls)
                 pool.close()
 
