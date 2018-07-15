@@ -95,22 +95,25 @@ class ElasticSearchEngine(SearchEngine):
 
     def delete_docs(self, website_id):
 
-        try:
-            print("Deleting docs of " + str(website_id))
-            self.es.delete_by_query(body={
-                "query": {
-                    "constant_score": {
-                        "filter": {
-                            "term": {"website_id": website_id}
+        while True:
+            try:
+                print("Deleting docs of " + str(website_id))
+                self.es.delete_by_query(body={
+                    "query": {
+                        "constant_score": {
+                            "filter": {
+                                "term": {"website_id": website_id}
+                            }
                         }
                     }
-                }
-            }, index=self.index_name, request_timeout=200)
-        except elasticsearch.exceptions.ConflictError:
-            print("Error: multiple delete tasks at the same time")
-        except Exception:
-            print("Timeout during delete!")
-            time.sleep(30)
+                }, index=self.index_name, request_timeout=200)
+                break
+            except elasticsearch.exceptions.ConflictError:
+                print("Error: multiple delete tasks at the same time, retrying")
+                time.sleep(10)
+            except Exception:
+                print("Timeout during delete! Retrying")
+                time.sleep(10)
 
     def import_json(self, in_lines, website_id: int):
 
