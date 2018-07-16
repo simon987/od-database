@@ -334,7 +334,7 @@ def home():
 
 @app.route("/submit")
 def submit():
-    queued_websites = taskManager.get_queued_tasks()[30:]
+    queued_websites = taskManager.get_queued_tasks()[:30]
     return render_template("submit.html", queue=queued_websites, recaptcha=recaptcha,
                            show_captcha=config.CAPTCHA_SUBMIT)
 
