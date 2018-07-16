@@ -334,8 +334,9 @@ def home():
 
 @app.route("/submit")
 def submit():
-    queued_websites = taskManager.get_queued_tasks()
-    return render_template("submit.html", queue=queued_websites, recaptcha=recaptcha, show_captcha=config.CAPTCHA_SUBMIT)
+    queued_websites = taskManager.get_queued_tasks()[30:]
+    return render_template("submit.html", queue=queued_websites, recaptcha=recaptcha,
+                           show_captcha=config.CAPTCHA_SUBMIT)
 
 
 def try_enqueue(url):
@@ -364,9 +365,11 @@ def try_enqueue(url):
                "an open directory or the server is not responding. If you think " \
                "this is an error, please <a href='/contribute'>contact me</a>.", "danger"
 
-    web_id = db.insert_website(Website(url, str(request.remote_addr), str(request.user_agent)))
+    website_id = db.insert_website(Website(url, str(request.remote_addr + "|" +
+                                                    request.headers.get("X-Forwarded-For", "")),
+                                           request.user_agent))
 
-    task = Task(web_id, url, priority=1)
+    task = Task(website_id, url, priority=1)
     taskManager.queue_task(task)
 
     return "The website has been added to the queue", "success"
@@ -580,6 +583,73 @@ def api_complete_task():
             print("ERROR: " + name + " indicated that task for " + str(task_result.website_id) +
                   " was completed but there is no such task in the database.")
             return "No such task"
+
+
+@app.route("/api/website/by_url", methods=["GET"])
+def api_website_by_url():
+    token = request.args.get("token")
+    url = request.args.get("url")
+    name = db.check_api_token(token)
+
+    if name:
+        website = db.get_website_by_url(url)
+        if website:
+            return str(website.id)
+        return abort(404)
+    else:
+        return abort(403)
+
+
+@app.route("/api/website/blacklisted", methods=["GET"])
+def api_website_is_blacklisted():
+    token = request.args.get("token")
+    url = request.args.get("url")
+    name = db.check_api_token(token)
+
+    if name:
+        return str(db.is_blacklisted(url))
+    else:
+        return abort(403)
+
+
+@app.route("/api/website/add", methods=["GET"])
+def api_add_website():
+    token = request.args.get("token")
+    url = request.args.get("url")
+
+    name = db.check_api_token(token)
+    if name:
+
+        website_id = db.insert_website(Website(url, str(request.remote_addr + "|" +
+                                                        request.headers.get("X-Forwarded-For", "")),
+                                               "API_CLIENT_" + name))
+        return str(website_id)
+    else:
+        return abort(403)
+
+
+@app.route("/api/task/enqueue", methods=["POST"])
+def api_task_enqueue():
+    try:
+        token = request.json["token"]
+    except KeyError:
+        return abort(400)
+
+    name = db.check_api_token(token)
+
+    if name:
+
+        task = Task(
+            request.json["website_id"],
+            request.json["url"],
+            request.json["priority"],
+            request.json["callback_type"],
+            request.json["callback_args"]
+        )
+        taskManager.queue_task(task)
+        return ""
+    else:
+        return abort(403)
 
 
 if __name__ == '__main__':

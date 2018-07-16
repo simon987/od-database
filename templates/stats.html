@@ -96,7 +96,7 @@
                     <tr>
                         <th>Crawl time average</th>
                         {% for server in crawl_server_stats %}
-                            <td>{{ crawl_server_stats[server].time_avg|round(2) }}s per task</td>
+                            <td>{{ crawl_server_stats[server].time_avg|round(2) }}s</td>
                         {% endfor %}
                     </tr>
                     <tr>
@@ -108,7 +108,7 @@
                     <tr>
                         <th>Files crawled average</th>
                         {% for server in crawl_server_stats %}
-                            <td>{{ crawl_server_stats[server].file_count_avg | round(2) }} per task</td>
+                            <td>{{ crawl_server_stats[server].file_count_avg | round(2) }}</td>
                         {% endfor %}
                     </tr>
                     </tbody>

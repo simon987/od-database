@@ -1,7 +1,6 @@
 import os
 import json
 import shutil
-import sys
 from search.search import ElasticSearchEngine
 from concurrent.futures import ThreadPoolExecutor
 import requests
@@ -15,6 +14,7 @@ exts = [
     "part", "blend", "3ds", "obj", "ico", "html", "css", "js", "ts", "ape", "asm", "nasm", "fasm", "o",
     "so", "dll", "tar", "gz", "bin", "cad", "cmd", "bat", "sh", "md"
 ]
+
 
 def dump_local_filesystem(root_dir: str):
 
@@ -71,7 +71,7 @@ def index_file_list(path: str, website_id):
 
 
 def search(term=""):
-    requests.get("http://localhost/?&sort_order=score&per_page=100q=" + term, verify=False)
+    requests.get("http://localhost/search?q=" + term, verify=False)
     print(term)
 
 
@@ -91,7 +91,7 @@ def make_wide_filesystem(count=100000):
             os.mkdir(new_path)
 
 
-dump_local_filesystem("/mnt/")
+# dump_local_filesystem("/mnt/")
 # index_file_list("local_filesystem.json", 4)
 # random_searches(100000)
 # dump_random_files(20000 * 100000)
