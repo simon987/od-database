@@ -334,7 +334,7 @@ class Database:
 
             cursor.execute("SELECT website_id, status_code, file_count, start_time, end_time, server "
                            "FROM TaskResult ORDER BY end_time DESC")
-        return [tasks.TaskResult(r[1], r[2], r[3], r[4], r[0], r[5]) for r in cursor.fetchall()]
+        return [tasks.TaskResult(r[1], r[2], r[3], r[4], r[0], str(r[5])) for r in cursor.fetchall()]
 
     def get_stats_by_crawler(self):
 
