@@ -365,7 +365,7 @@ def try_enqueue(url):
                "an open directory or the server is not responding. If you think " \
                "this is an error, please <a href='/contribute'>contact me</a>.", "danger"
 
-    website_id = db.insert_website(Website(url, str(request.remote_addr + "|" +
+    website_id = db.insert_website(Website(url, str(request.remote_addr + "_" +
                                                     request.headers.get("X-Forwarded-For", "")),
                                            request.user_agent))
 
@@ -620,7 +620,7 @@ def api_add_website():
     name = db.check_api_token(token)
     if name:
 
-        website_id = db.insert_website(Website(url, str(request.remote_addr + "|" +
+        website_id = db.insert_website(Website(url, str(request.remote_addr + "_" +
                                                         request.headers.get("X-Forwarded-For", "")),
                                                "API_CLIENT_" + name))
         return str(website_id)

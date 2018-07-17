@@ -91,7 +91,7 @@ class Database:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("INSERT INTO Website (url, logged_ip, logged_useragent) VALUES (?,?,?)",
-                           (website.url, website.logged_ip, website.logged_useragent))
+                           (website.url, str(website.logged_ip), str(website.logged_useragent)))
             cursor.execute("SELECT LAST_INSERT_ROWID()")
 
             website_id = cursor.fetchone()[0]
@@ -337,7 +337,6 @@ class Database:
         return [tasks.TaskResult(r[1], r[2], r[3], r[4], r[0], str(r[5])) for r in cursor.fetchall()]
 
     def get_stats_by_crawler(self):
-
         stats = dict()
         task_results = self.get_crawl_logs()
 
