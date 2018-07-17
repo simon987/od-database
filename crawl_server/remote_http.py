@@ -119,7 +119,7 @@ class HttpDirectory(RemoteDirectory):
             if self._isdir(anchor):
 
                 directory = File(
-                    name=anchor.href, # todo handle external links here
+                    name=anchor.href,  # todo handle external links here
                     mtime=0,
                     size=0,
                     path=path,
@@ -143,7 +143,9 @@ class HttpDirectory(RemoteDirectory):
             pool = ThreadPool(processes=10)
             files = pool.starmap(HttpDirectory._request_file, zip(repeat(self), urls_to_request))
             pool.close()
-            return (f for f in files if f)
+            for file in files:
+                if file:
+                    yield file
         else:
             # Too few urls to create thread pool
             for url in urls_to_request:
