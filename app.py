@@ -628,7 +628,7 @@ def api_add_website():
         return abort(403)
 
 
-@app.route("/api/task/enqueue", methods=["POST"])
+@app.route("/api/task/force_enqueue", methods=["POST"])
 def api_task_enqueue():
     try:
         token = request.json["token"]
@@ -648,6 +648,44 @@ def api_task_enqueue():
         )
         taskManager.queue_task(task)
         return ""
+    else:
+        return abort(403)
+
+
+@app.route("/api/task/try_enqueue", methods=["POST"])
+def api_task_try_enqueue():
+    try:
+        token = request.form.get("token")
+        url = request.form.get("url")
+    except KeyError:
+        return abort(400)
+
+    name = db.check_api_token(token)
+
+    if name:
+
+        message, result = try_enqueue(url)
+
+        return json.dumps({
+            "message": message,
+            "result": result
+        })
+    else:
+        return abort(403)
+
+
+@app.route("/api/website/random")
+def api_random_website():
+
+    try:
+        token = request.json["token"]
+    except KeyError:
+        return abort(400)
+
+    name = db.check_api_token(token)
+
+    if name:
+        return str(db.get_random_website_id())
     else:
         return abort(403)
 
