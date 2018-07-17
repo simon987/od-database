@@ -86,7 +86,7 @@ class HttpDirectory(RemoteDirectory):
     FILE_NAME_BLACKLIST = (
         "Parent Directory",
         " Parent Directory"
-        "../"
+        "../",
 
     )
     MAX_RETRIES = 2
@@ -113,7 +113,7 @@ class HttpDirectory(RemoteDirectory):
         files = []
 
         for anchor in anchors:
-            if self._should_ignore(self.base_url, anchor):
+            if self._should_ignore(self.base_url, path, anchor):
                 continue
 
             if self._isdir(anchor):
@@ -214,9 +214,12 @@ class HttpDirectory(RemoteDirectory):
         return link.href.endswith("/")
 
     @staticmethod
-    def _should_ignore(base_url, link: Anchor):
-        if link.text in HttpDirectory.FILE_NAME_BLACKLIST or link.href in ("../", "./", "", "..", "../../") \
-                or link.href.endswith(HttpDirectory.BLACK_LIST):
+    def _should_ignore(base_url, current_path, link: Anchor):
+
+        if urljoin(base_url, link.href) == urljoin(urljoin(base_url, current_path), "../"):
+            return True
+
+        if link.href.endswith(HttpDirectory.BLACK_LIST):
             return True
 
         # Ignore external links
