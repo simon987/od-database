@@ -48,21 +48,22 @@ class TaskManager:
             logger.info("Uploading file list in small chunks")
             filename = "./crawled/" + str(task_result.website_id) + ".json"
             CHUNK_SIZE = 1000000 * 10
-            with open(filename) as f:
-                chunk = f.read(CHUNK_SIZE)
-                while chunk:
-                    payload = {
-                        "token": config.API_TOKEN,
-                        "website_id": task_result.website_id
-                    }
-
-                    files = {
-                        "file_list": chunk
-                    }
-
-                    r = requests.post(config.SERVER_URL + "/task/upload", data=payload, files=files)
-                    logger.info("RESPONSE: " + r.text)
+            if os.path.exists(filename):
+                with open(filename) as f:
                     chunk = f.read(CHUNK_SIZE)
+                    while chunk:
+                        payload = {
+                            "token": config.API_TOKEN,
+                            "website_id": task_result.website_id
+                        }
+
+                        files = {
+                            "file_list": chunk
+                        }
+
+                        r = requests.post(config.SERVER_URL + "/task/upload", data=payload, files=files)
+                        logger.info("RESPONSE: " + r.text)
+                        chunk = f.read(CHUNK_SIZE)
 
             payload = {
                 "token": config.API_TOKEN,
