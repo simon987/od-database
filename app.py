@@ -562,15 +562,7 @@ def api_complete_task():
 
         if task:
 
-            if "file_list" in request.files:
-                file = request.files['file_list']
-                filename = "./tmp/" + str(task_result.website_id) + ".json"
-                print("Saving temp file " + filename + " ...")
-                file.save(filename)
-                print("Done")
-            else:
-                filename = None
-
+            filename = "./tmp/" + str(task_result.website_id) + ".json"
             taskManager.complete_task(filename, task, task_result, name)
 
             if filename and os.path.exists(filename):
@@ -583,6 +575,31 @@ def api_complete_task():
             print("ERROR: " + name + " indicated that task for " + str(task_result.website_id) +
                   " was completed but there is no such task in the database.")
             return "No such task"
+
+
+@app.route("/api/task/upload", methods=["POST"])
+def api_upload():
+    token = request.form.get("token")
+    website_id = request.form.get("website_id")
+    name = db.check_api_token(token)
+
+    if name:
+        if "file_list" in request.files:
+            file = request.files['file_list']
+
+            filename = "./tmp/" + str(website_id) + ".json"
+
+            if os.path.exists(filename):
+                print("Appending chunk to existing file...")
+                with open(filename, "ab") as f:
+                    f.write(file.stream.read())
+            else:
+                print("Saving temp file " + filename + " ...")
+                file.save(filename)
+                print("Done")
+        return "ok"
+    else:
+        return abort(403)
 
 
 @app.route("/api/website/by_url", methods=["GET"])
