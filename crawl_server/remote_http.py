@@ -90,6 +90,7 @@ class HttpDirectory(RemoteDirectory):
 
     )
     MAX_RETRIES = 2
+    TIMEOUT = 1
 
     def __init__(self, url):
         super().__init__(url)
@@ -104,9 +105,6 @@ class HttpDirectory(RemoteDirectory):
         path_identifier = hashlib.sha1(current_dir_name.encode())
         path_url = urljoin(self.base_url, path, "")
         body = self._stream_body(path_url)
-        if not body:
-            logger.info("No body returned @ " + path_url)
-            return None, None
         anchors = self._parse_links(body)
 
         urls_to_request = []
@@ -158,16 +156,16 @@ class HttpDirectory(RemoteDirectory):
         retries = HttpDirectory.MAX_RETRIES
         while retries > 0:
             try:
-                r = self.session.head(url, allow_redirects=False, timeout=40)
+                r = self.session.head(url, allow_redirects=False, timeout=HttpDirectory.TIMEOUT)
 
                 stripped_url = url[len(self.base_url) - 1:]
 
                 path, name = os.path.split(stripped_url)
-                date = r.headers["Last-Modified"] if "Last-Modified" in r.headers else "1970-01-01"
+                date = r.headers.get("Last-Modified", "1970-01-01")
                 return File(
                     path=unquote(path).strip("/"),
                     name=unquote(name),
-                    size=int(r.headers["Content-Length"]) if "Content-Length" in r.headers else -1,
+                    size=int(r.headers.get("Content-Length", -1)),
                     mtime=int(parse_date(date).timestamp()),
                     is_dir=False
                 )
@@ -175,26 +173,28 @@ class HttpDirectory(RemoteDirectory):
                 self.session.close()
                 retries -= 1
 
-        return None
+        logger.debug("TimeoutError - _request_file")
+        raise TimeoutError
 
     def _stream_body(self, url: str):
         retries = HttpDirectory.MAX_RETRIES
         while retries > 0:
             try:
-                r = self.session.get(url, stream=True, timeout=40)
-                for chunk in r.iter_content(chunk_size=4096):
+                r = self.session.get(url, stream=True, timeout=HttpDirectory.TIMEOUT)
+                for chunk in r.iter_content(chunk_size=8192):
                     try:
                         yield chunk.decode(r.encoding if r.encoding else "utf-8", errors="ignore")
                     except LookupError:
                         # Unsupported encoding
                         yield chunk.decode("utf-8", errors="ignore")
                 r.close()
-                break
+                return
             except RequestException:
                 self.session.close()
                 retries -= 1
 
-        return None
+        logger.debug("TimeoutError - _stream_body")
+        raise TimeoutError
 
     @staticmethod
     def _parse_links(body):

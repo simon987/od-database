@@ -82,6 +82,7 @@ class RemoteDirectoryCrawler:
         self.url = url
         self.max_threads = max_threads
         self.crawled_paths = list()
+        self.status_code = "success"
 
     def crawl_directory(self, out_file: str) -> CrawlResult:
         try:
@@ -96,7 +97,7 @@ class RemoteDirectoryCrawler:
                     return CrawlResult(0, "empty")
                 directory.close()
             except TimeoutError:
-                return CrawlResult(0, "timeout")
+                return CrawlResult(0, "Timeout during initial request")
 
             in_q = Queue(maxsize=0)
             files_q = Queue(maxsize=0)
@@ -128,18 +129,20 @@ class RemoteDirectoryCrawler:
             files_q.put(None)
             file_writer_thread.join()
 
-            return CrawlResult(files_written[0], "success")
+            return CrawlResult(files_written[0], self.status_code)
         except Exception as e:
             return CrawlResult(0, str(e) + " \nType:" + str(type(e)))
 
     def _process_listings(self, url: str, in_q: Queue, files_q: Queue):
 
         directory = RemoteDirectoryFactory.get_directory(url)
+        timeout_retries = 20  # If any worker threads reaches 20 retries, the whole queue is emptied
 
         while directory:
             try:
                 path = in_q.get(timeout=150)
             except Empty:
+                logger.debug("in_q is Empty")
                 directory.close()
                 break
 
@@ -156,15 +159,34 @@ class RemoteDirectoryCrawler:
                             in_q.put(urljoin(f.path, f.name))
                         else:
                             files_q.put(f)
-                    logger.debug("LISTED " + self.url + path)
-                else:
-                    logger.debug("Dropped " + self.url + path + " (was empty or already crawled)")
+                    logger.debug("LISTED " + urljoin(self.url, path))
             except TooManyConnectionsError:
                 logger.debug("Too many connections, this thread will be killed and path resubmitted")
                 # Kill worker and resubmit listing task
                 directory.close()
                 in_q.put(path)
+                # TODO: If all workers are killed the queue will never get processed and
+                # TODO: the crawler will be stuck forever
                 break
+            except TimeoutError:
+                logger.error("Directory listing timed out, " + str(timeout_retries) + " retries left")
+                if timeout_retries > 0:
+                    timeout_retries -= 1
+                    in_q.put(path)
+                else:
+                    logger.error("Dropping website " + url)
+                    self.status_code = "Timeout during website listing"
+                    directory.close()
+
+                    logger.debug("Emptying queue")
+                    while True:
+                        try:
+                            in_q.get_nowait()
+                            in_q.task_done()
+                        except Empty:
+                            break
+                    logger.debug("Emptied queue")
+                    break
             finally:
                 in_q.task_done()
 
@@ -177,7 +199,7 @@ class RemoteDirectoryCrawler:
             while True:
 
                 try:
-                    file = files_q.get(timeout=800)
+                    file = files_q.get(timeout=2000)
                 except Empty:
                     logger.error("File writer thread timed out")
                     break
