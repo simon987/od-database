@@ -140,7 +140,7 @@ class RemoteDirectoryCrawler:
 
         while directory:
             try:
-                path = in_q.get(timeout=150)
+                path = in_q.get(timeout=2000)
             except Empty:
                 logger.debug("in_q is Empty")
                 directory.close()
