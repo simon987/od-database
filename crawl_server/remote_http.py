@@ -90,7 +90,7 @@ class HttpDirectory(RemoteDirectory):
 
     )
     MAX_RETRIES = 2
-    TIMEOUT = 1
+    TIMEOUT = 25
 
     def __init__(self, url):
         super().__init__(url)
