@@ -418,7 +418,7 @@ class ElasticSearchEngine(SearchEngine):
             "query": {
                 "match_all": {}
             }
-        }, scroll="5m", client=self.es, index=self.index_name)
+        }, scroll="1m", client=self.es, index=self.index_name, request_timeout=60)
 
     def are_empty(self, websites):
         result = self.es.search(body={

@@ -47,22 +47,26 @@ class TaskManager:
 
             logger.info("Uploading file list in small chunks")
             filename = "./crawled/" + str(task_result.website_id) + ".json"
-            CHUNK_SIZE = 1000000 * 10
+            CHUNK_SIZE = 500000 * 10  # 5Mb
             if os.path.exists(filename):
                 with open(filename) as f:
                     chunk = f.read(CHUNK_SIZE)
                     while chunk:
-                        payload = {
-                            "token": config.API_TOKEN,
-                            "website_id": task_result.website_id
-                        }
+                        try:
+                            payload = {
+                                "token": config.API_TOKEN,
+                                "website_id": task_result.website_id
+                            }
 
-                        files = {
-                            "file_list": chunk
-                        }
+                            files = {
+                                "file_list": chunk
+                            }
 
-                        r = requests.post(config.SERVER_URL + "/task/upload", data=payload, files=files)
-                        logger.info("RESPONSE: " + r.text)
+                            r = requests.post(config.SERVER_URL + "/task/upload", data=payload, files=files)
+                            logger.info("RESPONSE: " + r.text)
+                        except Exception as e:
+                            logger.error("Exception while sending file_list chunk: " + str(e))
+                            pass
                         chunk = f.read(CHUNK_SIZE)
 
             payload = {
