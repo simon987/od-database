@@ -81,7 +81,7 @@ class TaskManager:
                 os.remove(filename)
 
         except Exception as e:
-            raise e
+            logger.error("Error during push_result: " + str(e))
 
     def execute_queued_task(self):
 
