@@ -25,8 +25,8 @@ class File:
         return b"".join([
             self.name.encode(),
             b"D" if self.is_dir else b"F",
-            self.size.to_bytes(6, byteorder="little"),
-            self.mtime.to_bytes(6, byteorder="little"),
+            abs(self.size).to_bytes(6, byteorder="little"),
+            abs(self.mtime).to_bytes(6, byteorder="little"),
         ])
 
     def to_json(self):
