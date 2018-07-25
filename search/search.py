@@ -48,7 +48,7 @@ class ElasticSearchEngine(SearchEngine):
         self.es = elasticsearch.Elasticsearch()
 
         scheduler = BackgroundScheduler()
-        scheduler.add_job(self._generate_global_stats, "interval", seconds=180)
+        scheduler.add_job(self._generate_global_stats, "interval", seconds=60 * 15)
         scheduler.start()
 
         if not self.es.indices.exists(self.index_name):
