@@ -102,7 +102,7 @@ class HttpDirectory(RemoteDirectory):
     def list_dir(self, path):
 
         current_dir_name = path[path.rstrip("/").rfind("/") + 1: -1]
-        path_identifier = hashlib.sha1(current_dir_name.encode())
+        path_identifier = hashlib.md5(current_dir_name.encode())
         path_url = urljoin(self.base_url, path, "")
         body = self._stream_body(path_url)
         anchors = self._parse_links(body)

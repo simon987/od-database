@@ -4,6 +4,7 @@ from urllib.parse import urlparse, urljoin
 from threading import Thread
 from queue import Queue, Empty
 from crawl_server import logger
+from pybloom_live import ScalableBloomFilter
 
 
 class TooManyConnectionsError(Exception):
@@ -21,11 +22,11 @@ class File:
         self.is_dir = is_dir
 
     def __bytes__(self):
-        return b"|".join([
+        return b"".join([
             self.name.encode(),
             b"D" if self.is_dir else b"F",
-            str(self.size).encode(),
-            str(self.mtime).encode(),
+            self.size.to_bytes(6, byteorder="little"),
+            self.mtime.to_bytes(6, byteorder="little"),
         ])
 
     def to_json(self):
@@ -81,7 +82,7 @@ class RemoteDirectoryCrawler:
     def __init__(self, url, max_threads: int):
         self.url = url
         self.max_threads = max_threads
-        self.crawled_paths = list()
+        self.crawled_paths = ScalableBloomFilter(error_rate=0.0001)
         self.status_code = "success"
 
     def crawl_directory(self, out_file: str) -> CrawlResult:
@@ -91,7 +92,7 @@ class RemoteDirectoryCrawler:
                 logger.info("Crawling directory " + self.url + " with " + str(type(directory)))
                 path_id, root_listing = directory.list_dir(urlparse(self.url).path)
                 if root_listing:
-                    self.crawled_paths.append(path_id)
+                    self.crawled_paths.add(path_id)
                 else:
                     logger.info("No files in root listing for " + self.url)
                     return CrawlResult(0, "empty")
@@ -152,7 +153,7 @@ class RemoteDirectoryCrawler:
             try:
                 path_id, listing = directory.list_dir(path)
                 if len(listing) > 0 and path_id not in self.crawled_paths:
-                    self.crawled_paths.append(path_id)
+                    self.crawled_paths.add(path_id)
 
                     for f in listing:
                         if f.is_dir:
