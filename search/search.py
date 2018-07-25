@@ -3,6 +3,7 @@ import time
 from elasticsearch import helpers
 import os
 import ujson
+from apscheduler.schedulers.background import BackgroundScheduler
 
 
 class IndexingError(Exception):
@@ -45,6 +46,10 @@ class ElasticSearchEngine(SearchEngine):
         super().__init__()
         self.index_name = index_name
         self.es = elasticsearch.Elasticsearch()
+
+        scheduler = BackgroundScheduler()
+        scheduler.add_job(self._generate_global_stats, "interval", seconds=180)
+        scheduler.start()
 
         if not self.es.indices.exists(self.index_name):
             self.init()
@@ -271,6 +276,14 @@ class ElasticSearchEngine(SearchEngine):
 
     def get_global_stats(self):
 
+        if os.path.exists("_stats.json"):
+            with open("_stats.json", "r") as f:
+                return ujson.load(f)
+        else:
+            return None
+
+    def _generate_global_stats(self):
+
         size_per_ext = self.es.search(body={
             "query": {
                 "bool": {
@@ -298,7 +311,7 @@ class ElasticSearchEngine(SearchEngine):
             },
             "size": 0
 
-        }, index=self.index_name, request_timeout=20)
+        }, index=self.index_name, request_timeout=120)
 
         total_stats = self.es.search(body={
             "query": {
@@ -320,7 +333,7 @@ class ElasticSearchEngine(SearchEngine):
             },
             "size": 0
 
-        }, index=self.index_name, request_timeout=20)
+        }, index=self.index_name, request_timeout=120)
 
         size_and_date_histogram = self.es.search(body={
             "query": {
@@ -355,7 +368,7 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
-        }, index=self.index_name, request_timeout=20)
+        }, index=self.index_name, request_timeout=120)
 
         website_scatter = self.es.search(body={
             "query": {
@@ -383,17 +396,15 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
-        }, index=self.index_name, request_timeout=20)
+        }, index=self.index_name, request_timeout=120)
 
-        es_stats = self.es.indices.stats(self.index_name, request_timeout=20)
+        es_stats = self.es.indices.stats(self.index_name, request_timeout=120)
 
         stats = dict()
         stats["es_index_size"] = es_stats["indices"][self.index_name]["total"]["store"]["size_in_bytes"]
         stats["es_search_count"] = es_stats["indices"][self.index_name]["total"]["search"]["query_total"]
         stats["es_search_time"] = es_stats["indices"][self.index_name]["total"]["search"]["query_time_in_millis"]
-        stats["es_search_time_avg"] = stats["es_search_time"] / (
-
-            stats["es_search_count"] if stats["es_search_count"] != 0 else 1)
+        stats["es_search_time_avg"] = stats["es_search_time"] / (stats["es_search_count"] if stats["es_search_count"] != 0 else 1)
 
         stats["total_count"] = total_stats["hits"]["total"]
         stats["total_size"] = total_stats["aggregations"]["file_stats"]["sum"]
@@ -411,7 +422,8 @@ class ElasticSearchEngine(SearchEngine):
                                     for b in website_scatter["aggregations"]["websites"]["buckets"]]
         stats["base_url"] = "entire database"
 
-        return stats
+        with open("_stats.json", "w") as f:
+            ujson.dump(stats, f)
 
     def stream_all_docs(self):
         return helpers.scan(query={

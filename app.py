@@ -68,8 +68,10 @@ def stats_page():
 @cache.cached(240)
 def stats_json():
     stats = searchEngine.get_global_stats()
-    db.join_website_on_stats(stats)
-    return Response(json.dumps(stats), mimetype="application/json")
+    if stats:
+        db.join_website_on_stats(stats)
+        return Response(json.dumps(stats), mimetype="application/json")
+    return abort(500)
 
 
 @app.route("/get_export")
