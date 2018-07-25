@@ -579,6 +579,7 @@ def api_complete_task():
             print("ERROR: " + name + " indicated that task for " + str(task_result.website_id) +
                   " was completed but there is no such task in the database.")
             return "No such task"
+    return abort(403)
 
 
 @app.route("/api/task/upload", methods=["POST"])
