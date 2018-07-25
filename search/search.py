@@ -384,7 +384,7 @@ class ElasticSearchEngine(SearchEngine):
                 "websites": {
                     "terms": {
                         "field": "website_id",
-                        "size": 300  # TODO: Figure out what size is appropriate
+                        "size": 500  # TODO: Figure out what size is appropriate
                     },
                     "aggs": {
                         "size": {
