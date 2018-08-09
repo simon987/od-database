@@ -13,6 +13,7 @@ import config
 from flask_caching import Cache
 from tasks import TaskManager, Task, TaskResult
 from search.search import ElasticSearchEngine
+from callbacks import PostCrawlCallbackFactory
 
 app = Flask(__name__)
 if config.CAPTCHA_SUBMIT or config.CAPTCHA_LOGIN:
@@ -572,7 +573,11 @@ def api_complete_task():
             if filename and os.path.exists(filename):
                 os.remove(filename)
 
-            # TODO: handle callback here
+            # Handle task callback
+            callback = PostCrawlCallbackFactory.get_callback(task)
+            if callback:
+                callback.run(task_result, searchEngine)
+
             return "Successfully logged task result and indexed files"
 
         else:
@@ -666,7 +671,7 @@ def api_task_enqueue():
             request.json["url"],
             request.json["priority"],
             request.json["callback_type"],
-            request.json["callback_args"]
+            json.dumps(request.json["callback_args"])
         )
         taskManager.queue_task(task)
         return ""

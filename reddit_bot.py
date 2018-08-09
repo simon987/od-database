@@ -54,14 +54,13 @@ class RedditBot:
 
     @staticmethod
     def get_comment(stats: dict, website_id, message: str = ""):
-        comment = message + "    \n" if len(message) > 0 else ""
+        comment = message + "    \n" if message else ""
 
-        for stat in stats:
-            comment += stat + "    \n" if len(stat) > 0 else ""
-            comment += RedditBot.format_stats(stats[stat])
+        comment += RedditBot.format_stats(stats)
 
-        comment += "[Full Report](https://od-database.simon987.net/website/" + str(website_id) + "/)"
-        comment += " | [Link list](https://od-database.simon987.net/website/" + str(website_id) + "/links)    \n"
+        comment += "[Full Report](https://od-db.the-eye.eu/website/" + str(website_id) + "/)"
+        comment += " | [Link list](https://od-db.the-eye.eu/website/" + str(website_id) + "/links)"
+        comment += " | [Source](https://github.com/simon987/od-database)    \n"
         comment += "***    \n"
         comment += RedditBot.bottom_line
 
@@ -74,7 +73,7 @@ class RedditBot:
         result += "File types | Count | Total Size\n"
         result += ":-- | :-- | :--    \n"
         counter = 0
-        for mime in stats["mime_stats"]:
+        for mime in stats["ext_stats"]:
             result += mime[2]
             result += " | " + str(mime[1])
             result += " | " + humanfriendly.format_size(mime[0]) + "    \n"
