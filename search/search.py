@@ -311,7 +311,7 @@ class ElasticSearchEngine(SearchEngine):
             },
             "size": 0
 
-        }, index=self.index_name, request_timeout=120)
+        }, index=self.index_name, request_timeout=240)
 
         total_stats = self.es.search(body={
             "query": {
@@ -333,7 +333,7 @@ class ElasticSearchEngine(SearchEngine):
             },
             "size": 0
 
-        }, index=self.index_name, request_timeout=120)
+        }, index=self.index_name, request_timeout=241)
 
         size_and_date_histogram = self.es.search(body={
             "query": {
@@ -354,21 +354,21 @@ class ElasticSearchEngine(SearchEngine):
                 "sizes": {
                     "histogram": {
                         "field": "size",
-                        "interval": 50000000,  # 50Mb
-                        "min_doc_count": 100
+                        "interval": 100000000,  # 100Mb
+                        "min_doc_count": 500
                     }
                 },
                 "dates": {
                     "date_histogram": {
                         "field": "mtime",
                         "interval": "1y",
-                        "min_doc_count": 100,
+                        "min_doc_count": 500,
                         "format": "yyyy"
                     }
                 }
             },
             "size": 0
-        }, index=self.index_name, request_timeout=120)
+        }, index=self.index_name, request_timeout=242)
 
         website_scatter = self.es.search(body={
             "query": {
@@ -384,7 +384,7 @@ class ElasticSearchEngine(SearchEngine):
                 "websites": {
                     "terms": {
                         "field": "website_id",
-                        "size": 500  # TODO: Figure out what size is appropriate
+                        "size": 400  # TODO: Figure out what size is appropriate
                     },
                     "aggs": {
                         "size": {
@@ -396,9 +396,9 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
-        }, index=self.index_name, request_timeout=120)
+        }, index=self.index_name, request_timeout=243)
 
-        es_stats = self.es.indices.stats(self.index_name, request_timeout=120)
+        es_stats = self.es.indices.stats(self.index_name, request_timeout=244)
 
         stats = dict()
         stats["es_index_size"] = es_stats["indices"][self.index_name]["total"]["store"]["size_in_bytes"]

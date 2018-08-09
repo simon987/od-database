@@ -59,7 +59,9 @@ class RedditCommentCallback(RedditCallback):
         print("Editing comment comment " + comment_id)
 
         stats = search.get_stats(self.task.website_id)
-        message = self.reddit_bot.get_comment(stats, self.task.website_id)
+        message = self.reddit_bot.get_comment(stats, self.task.website_id,
+                                              message="There you go! This website was crawled in `" +
+                                                      str(int(task_result.end_time - task_result.start_time)) + "s`")
         print(message)
         self.reddit_bot.edit(self.reddit_bot.reddit.comment(comment_id), message)
 

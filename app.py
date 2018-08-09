@@ -716,5 +716,38 @@ def api_random_website():
         return abort(403)
 
 
+@app.route("/api/search", methods=["POST"])
+def api_search():
+
+    try:
+        token = request.json["token"]
+    except KeyError:
+        return abort(400)
+
+    name = db.check_api_token(token)
+
+    if name:
+
+        try:
+            hits = searchEngine.search(
+                request.json["query"],
+                request.json["page"], request.json["per_page"],
+                request.json["sort_order"],
+                request.json["extensions"],
+                request.json["size_min"], request.json["size_max"],
+                request.json["match_all"],
+                request.json["fields"],
+                request.json["date_min"], request.json["date_max"]
+            )
+
+            hits = db.join_website_on_search_result(hits)
+            return json.dumps(hits)
+
+        except InvalidQueryException as e:
+            return str(e)
+    else:
+        return abort(403)
+
+
 if __name__ == '__main__':
     app.run("0.0.0.0", port=12345, threaded=True)
