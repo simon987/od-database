@@ -41,12 +41,23 @@ class RedditBot:
 
         while True:
             try:
-                # Double check has_crawled
                 if not self.has_crawled(reddit_obj.id):
-                    reddit_obj.reply(comment)
+                    reply = reddit_obj.reply(comment)
                     self.log_crawl(reddit_obj.id)
                     print("Reply to " + reddit_obj.id)
+                    return reply
                 break
+            except Exception as e:
+                print("Waiting 5 minutes: " + str(e))
+                time.sleep(300)
+                continue
+
+    def edit(self, reddit_comment, new_message):
+
+        while True:
+            try:
+                reddit_comment.edit(new_message)
+                print("Edit comment " + reddit_comment.id)
             except Exception as e:
                 print("Waiting 5 minutes: " + str(e))
                 time.sleep(300)

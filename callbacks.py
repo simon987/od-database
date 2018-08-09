@@ -52,12 +52,12 @@ class RedditCommentCallback(RedditCallback):
     def run(self, task_result: TaskResult, search: SearchEngine):
 
         comment_id = self.task.callback_args["comment_id"]
-        print("Replying to comment " + comment_id)
+        print("Editing comment comment " + comment_id)
 
         stats = search.get_stats(self.task.website_id)
         message = self.reddit_bot.get_comment(stats, self.task.website_id)
         print(message)
-        self.reddit_bot.reply(self.reddit_bot.reddit.comment(comment_id), message)
+        self.reddit_bot.edit(self.reddit_bot.reddit.comment(comment_id), message)
 
 
 class DiscordCallback(PostCrawlCallback):
