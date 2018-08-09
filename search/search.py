@@ -31,6 +31,9 @@ class SearchEngine:
     def get_stats(self, website_id: int, subdir: str = None):
         raise NotImplementedError
 
+    def refresh(self):
+        raise NotImplementedError
+
 
 class ElasticSearchEngine(SearchEngine):
     SORT_ORDERS = {
@@ -460,3 +463,6 @@ class ElasticSearchEngine(SearchEngine):
         for website in websites:
             if website not in non_empty_websites:
                 yield website
+
+    def refresh(self):
+        self.es.indices.refresh(self.index_name)

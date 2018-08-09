@@ -58,6 +58,7 @@ class RedditCommentCallback(RedditCallback):
         comment_id = self.task.callback_args["comment_id"]
         print("Editing comment comment " + comment_id)
 
+        search.refresh()  # Make sure the newly indexed documents are available before commenting
         stats = search.get_stats(self.task.website_id)
         message = self.reddit_bot.get_comment(stats, self.task.website_id,
                                               message="There you go! This website was crawled in `" +
