@@ -2,12 +2,16 @@ from tasks import Task, TaskResult
 from reddit_bot import RedditBot
 import praw
 from search.search import SearchEngine
+import json
 
 
 class PostCrawlCallback:
 
     def __init__(self, task: Task):
         self.task = task
+
+        if self.task.callback_args:
+            self.task.callback_args = json.loads(self.task.callback_args)
 
     def run(self, task_result: TaskResult, search: SearchEngine):
         raise NotImplementedError

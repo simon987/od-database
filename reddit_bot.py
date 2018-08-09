@@ -58,6 +58,7 @@ class RedditBot:
             try:
                 reddit_comment.edit(new_message)
                 print("Edit comment " + reddit_comment.id)
+                break
             except Exception as e:
                 print("Waiting 5 minutes: " + str(e))
                 time.sleep(300)

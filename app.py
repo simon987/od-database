@@ -5,7 +5,6 @@ from urllib.parse import urlparse
 import os
 import time
 import datetime
-import itertools
 from database import Database, Website, InvalidQueryException
 from flask_recaptcha import ReCaptcha
 import od_util
