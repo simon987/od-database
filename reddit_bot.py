@@ -72,7 +72,7 @@ class RedditBot:
 
         comment += "[Full Report](https://od-db.the-eye.eu/website/" + str(website_id) + "/)"
         comment += " | [Link list](https://od-db.the-eye.eu/website/" + str(website_id) + "/links)"
-        comment += " | [Source](https://github.com/simon987/od-database)    \n"
+        comment += " | [Source](https://github.com/simon987)    \n"
         comment += "***    \n"
         comment += RedditBot.bottom_line
 
