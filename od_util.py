@@ -5,7 +5,7 @@ import os
 import validators
 import re
 from ftplib import FTP
-import config
+from . import config
 
 import urllib3
 urllib3.disable_warnings()
