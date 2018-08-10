@@ -22,6 +22,7 @@
                                 </div>
                             </div>
                             <input class="form-control" name="q" id="q" placeholder="Query" value="{{ q }}">
+                            <input type="hidden" name="p" id="page" value="{{ p }}">
                         </div>
                     </div>
                     {# Size #}
@@ -90,15 +91,16 @@
                             </select>
                         </div>
 
+
                         {# Search button #}
                         <div class="form-group col-md-7">
 
                             {% if show_captcha %}
                                 <script>function f(token) {document.getElementById("sfrm").submit();}</script>
                                 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-                                <button class="g-recaptcha btn btn-primary btn-shadow" data-sitekey="6LcCXWkUAAAAAJo2NR9_m09Obn5YmDrI97sGrr2f" data-callback="f" style="float: right">Search</button>
+                                <button id="s" class="g-recaptcha btn btn-primary btn-shadow" data-sitekey="6LcCXWkUAAAAAJo2NR9_m09Obn5YmDrI97sGrr2f" data-callback="f" style="float: right">Search</button>
                             {% else %}
-                                <input class="btn btn-primary btn-shadow" type="submit" value="Search" style="float: right">
+                                <input id="s" class="btn btn-primary btn-shadow" type="submit" value="Search" style="float: right">
                             {% endif %}
                         </div>
                     </div>
@@ -163,12 +165,10 @@
                         </table>
                     </div>
                     {% if results["hits"]["total"] > (p + 1) * per_page %}
-                        <a href="/search?q={{ q }}&p={{ p + 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}&ext={{ extensions }}&size_min={{ size_min }}&size_max={{ size_max }}{{ "&field_path" if field_path else "" }}{{ "&field_name" if field_name else "" }}{{ "&field_trigram" if field_trigram else "" }}&date_min={{ date_min }}&date_max={{ date_max }}"
-                           class="btn btn-primary" style="float: right">Next</a>
+                        <button class="btn btn-primary" onclick="nextPage()" style="float: right">Next</button>
                     {% endif %}
                     {% if p > 0 %}
-                        <a href="/search?q={{ q }}&p={{ p - 1 }}&sort_order={{ sort_order }}&per_page={{ per_page }}&ext={{ extensions }}&size_min={{ size_min }}&size_max={{ size_max }}{{ "&field_path" if field_path else "" }}{{ "&field_name" if field_name else "" }}{{ "&field_trigram" if field_trigram else "" }}&date_min={{ date_min }}&date_max={{ date_max }}"
-                           class="btn btn-primary">Previous</a>
+                        <button class="btn btn-primary" onclick="prevPage()">Previous</button>
                     {% endif %}
 
                 </div>
@@ -252,6 +252,16 @@
                     document.getElementById("dateMax").value = e.to >= e.max ? null : e.to;
                 }
             });
+
+            //Next button
+            function nextPage() {
+                document.getElementById("page").value = parseInt(document.getElementById("page").value) + 1;
+                document.getElementById("s").click();
+            }
+            function prevPage() {
+                document.getElementById("page").value = parseInt(document.getElementById("page").value) - 1;
+                document.getElementById("s").click();
+            }
 
         </script>
     </div>
