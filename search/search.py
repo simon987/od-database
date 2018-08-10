@@ -214,7 +214,7 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": per_page, "from": min(page * per_page, 10000 - per_page)},
-            index=self.index_name, request_timeout=60)
+            index=self.index_name, request_timeout=35)
 
         return page
 
@@ -232,7 +232,7 @@ class ElasticSearchEngine(SearchEngine):
                 "ext_group": {
                     "terms": {
                         "field": "ext",
-                        "size": 20
+                        "size": 12
                     },
                     "aggs": {
                         "size": {
@@ -249,7 +249,7 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
-        }, index=self.index_name, request_timeout=20)
+        }, index=self.index_name, request_timeout=30)
 
         stats = dict()
         stats["total_size"] = result["aggregations"]["total_size"]["value"]
