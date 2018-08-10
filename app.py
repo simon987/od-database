@@ -21,6 +21,12 @@ if config.CAPTCHA_SUBMIT or config.CAPTCHA_LOGIN:
                           secret_key=config.CAPTCHA_SECRET_KEY)
 else:
     recaptcha = None
+if config.CAPTCHA_SEARCH:
+    recaptcha_search = ReCaptcha(app=app,
+                                 site_key=config.CAPTCHA_S_SITE_KEY,
+                                 secret_key=config.CAPTCHA_S_SECRET_KEY)
+else:
+    recaptcha_search = None
 app.secret_key = config.FLASK_SECRET
 db = Database("db.sqlite3")
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
@@ -243,79 +249,86 @@ def admin_rescan_website(website_id):
 
 @app.route("/search")
 def search():
-    q = request.args.get("q") if "q" in request.args else ""
-    sort_order = request.args.get("sort_order") if "sort_order" in request.args else "score"
 
-    page = request.args.get("p") if "p" in request.args else "0"
-    page = int(page) if page.isdigit() else 0
+        q = request.args.get("q") if "q" in request.args else ""
+        sort_order = request.args.get("sort_order") if "sort_order" in request.args else "score"
 
-    per_page = request.args.get("per_page") if "per_page" in request.args else "50"
-    per_page = int(per_page) if per_page.isdigit() else "50"
-    per_page = per_page if per_page in config.RESULTS_PER_PAGE else 50
+        page = request.args.get("p") if "p" in request.args else "0"
+        page = int(page) if page.isdigit() else 0
 
-    extensions = request.args.get("ext") if "ext" in request.args else None
-    extensions = [ext.strip().strip(".").lower() for ext in extensions.split(",")] if extensions else []
+        per_page = request.args.get("per_page") if "per_page" in request.args else "50"
+        per_page = int(per_page) if per_page.isdigit() else "50"
+        per_page = per_page if per_page in config.RESULTS_PER_PAGE else 50
 
-    size_min = request.args.get("size_min") if "size_min" in request.args else "size_min"
-    size_min = int(size_min) if size_min.isdigit() else 0
-    size_max = request.args.get("size_max") if "size_max" in request.args else "size_max"
-    size_max = int(size_max) if size_max.isdigit() else 0
+        extensions = request.args.get("ext") if "ext" in request.args else None
+        extensions = [ext.strip().strip(".").lower() for ext in extensions.split(",")] if extensions else []
 
-    date_min = request.args.get("date_min") if "date_min" in request.args else "date_min"
-    date_min = int(date_min) if date_min.isdigit() else 0
-    date_max = request.args.get("date_max") if "date_max" in request.args else "date_max"
-    date_max = int(date_max) if date_max.isdigit() else 0
+        size_min = request.args.get("size_min") if "size_min" in request.args else "size_min"
+        size_min = int(size_min) if size_min.isdigit() else 0
+        size_max = request.args.get("size_max") if "size_max" in request.args else "size_max"
+        size_max = int(size_max) if size_max.isdigit() else 0
 
-    match_all = "all" in request.args
+        date_min = request.args.get("date_min") if "date_min" in request.args else "date_min"
+        date_min = int(date_min) if date_min.isdigit() else 0
+        date_max = request.args.get("date_max") if "date_max" in request.args else "date_max"
+        date_max = int(date_max) if date_max.isdigit() else 0
 
-    field_name = "field_name" in request.args
-    field_trigram = "field_trigram" in request.args
-    field_path = "field_path" in request.args
+        match_all = "all" in request.args
 
-    if not field_name and not field_trigram and not field_path:
-        # If no fields are selected, search in all
-        field_name = field_path = field_trigram = True
+        field_name = "field_name" in request.args
+        field_trigram = "field_trigram" in request.args
+        field_path = "field_path" in request.args
 
-    fields = []
-    if field_path:
-        fields.append("path")
-    if field_name:
-        fields.append("name^5")
-    if field_trigram:
-        fields.append("name.nGram^2")
+        if not field_name and not field_trigram and not field_path:
+            # If no fields are selected, search in all
+            field_name = field_path = field_trigram = True
 
-    if len(q) >= 3:
+        fields = []
+        if field_path:
+            fields.append("path")
+        if field_name:
+            fields.append("name^5")
+        if field_trigram:
+            fields.append("name.nGram^2")
 
-        db.log_search(request.remote_addr,
-                      request.headers["X-Forwarded-For"] if "X-Forwarded-For" in request.headers else None,
-                      q, extensions, page)
+        if len(q) >= 3:
 
-        try:
-            hits = searchEngine.search(q, page, per_page, sort_order,
-                                       extensions, size_min, size_max, match_all, fields, date_min, date_max)
-            hits = db.join_website_on_search_result(hits)
-        except InvalidQueryException as e:
-            flash("<strong>Invalid query:</strong> " + str(e), "warning")
-            return redirect("/search")
-        except Exception:
-            flash("Query failed, this could mean that the search server is overloaded or is not reachable. "
-                  "Please try again later", "danger")
+            response = request.args.get("g-recaptcha-response", "")
+            if not config.CAPTCHA_SEARCH or recaptcha_search.verify(response):
+                db.log_search(request.remote_addr,
+                              request.headers["X-Forwarded-For"] if "X-Forwarded-For" in request.headers else None,
+                              q, extensions, page)
+
+                try:
+                    hits = searchEngine.search(q, page, per_page, sort_order,
+                                               extensions, size_min, size_max, match_all, fields, date_min, date_max)
+                    hits = db.join_website_on_search_result(hits)
+                except InvalidQueryException as e:
+                    flash("<strong>Invalid query:</strong> " + str(e), "warning")
+                    return redirect("/search")
+                except Exception:
+                    flash("Query failed, this could mean that the search server is overloaded or is not reachable. "
+                          "Please try again later", "danger")
+                    hits = None
+            else:
+                flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
+                hits = None
+
+        else:
             hits = None
 
-    else:
-        hits = None
-
-    return render_template("search.html",
-                           results=hits,
-                           q=q,
-                           p=page, per_page=per_page,
-                           sort_order=sort_order,
-                           results_set=config.RESULTS_PER_PAGE,
-                           extensions=",".join(extensions),
-                           size_min=size_min, size_max=size_max,
-                           match_all=match_all,
-                           field_trigram=field_trigram, field_path=field_path, field_name=field_name,
-                           date_min=date_min, date_max=date_max)
+        return render_template("search.html",
+                               results=hits,
+                               q=q,
+                               p=page, per_page=per_page,
+                               sort_order=sort_order,
+                               results_set=config.RESULTS_PER_PAGE,
+                               extensions=",".join(extensions),
+                               size_min=size_min, size_max=size_max,
+                               match_all=match_all,
+                               field_trigram=field_trigram, field_path=field_path, field_name=field_name,
+                               date_min=date_min, date_max=date_max,
+                               show_captcha=config.CAPTCHA_SEARCH, recaptcha=recaptcha_search)
 
 
 @app.route("/contribute")
@@ -331,7 +344,8 @@ def home():
         stats["website_count"] = len(db.get_all_websites())
     except:
         stats = {}
-    return render_template("home.html", stats=stats)
+    return render_template("home.html", stats=stats,
+                           show_captcha=config.CAPTCHA_SEARCH, recaptcha=recaptcha_search)
 
 
 @app.route("/submit")
