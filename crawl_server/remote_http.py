@@ -104,7 +104,7 @@ class HttpDirectory(RemoteDirectory):
         current_dir_name = path[path.rstrip("/").rfind("/") + 1: -1]
         path_identifier = hashlib.md5(current_dir_name.encode())
         path_url = urljoin(self.base_url, path, "")
-        body = self._stream_body(path_url)
+        body = self._fetch_body(path_url)
         anchors = self._parse_links(body)
 
         urls_to_request = []
@@ -176,19 +176,16 @@ class HttpDirectory(RemoteDirectory):
         logger.debug("TimeoutError - _request_file")
         raise TimeoutError
 
-    def _stream_body(self, url: str):
+    def _fetch_body(self, url: str):
         retries = HttpDirectory.MAX_RETRIES
         while retries > 0:
             try:
-                r = self.session.get(url, stream=True, timeout=HttpDirectory.TIMEOUT)
-                for chunk in r.iter_content(chunk_size=8192):
-                    try:
-                        yield chunk.decode(r.encoding if r.encoding else "utf-8", errors="ignore")
-                    except LookupError:
-                        # Unsupported encoding
-                        yield chunk.decode("utf-8", errors="ignore")
-                r.close()
-                return
+                r = self.session.get(url, timeout=HttpDirectory.TIMEOUT)
+                try:
+                    return r.content.decode(r.encoding if r.encoding else "utf-8", errors="ignore")
+                except LookupError:
+                    # Unsupported encoding
+                    return r.content.decode("utf-8", errors="ignore")
             except RequestException:
                 self.session.close()
                 retries -= 1
@@ -200,14 +197,8 @@ class HttpDirectory(RemoteDirectory):
     def _parse_links(body):
 
         parser = HTMLAnchorParser()
-        anchors = []
-
-        for chunk in body:
-            parser.feed(chunk)
-            for anchor in parser.anchors:
-                anchors.append(anchor)
-
-        return anchors
+        parser.feed(body)
+        return parser.anchors
 
     @staticmethod
     def _isdir(link: Anchor):
