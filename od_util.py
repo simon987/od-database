@@ -9,7 +9,7 @@ from ftplib import FTP
 # TODO: find a better way to do this
 try:
     from . import config
-except ImportError:
+except (ImportError, SystemError):
     import config
 
 import urllib3
