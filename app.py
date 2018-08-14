@@ -36,6 +36,7 @@ app.jinja_env.globals.update(get_mime=od_util.get_category)
 
 taskManager = TaskManager()
 searchEngine = ElasticSearchEngine("od-database")
+searchEngine.start_stats_scheduler()
 
 
 @app.template_filter("date_format")

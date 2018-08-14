@@ -50,12 +50,14 @@ class ElasticSearchEngine(SearchEngine):
         self.index_name = index_name
         self.es = elasticsearch.Elasticsearch()
 
+        if not self.es.indices.exists(self.index_name):
+            self.init()
+
+    def start_stats_scheduler(self):
         scheduler = BackgroundScheduler()
         scheduler.add_job(self._generate_global_stats, "interval", seconds=60 * 120)
         scheduler.start()
 
-        if not self.es.indices.exists(self.index_name):
-            self.init()
 
     def init(self):
         print("Elasticsearch first time setup")
