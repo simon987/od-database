@@ -96,7 +96,10 @@
                         <div class="form-group col-md-7">
 
                             {% if show_captcha %}
-                                <script>function f(token) {document.getElementById("sfrm").submit();}</script>
+                                <script>function f(token) {
+                                    document.getElementById("page").value = 0;
+                                    document.getElementById("sfrm").submit();
+                                }</script>
                                 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
                                 <button id="s" class="g-recaptcha btn btn-primary btn-shadow" data-sitekey="6LcCXWkUAAAAAJo2NR9_m09Obn5YmDrI97sGrr2f" data-callback="f" style="float: right">Search</button>
                             {% else %}

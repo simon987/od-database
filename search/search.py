@@ -58,7 +58,6 @@ class ElasticSearchEngine(SearchEngine):
         scheduler.add_job(self._generate_global_stats, "interval", seconds=60 * 120)
         scheduler.start()
 
-
     def init(self):
         print("Elasticsearch first time setup")
         if self.es.indices.exists(self.index_name):
