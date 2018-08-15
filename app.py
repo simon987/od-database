@@ -57,7 +57,7 @@ def from_timestamp(value):
 @app.route("/dl")
 def downloads():
     try:
-        export_file_stats = os.stat("static/out.csv.xz")
+        export_file_stats = os.stat("static/out.csv.lzma")
     except FileNotFoundError:
         print("No export file")
         export_file_stats = None
