@@ -97,11 +97,10 @@
 
                             {% if show_captcha %}
                                 <script>function f(token) {
-                                    {#document.getElementById("page").value = 0;#}
                                     document.getElementById("sfrm").submit();
                                 }</script>
                                 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-                                <button id="s" class="g-recaptcha btn btn-primary btn-shadow" data-sitekey="6LcCXWkUAAAAAJo2NR9_m09Obn5YmDrI97sGrr2f" data-callback="f" style="float: right">Search</button>
+                                <button id="s" class="g-recaptcha btn btn-primary btn-shadow" data-sitekey="6LcCXWkUAAAAAJo2NR9_m09Obn5YmDrI97sGrr2f" data-callback="f" style="float: right" onclick="document.getElementById('page').value = 0">Search</button>
                             {% else %}
                                 <input id="s" class="btn btn-primary btn-shadow" type="submit" value="Search" style="float: right">
                             {% endif %}
@@ -259,11 +258,11 @@
             //Next button
             function nextPage() {
                 document.getElementById("page").value = parseInt(document.getElementById("page").value) + 1;
-                document.getElementById("s").click();
+                grecaptcha.execute();
             }
             function prevPage() {
                 document.getElementById("page").value = parseInt(document.getElementById("page").value) - 1;
-                document.getElementById("s").click();
+                grecaptcha.execute();
             }
 
         </script>
