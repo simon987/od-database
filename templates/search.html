@@ -97,7 +97,7 @@
 
                             {% if show_captcha %}
                                 <script>function f(token) {
-                                    document.getElementById("page").value = 0;
+                                    {#document.getElementById("page").value = 0;#}
                                     document.getElementById("sfrm").submit();
                                 }</script>
                                 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
