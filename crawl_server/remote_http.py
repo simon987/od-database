@@ -197,10 +197,9 @@ class HttpDirectory(RemoteDirectory):
                     mtime=int(parse_date(date).timestamp()),
                     is_dir=False
                 )
-            except pycurl.error as e:
+            except pycurl.error:
                 curl.close()
                 retries -= 1
-                raise e
 
         logger.debug("TimeoutError - _request_file")
         raise TimeoutError
@@ -215,11 +214,9 @@ class HttpDirectory(RemoteDirectory):
                 self.curl.perform()
 
                 return content.getvalue().decode("utf-8", errors="ignore")
-            except pycurl.error as e:
+            except pycurl.error:
                 self.curl.close()
                 retries -= 1
-                print(e)
-                raise e
 
         logger.debug("TimeoutError - _fetch_body")
         raise TimeoutError
