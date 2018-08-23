@@ -119,7 +119,6 @@ class HttpDirectory(RemoteDirectory):
 
         return curl_head
 
-
     def list_dir(self, path):
 
         current_dir_name = path[path.rstrip("/").rfind("/") + 1: -1]
@@ -235,14 +234,14 @@ class HttpDirectory(RemoteDirectory):
     @staticmethod
     def _should_ignore(base_url, current_path, link: Anchor):
 
-        if urljoin(base_url, link.href) == urljoin(urljoin(base_url, current_path), "../"):
+        full_url = urljoin(base_url, link.href)
+        if full_url == urljoin(urljoin(base_url, current_path), "../") or full_url == base_url:
             return True
 
         if link.href.endswith(HttpDirectory.BLACK_LIST):
             return True
 
         # Ignore external links
-        full_url = urljoin(base_url, link.href)
         if not full_url.startswith(base_url):
             return True
 
