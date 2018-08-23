@@ -162,6 +162,8 @@ class HttpDirectory(RemoteDirectory):
             handles = [self._curl_handle() for _ in range(len(urls_to_request))]
             files = pool.starmap(self._request_file, zip(handles, urls_to_request, repeat(self.base_url)))
             pool.close()
+            for handle in handles:
+                handle.close()
             for file in files:
                 if file:
                     yield file
@@ -186,7 +188,6 @@ class HttpDirectory(RemoteDirectory):
                 stripped_url = url[len(base_url) - 1:]
                 headers = HttpDirectory._parse_dict_header(raw_headers.getvalue().decode("utf-8", errors="ignore"))
                 raw_headers.close()
-                curl.close()
 
                 path, name = os.path.split(stripped_url)
                 date = headers.get("Last-Modified", "1970-01-01")
