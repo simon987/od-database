@@ -198,7 +198,6 @@ class HttpDirectory(RemoteDirectory):
                     is_dir=False
                 )
             except pycurl.error:
-                curl.close()
                 retries -= 1
 
         logger.debug("TimeoutError - _request_file")
