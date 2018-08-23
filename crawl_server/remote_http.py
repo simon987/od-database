@@ -190,6 +190,7 @@ class HttpDirectory(RemoteDirectory):
 
                 path, name = os.path.split(stripped_url)
                 date = headers.get("Last-Modified", "1970-01-01")
+                curl.close()
                 return File(
                     path=unquote(path).strip("/"),
                     name=unquote(name),
