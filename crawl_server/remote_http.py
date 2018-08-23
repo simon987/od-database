@@ -179,13 +179,14 @@ class HttpDirectory(RemoteDirectory):
         while retries > 0:
             try:
                 raw_headers = BytesIO()
-                curl.setopt(pycurl.URL, url)
+                curl.setopt(pycurl.URL, url.encode("utf-8", errors="ignore"))
                 curl.setopt(pycurl.HEADERFUNCTION, raw_headers.write)
                 curl.perform()
 
                 stripped_url = url[len(base_url) - 1:]
                 headers = HttpDirectory._parse_dict_header(raw_headers.getvalue().decode("utf-8", errors="ignore"))
                 raw_headers.close()
+                curl.close()
 
                 path, name = os.path.split(stripped_url)
                 date = headers.get("Last-Modified", "1970-01-01")
@@ -208,7 +209,7 @@ class HttpDirectory(RemoteDirectory):
         while retries > 0:
             try:
                 content = BytesIO()
-                self.curl.setopt(pycurl.URL, url)
+                self.curl.setopt(pycurl.URL, url.encode("utf-8", errors="ignore"))
                 self.curl.setopt(pycurl.WRITEDATA, content)
                 self.curl.perform()
 
