@@ -109,11 +109,12 @@ class HttpDirectory(RemoteDirectory):
 
         self.curl_head = self._curl_handle()
 
-    def _curl_handle(self):
+    @staticmethod
+    def _curl_handle():
 
         curl_head = Curl()
-        curl_head.setopt(self.curl.SSL_VERIFYPEER, 0)
-        curl_head.setopt(self.curl.SSL_VERIFYHOST, 0)
+        curl_head.setopt(pycurl.SSL_VERIFYPEER, 0)
+        curl_head.setopt(pycurl.SSL_VERIFYHOST, 0)
         curl_head.setopt(pycurl.NOBODY, 1)
         curl_head.setopt(pycurl.TIMEOUT, HttpDirectory.TIMEOUT)
 
@@ -159,27 +160,25 @@ class HttpDirectory(RemoteDirectory):
         if len(urls_to_request) > 150:
             # Many urls, use multi-threaded solution
             pool = ThreadPool(processes=10)
-            handles = [self._curl_handle() for _ in range(len(urls_to_request))]
-            files = pool.starmap(self._request_file, zip(handles, urls_to_request, repeat(self.base_url)))
+            files = pool.starmap(self._request_file, zip(urls_to_request, repeat(self.base_url)))
             pool.close()
-            for handle in handles:
-                handle.close()
             for file in files:
                 if file:
                     yield file
         else:
             # Too few urls to create thread pool
             for url in urls_to_request:
-                file = self._request_file(self.curl_head, url, self.base_url)
+                file = self._request_file(url, self.base_url)
                 if file:
                     yield file
 
     @staticmethod
-    def _request_file(curl, url, base_url):
+    def _request_file(url, base_url):
 
         retries = HttpDirectory.MAX_RETRIES
         while retries > 0:
             try:
+                curl = HttpDirectory._curl_handle()
                 raw_headers = BytesIO()
                 curl.setopt(pycurl.URL, url.encode("utf-8", errors="ignore"))
                 curl.setopt(pycurl.HEADERFUNCTION, raw_headers.write)
