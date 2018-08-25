@@ -215,7 +215,7 @@ class HttpDirectory(RemoteDirectory):
 
                 return content.getvalue().decode("utf-8", errors="ignore")
             except pycurl.error:
-                self.curl.close()
+                self.close()
                 retries -= 1
 
         logger.debug("TimeoutError - _fetch_body")
@@ -262,7 +262,6 @@ class HttpDirectory(RemoteDirectory):
 
     def close(self):
         self.curl.close()
-        logger.debug("Closing HTTPRemoteDirectory for " + self.base_url)
         self.init_curl()
 
 
