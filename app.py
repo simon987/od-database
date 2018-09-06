@@ -74,13 +74,6 @@ def stats_json():
     return abort(500)
 
 
-@app.route("/get_export")
-def get_export():
-    if os.path.exists("static/out.csv.xz"):
-        return send_from_directory("static", "out.csv.xz", as_attachment=True, mimetype="application/x-xz")
-    return abort(404)
-
-
 @app.route("/website/<int:website_id>/")
 def website_info(website_id):
     website = db.get_website_by_id(website_id)
