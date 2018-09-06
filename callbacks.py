@@ -1,6 +1,8 @@
-from tasks import Task
-from crawl_server.reddit_bot import RedditBot
+from tasks import Task, TaskResult
+from reddit_bot import RedditBot
 import praw
+from search.search import SearchEngine
+import json
 
 
 class PostCrawlCallback:
@@ -8,7 +10,10 @@ class PostCrawlCallback:
     def __init__(self, task: Task):
         self.task = task
 
-    def run(self):
+        if self.task.callback_args:
+            self.task.callback_args = json.loads(self.task.callback_args)
+
+    def run(self, task_result: TaskResult, search: SearchEngine):
         raise NotImplementedError
 
 
@@ -36,26 +41,33 @@ class RedditCallback(PostCrawlCallback):
                              user_agent='github.com/simon987/od-database (by /u/Hexahedr_n)')
         self.reddit_bot = RedditBot("crawled.txt", reddit)
 
-    def run(self):
+    def run(self, task_result: TaskResult, search: SearchEngine):
         raise NotImplementedError
 
 
 class RedditPostCallback(RedditCallback):
 
-    def run(self):
+    def run(self, task_result: TaskResult, search: SearchEngine):
         print("Reddit post callback for task " + str(self.task))
-        pass
 
 
 class RedditCommentCallback(RedditCallback):
 
-    def run(self):
-        print("Reddit comment callback for task " + str(self.task))
-        pass
+    def run(self, task_result: TaskResult, search: SearchEngine):
+
+        comment_id = self.task.callback_args["comment_id"]
+        print("Editing comment comment " + comment_id)
+
+        search.refresh()  # Make sure the newly indexed documents are available before commenting
+        stats = search.get_stats(self.task.website_id)
+        message = self.reddit_bot.get_comment(stats, self.task.website_id,
+                                              message="There you go! This website was crawled in `" +
+                                                      str(int(task_result.end_time - task_result.start_time)) + "s`")
+        print(message)
+        self.reddit_bot.edit(self.reddit_bot.reddit.comment(comment_id), message)
 
 
 class DiscordCallback(PostCrawlCallback):
 
-    def run(self):
+    def run(self, task_result: TaskResult, search: SearchEngine):
         print("Discord callback for task " + str(self.task))
-        pass

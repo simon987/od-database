@@ -5,7 +5,12 @@ import os
 import validators
 import re
 from ftplib import FTP
-import config
+
+# TODO: find a better way to do this
+try:
+    from . import config
+except (ImportError, SystemError):
+    import config
 
 import urllib3
 urllib3.disable_warnings()

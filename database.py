@@ -407,12 +407,12 @@ class Database:
             cursor = conn.cursor()
 
             cursor.execute("SELECT id, website_id, url, priority, callback_type, callback_args FROM "
-                           "Queue WHERE website_id=? AND assigned_crawler=?", (website_id, name))
+                           "Queue WHERE website_id=?", (website_id, ))
 
             task = cursor.fetchone()
 
             if task:
-                cursor.execute("DELETE FROM Queue WHERE website_id=? AND assigned_crawler=?", (website_id, name))
+                cursor.execute("DELETE FROM Queue WHERE website_id=?", (website_id, ))
                 conn.commit()
                 return Task(task[1], task[2], task[3], task[4], task[5])
             else:

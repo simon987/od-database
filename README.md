@@ -5,6 +5,7 @@ Suggestions/concerns/PRs are welcome
 ## Installation
 Assuming you have Python 3 and git installed:
 ```bash
+sudo apt install libssl-dev libcurl4-openssl-dev
 git clone https://github.com/simon987/od-database
 cd od-database
 sudo pip3 install -r requirements.txt
@@ -14,8 +15,11 @@ Create `/config.py` and fill out the parameters. Sample config:
 # Leave default values for no CAPTCHAs
 CAPTCHA_LOGIN = False
 CAPTCHA_SUBMIT = False
+CAPTCHA_SEARCH = False
 CAPTCHA_SITE_KEY = ""
 CAPTCHA_SECRET_KEY = ""
+CAPTCHA_S_SITE_KEY = ""
+CAPTCHA_S_SECRET_KEY = ""
 
 # Flask secret key for sessions
 FLASK_SECRET = ""

@@ -17,3 +17,5 @@ ujson
 urllib3
 pyOpenSSL
 pybloom-live
+pycurl
+lxml

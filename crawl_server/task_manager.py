@@ -63,7 +63,7 @@ class TaskManager:
                             }
 
                             r = requests.post(config.SERVER_URL + "/task/upload", data=payload, files=files)
-                            logger.info("RESPONSE: " + r.text)
+                            logger.info("RESPONSE: " + r.text + "<" + str(r.status_code) + ">")
                         except Exception as e:
                             logger.error("Exception while sending file_list chunk: " + str(e))
                             pass
@@ -75,7 +75,7 @@ class TaskManager:
             }
 
             r = requests.post(config.SERVER_URL + "/task/complete", data=payload)
-            logger.info("RESPONSE: " + r.text)
+            logger.info("RESPONSE: " + r.text + "<" + str(r.status_code) + ">")
 
             if os.path.exists(filename):
                 os.remove(filename)

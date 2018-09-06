@@ -41,11 +41,23 @@ class RedditBot:
 
         while True:
             try:
-                # Double check has_crawled
                 if not self.has_crawled(reddit_obj.id):
-                    reddit_obj.reply(comment)
+                    reply = reddit_obj.reply(comment)
                     self.log_crawl(reddit_obj.id)
                     print("Reply to " + reddit_obj.id)
+                    return reply
+                break
+            except Exception as e:
+                print("Waiting 5 minutes: " + str(e))
+                time.sleep(300)
+                continue
+
+    def edit(self, reddit_comment, new_message):
+
+        while True:
+            try:
+                reddit_comment.edit(new_message)
+                print("Edit comment " + reddit_comment.id)
                 break
             except Exception as e:
                 print("Waiting 5 minutes: " + str(e))
@@ -54,14 +66,13 @@ class RedditBot:
 
     @staticmethod
     def get_comment(stats: dict, website_id, message: str = ""):
-        comment = message + "    \n" if len(message) > 0 else ""
+        comment = message + "    \n" if message else ""
 
-        for stat in stats:
-            comment += stat + "    \n" if len(stat) > 0 else ""
-            comment += RedditBot.format_stats(stats[stat])
+        comment += RedditBot.format_stats(stats)
 
-        comment += "[Full Report](https://od-database.simon987.net/website/" + str(website_id) + "/)"
-        comment += " | [Link list](https://od-database.simon987.net/website/" + str(website_id) + "/links)    \n"
+        comment += "[Full Report](https://od-db.the-eye.eu/website/" + str(website_id) + "/)"
+        comment += " | [Link list](https://od-db.the-eye.eu/website/" + str(website_id) + "/links)"
+        comment += " | [Source](https://github.com/simon987)    \n"
         comment += "***    \n"
         comment += RedditBot.bottom_line
 
@@ -74,7 +85,7 @@ class RedditBot:
         result += "File types | Count | Total Size\n"
         result += ":-- | :-- | :--    \n"
         counter = 0
-        for mime in stats["mime_stats"]:
+        for mime in stats["ext_stats"]:
             result += mime[2]
             result += " | " + str(mime[1])
             result += " | " + humanfriendly.format_size(mime[0]) + "    \n"

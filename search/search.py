@@ -31,6 +31,9 @@ class SearchEngine:
     def get_stats(self, website_id: int, subdir: str = None):
         raise NotImplementedError
 
+    def refresh(self):
+        raise NotImplementedError
+
 
 class ElasticSearchEngine(SearchEngine):
     SORT_ORDERS = {
@@ -47,12 +50,13 @@ class ElasticSearchEngine(SearchEngine):
         self.index_name = index_name
         self.es = elasticsearch.Elasticsearch()
 
-        scheduler = BackgroundScheduler()
-        scheduler.add_job(self._generate_global_stats, "interval", seconds=60 * 15)
-        scheduler.start()
-
         if not self.es.indices.exists(self.index_name):
             self.init()
+
+    def start_stats_scheduler(self):
+        scheduler = BackgroundScheduler()
+        scheduler.add_job(self._generate_global_stats, "interval", seconds=60 * 120)
+        scheduler.start()
 
     def init(self):
         print("Elasticsearch first time setup")
@@ -122,8 +126,8 @@ class ElasticSearchEngine(SearchEngine):
 
     def import_json(self, in_lines, website_id: int):
 
-        import_every = 1000
-        cooldown_time = 1
+        import_every = 400
+        cooldown_time = 0
 
         docs = []
 
@@ -211,7 +215,7 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": per_page, "from": min(page * per_page, 10000 - per_page)},
-            index=self.index_name, request_timeout=30)
+            index=self.index_name, request_timeout=35)
 
         return page
 
@@ -229,7 +233,7 @@ class ElasticSearchEngine(SearchEngine):
                 "ext_group": {
                     "terms": {
                         "field": "ext",
-                        "size": 20
+                        "size": 12
                     },
                     "aggs": {
                         "size": {
@@ -246,7 +250,7 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
-        }, index=self.index_name, request_timeout=20)
+        }, index=self.index_name, request_timeout=30)
 
         stats = dict()
         stats["total_size"] = result["aggregations"]["total_size"]["value"]
@@ -311,7 +315,7 @@ class ElasticSearchEngine(SearchEngine):
             },
             "size": 0
 
-        }, index=self.index_name, request_timeout=120)
+        }, index=self.index_name, request_timeout=240)
 
         total_stats = self.es.search(body={
             "query": {
@@ -333,7 +337,7 @@ class ElasticSearchEngine(SearchEngine):
             },
             "size": 0
 
-        }, index=self.index_name, request_timeout=120)
+        }, index=self.index_name, request_timeout=241)
 
         size_and_date_histogram = self.es.search(body={
             "query": {
@@ -354,21 +358,21 @@ class ElasticSearchEngine(SearchEngine):
                 "sizes": {
                     "histogram": {
                         "field": "size",
-                        "interval": 50000000,  # 50Mb
-                        "min_doc_count": 100
+                        "interval": 100000000,  # 100Mb
+                        "min_doc_count": 500
                     }
                 },
                 "dates": {
                     "date_histogram": {
                         "field": "mtime",
                         "interval": "1y",
-                        "min_doc_count": 100,
+                        "min_doc_count": 500,
                         "format": "yyyy"
                     }
                 }
             },
             "size": 0
-        }, index=self.index_name, request_timeout=120)
+        }, index=self.index_name, request_timeout=242)
 
         website_scatter = self.es.search(body={
             "query": {
@@ -384,7 +388,7 @@ class ElasticSearchEngine(SearchEngine):
                 "websites": {
                     "terms": {
                         "field": "website_id",
-                        "size": 500  # TODO: Figure out what size is appropriate
+                        "size": 400  # TODO: Figure out what size is appropriate
                     },
                     "aggs": {
                         "size": {
@@ -396,9 +400,9 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
-        }, index=self.index_name, request_timeout=120)
+        }, index=self.index_name, request_timeout=243)
 
-        es_stats = self.es.indices.stats(self.index_name, request_timeout=120)
+        es_stats = self.es.indices.stats(self.index_name, request_timeout=244)
 
         stats = dict()
         stats["es_index_size"] = es_stats["indices"][self.index_name]["total"]["store"]["size_in_bytes"]
@@ -460,3 +464,6 @@ class ElasticSearchEngine(SearchEngine):
         for website in websites:
             if website not in non_empty_websites:
                 yield website
+
+    def refresh(self):
+        self.es.indices.refresh(self.index_name)

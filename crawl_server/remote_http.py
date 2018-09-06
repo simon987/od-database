@@ -1,14 +1,16 @@
+import pycurl
+from io import BytesIO
+
 from crawl_server import logger
 from urllib.parse import unquote, urljoin
 import os
 from html.parser import HTMLParser
 from itertools import repeat
 from crawl_server.crawler import RemoteDirectory, File
-import requests
-from requests.exceptions import RequestException
 from multiprocessing.pool import ThreadPool
 import config
 from dateutil.parser import parse as parse_date
+from pycurl import Curl
 import hashlib
 
 import urllib3
@@ -94,17 +96,36 @@ class HttpDirectory(RemoteDirectory):
 
     def __init__(self, url):
         super().__init__(url)
-        self.session = requests.Session()
-        self.session.headers = HttpDirectory.HEADERS
-        self.session.verify = False
-        self.session.max_redirects = 1
+        self.curl = None
+        self.curl_head = None
+        self.init_curl()
+
+    def init_curl(self):
+
+        self.curl = Curl()
+        self.curl.setopt(self.curl.SSL_VERIFYPEER, 0)
+        self.curl.setopt(self.curl.SSL_VERIFYHOST, 0)
+        self.curl.setopt(pycurl.TIMEOUT, HttpDirectory.TIMEOUT)
+
+        self.curl_head = self._curl_handle()
+
+    @staticmethod
+    def _curl_handle():
+
+        curl_head = Curl()
+        curl_head.setopt(pycurl.SSL_VERIFYPEER, 0)
+        curl_head.setopt(pycurl.SSL_VERIFYHOST, 0)
+        curl_head.setopt(pycurl.NOBODY, 1)
+        curl_head.setopt(pycurl.TIMEOUT, HttpDirectory.TIMEOUT)
+
+        return curl_head
 
     def list_dir(self, path):
 
         current_dir_name = path[path.rstrip("/").rfind("/") + 1: -1]
         path_identifier = hashlib.md5(current_dir_name.encode())
         path_url = urljoin(self.base_url, path, "")
-        body = self._stream_body(path_url)
+        body = self._fetch_body(path_url)
         anchors = self._parse_links(body)
 
         urls_to_request = []
@@ -139,7 +160,7 @@ class HttpDirectory(RemoteDirectory):
         if len(urls_to_request) > 150:
             # Many urls, use multi-threaded solution
             pool = ThreadPool(processes=10)
-            files = pool.starmap(HttpDirectory._request_file, zip(repeat(self), urls_to_request))
+            files = pool.starmap(self._request_file, zip(urls_to_request, repeat(self.base_url)))
             pool.close()
             for file in files:
                 if file:
@@ -147,67 +168,65 @@ class HttpDirectory(RemoteDirectory):
         else:
             # Too few urls to create thread pool
             for url in urls_to_request:
-                file = self._request_file(url)
+                file = self._request_file(url, self.base_url)
                 if file:
                     yield file
 
-    def _request_file(self, url):
+    @staticmethod
+    def _request_file(url, base_url):
 
         retries = HttpDirectory.MAX_RETRIES
         while retries > 0:
             try:
-                r = self.session.head(url, allow_redirects=False, timeout=HttpDirectory.TIMEOUT)
+                curl = HttpDirectory._curl_handle()
+                raw_headers = BytesIO()
+                curl.setopt(pycurl.URL, url.encode("utf-8", errors="ignore"))
+                curl.setopt(pycurl.HEADERFUNCTION, raw_headers.write)
+                curl.perform()
 
-                stripped_url = url[len(self.base_url) - 1:]
+                stripped_url = url[len(base_url) - 1:]
+                headers = HttpDirectory._parse_dict_header(raw_headers.getvalue().decode("utf-8", errors="ignore"))
+                raw_headers.close()
 
                 path, name = os.path.split(stripped_url)
-                date = r.headers.get("Last-Modified", "1970-01-01")
+                date = headers.get("Last-Modified", "1970-01-01")
+                curl.close()
                 return File(
                     path=unquote(path).strip("/"),
                     name=unquote(name),
-                    size=int(r.headers.get("Content-Length", -1)),
+                    size=int(headers.get("Content-Length", -1)),
                     mtime=int(parse_date(date).timestamp()),
                     is_dir=False
                 )
-            except RequestException:
-                self.session.close()
+            except pycurl.error:
                 retries -= 1
 
         logger.debug("TimeoutError - _request_file")
         raise TimeoutError
 
-    def _stream_body(self, url: str):
+    def _fetch_body(self, url: str):
         retries = HttpDirectory.MAX_RETRIES
         while retries > 0:
             try:
-                r = self.session.get(url, stream=True, timeout=HttpDirectory.TIMEOUT)
-                for chunk in r.iter_content(chunk_size=8192):
-                    try:
-                        yield chunk.decode(r.encoding if r.encoding else "utf-8", errors="ignore")
-                    except LookupError:
-                        # Unsupported encoding
-                        yield chunk.decode("utf-8", errors="ignore")
-                r.close()
-                return
-            except RequestException:
-                self.session.close()
+                content = BytesIO()
+                self.curl.setopt(pycurl.URL, url.encode("utf-8", errors="ignore"))
+                self.curl.setopt(pycurl.WRITEDATA, content)
+                self.curl.perform()
+
+                return content.getvalue().decode("utf-8", errors="ignore")
+            except pycurl.error:
+                self.close()
                 retries -= 1
 
-        logger.debug("TimeoutError - _stream_body")
+        logger.debug("TimeoutError - _fetch_body")
         raise TimeoutError
 
     @staticmethod
     def _parse_links(body):
 
         parser = HTMLAnchorParser()
-        anchors = []
-
-        for chunk in body:
-            parser.feed(chunk)
-            for anchor in parser.anchors:
-                anchors.append(anchor)
-
-        return anchors
+        parser.feed(body)
+        return parser.anchors
 
     @staticmethod
     def _isdir(link: Anchor):
@@ -216,14 +235,14 @@ class HttpDirectory(RemoteDirectory):
     @staticmethod
     def _should_ignore(base_url, current_path, link: Anchor):
 
-        if urljoin(base_url, link.href) == urljoin(urljoin(base_url, current_path), "../"):
+        full_url = urljoin(base_url, link.href)
+        if full_url == urljoin(urljoin(base_url, current_path), "../") or full_url == base_url:
             return True
 
         if link.href.endswith(HttpDirectory.BLACK_LIST):
             return True
 
         # Ignore external links
-        full_url = urljoin(base_url, link.href)
         if not full_url.startswith(base_url):
             return True
 
@@ -231,8 +250,18 @@ class HttpDirectory(RemoteDirectory):
         if "?" in link.href:
             return True
 
+    @staticmethod
+    def _parse_dict_header(raw):
+        headers = dict()
+        for line in raw.split("\r\n")[1:]:  # Ignore first 'HTTP/1.0 200 OK' line
+            if line:
+                k, v = line.split(":", maxsplit=1)
+                headers[k.strip()] = v.strip()
+
+        return headers
+
     def close(self):
-        self.session.close()
-        logger.debug("Closing HTTPRemoteDirectory for " + self.base_url)
+        self.curl.close()
+        self.init_curl()
 
 
