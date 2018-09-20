@@ -4,7 +4,9 @@ OD-Database is a web-crawling project that aims to index a very large number of 
 
 Each crawler instance fetches tasks from the central server and pushes the result once completed. A single instance can crawl hundreds of websites at the same time (Both FTP and HTTP(S)) and the central server is capable of ingesting thousands of new documents per second. 
 
-The data is indexed into elasticsearch and made available via the web frontend (Currently hosted at https://od-db.the-eye.eu/). There is currently ~1.8 billion files indexed (total of about 300Gb of raw data). The raw data is made available as a CSV file [here](https://od-db.the-eye.eu/dl).
+The data is indexed into elasticsearch and made available via the web frontend (Currently hosted at https://od-db.the-eye.eu/). There is currently ~1.93 billion files indexed (total of about 300Gb of raw data). The raw data is made available as a CSV file [here](https://od-db.the-eye.eu/dl).
+
+![2018-09-20-194116_1127x639_scrot](https://user-images.githubusercontent.com/7120851/45852325-281cca00-bd0d-11e8-9fed-49a54518e972.png)
 
 
 ### Contributing   
