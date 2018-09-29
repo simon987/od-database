@@ -106,6 +106,7 @@ class HttpDirectory(RemoteDirectory):
         self.curl.setopt(self.curl.SSL_VERIFYPEER, 0)
         self.curl.setopt(self.curl.SSL_VERIFYHOST, 0)
         self.curl.setopt(pycurl.TIMEOUT, HttpDirectory.TIMEOUT)
+        self.curl.setopt(pycurl.USERAGENT, config.HEADERS["User-Agent"])
 
         self.curl_head = self._curl_handle()
 
@@ -117,6 +118,7 @@ class HttpDirectory(RemoteDirectory):
         curl_head.setopt(pycurl.SSL_VERIFYHOST, 0)
         curl_head.setopt(pycurl.NOBODY, 1)
         curl_head.setopt(pycurl.TIMEOUT, HttpDirectory.TIMEOUT)
+        curl_head.setopt(pycurl.USERAGENT, config.HEADERS["User-Agent"])
 
         return curl_head
 
