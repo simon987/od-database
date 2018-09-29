@@ -550,9 +550,17 @@ def api_get_task():
 
         if task:
             print("Assigning task " + str(task.website_id) + " to " + name)
-            return Response(str(task), mimetype="application/json")
         else:
-            return abort(404)
+            print("No queued tasks, creating new rescan task")
+
+            website_id = db.get_oldest_website_id()
+            website = db.get_website_by_id(website_id)
+            task = Task(website_id, website.url)
+            db.put_task(task)
+
+            task = db.pop_task(name)
+
+        return Response(str(task), mimetype="application/json")
     else:
         return abort(403)
 

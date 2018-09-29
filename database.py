@@ -156,14 +156,13 @@ class Database:
             website_id = cursor.fetchone()
             return website_id[0] if website_id else None
 
-    def get_websites_older(self, delta: datetime.timedelta):
-        """Get websites last updated before a given date"""
-        date = datetime.datetime.utcnow() - delta
+    def get_oldest_website_id(self):
 
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT Website.id FROM Website WHERE last_modified < ?", (date, ))
-            return [x[0] for x in cursor.fetchall()]
+            cursor.execute("SELECT Website.id FROM Website WHERE Website.id not in (SELECT website_id FROM Queue) "
+                           "ORDER BY last_modified ASC LIMIT 1")
+            return cursor.fetchone()[0]
 
     def delete_website(self, website_id):
 
