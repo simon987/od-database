@@ -565,6 +565,23 @@ def api_get_task():
         return abort(403)
 
 
+@app.route("/api/task/cancel", methods=["POST"])
+def api_cancel_task():
+    token = request.form.get("token")
+    name = db.check_api_token(token)
+
+    if name:
+        website_id = request.form.get("website_id") if "website_id" in request.form else None
+        if website_id:
+            db.delete_task(website_id)
+            return Response("cancelled task")
+        else:
+            abort(400)
+
+    else:
+        abort(403)
+
+
 @app.route("/api/task/complete", methods=["POST"])
 def api_complete_task():
     token = request.form.get("token")
@@ -763,6 +780,7 @@ def api_search():
             return str(e)
     else:
         return abort(403)
+
 
 
 if __name__ == '__main__':

@@ -400,6 +400,12 @@ class Database:
             else:
                 return None
 
+    def delete_task(self, website_id):
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM Queue WHERE website_id=?", (website_id, ))
+
     def complete_task(self, website_id: int, name: str) -> Task:
 
         with sqlite3.connect(self.db_path) as conn:
