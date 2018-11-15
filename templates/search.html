@@ -18,7 +18,8 @@
                             <div class="input-group-prepend">
                                 <div class="input-group-text">
                                     <label for="matchAll" style="margin-bottom: 0">Match any word&nbsp</label>
-                                    <input title="Toggle between 'match all words' and 'match any word'" type="checkbox" id="matchAll" name="all" {{ "checked" if match_all }}>
+                                    <input title="Toggle between 'match all words' and 'match any word'" type="checkbox"
+                                           id="matchAll" name="all" {{ "checked" if match_all }}>
                                 </div>
                             </div>
                             <input class="form-control" name="q" id="q" placeholder="Query" value="{{ q }}">
@@ -52,15 +53,18 @@
                         <div class="col-md-5" style="margin-left: 1em">
                             <div class="text-muted">Search in</div>
                             <div class="form-group form-check form-check-inline">
-                                <input class="form-check-input" type="checkbox" id="field_name" name="field_name"{{ "checked" if field_name else ""}}>
+                                <input class="form-check-input" type="checkbox" id="field_name"
+                                       name="field_name"{{ "checked" if field_name else "" }}>
                                 <label class="form-check-label" for="field_name">name</label>
                             </div>
                             <div class="form-group form-check form-check-inline">
-                                <input class="form-check-input" type="checkbox" id="field_trigram" name="field_trigram"{{ "checked" if field_trigram else ""}}>
+                                <input class="form-check-input" type="checkbox" id="field_trigram"
+                                       name="field_trigram"{{ "checked" if field_trigram else "" }}>
                                 <label class="form-check-label" for="field_trigram">name.trigram</label>
                             </div>
                             <div class="form-group form-check form-check-inline">
-                                <input class="form-check-input" type="checkbox" id="field_path" name="field_path" {{ "checked" if field_path else ""}}>
+                                <input class="form-check-input" type="checkbox" id="field_path"
+                                       name="field_path" {{ "checked" if field_path else "" }}>
                                 <label class="form-check-label" for="field_path">path</label>
                             </div>
                         </div>
@@ -73,12 +77,23 @@
                             {# Sort order #}
                             <select class="form-control" name="sort_order" title="Sort order">
                                 <option disabled>Sort order</option>
-                                <option value="score" {{ "selected" if sort_order == "score" else "" }}>Relevance </option>
-                                <option value="size_asc" {{ "selected" if sort_order == "size_asc" else "" }}>Size ascending </option>
-                                <option value="size_dsc" {{ "selected" if sort_order == "size_dsc" else "" }}>Size descending</option>
-                                <option value="date_asc" {{ "selected" if sort_order == "date_asc" else "" }}>Date ascending</option>
-                                <option value="date_dsc" {{ "selected" if sort_order == "date_dsc" else "" }}>Date descending</option>
-                                <option value="none" {{ "selected" if sort_order == "none" else "" }}>No order (faster)</option>
+                                <option value="score" {{ "selected" if sort_order == "score" else "" }}>Relevance
+                                </option>
+                                <option value="size_asc" {{ "selected" if sort_order == "size_asc" else "" }}>Size
+                                    ascending
+                                </option>
+                                <option value="size_dsc" {{ "selected" if sort_order == "size_dsc" else "" }}>Size
+                                    descending
+                                </option>
+                                <option value="date_asc" {{ "selected" if sort_order == "date_asc" else "" }}>Date
+                                    ascending
+                                </option>
+                                <option value="date_dsc" {{ "selected" if sort_order == "date_dsc" else "" }}>Date
+                                    descending
+                                </option>
+                                <option value="none" {{ "selected" if sort_order == "none" else "" }}>No order
+                                    (faster)
+                                </option>
                             </select>
                         </div>
                         {# Results per page #}
@@ -100,9 +115,13 @@
                                     document.getElementById("sfrm").submit();
                                 }</script>
                                 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-                                <button id="s" class="g-recaptcha btn btn-primary btn-shadow" data-sitekey="6LcCXWkUAAAAAJo2NR9_m09Obn5YmDrI97sGrr2f" data-callback="f" style="float: right" onclick="document.getElementById('page').value = 0">Search</button>
+                                <button id="s" class="g-recaptcha btn btn-primary btn-shadow"
+                                        data-sitekey="6LcCXWkUAAAAAJo2NR9_m09Obn5YmDrI97sGrr2f" data-callback="f"
+                                        style="float: right" onclick="document.getElementById('page').value = 0">Search
+                                </button>
                             {% else %}
-                                <input id="s" class="btn btn-primary btn-shadow" type="submit" value="Search" style="float: right">
+                                <input id="s" class="btn btn-primary btn-shadow" type="submit" value="Search"
+                                       style="float: right">
                             {% endif %}
                         </div>
                     </div>
@@ -182,8 +201,11 @@
                     <p>For better results:</p>
                     <ul>
                         <li>Try checking the 'Match any word' box for a broader search.</li>
-                        <li>Make sure you don't include the file extension in your query (Use the appropriate field to filter file types)</li>
-                        <li>If you're searching for files in a particular website, use the <a href="/website">website search page</a></li>
+                        <li>Make sure you don't include the file extension in your query (Use the appropriate field to
+                            filter file types)
+                        </li>
+                        <li>If you're searching for files in a particular website, use the <a href="/website">website
+                            search page</a></li>
                     </ul>
                 </div>
 
@@ -239,15 +261,15 @@
                 grid: false,
                 force_edges: true,
                 min: 0,
-                max: Math.floor(Date.now()/1000),
+                max: Math.floor(Date.now() / 1000),
                 from: {{ date_min if date_min else 0 }},
                 to: {{ date_max if date_max else "self.max"}},
                 min_interval: 3600 * 24 * 7,
                 step: 3600 * 24,
                 drag_interval: true,
                 prettify: function (num) {
-                    let date = (new Date(num*1000));
-                    return date.getUTCFullYear() + "-" + ("0" + (date.getUTCMonth()+1)).slice(-2) + "-" + ("0" + date.getUTCDate()).slice(-2)
+                    let date = (new Date(num * 1000));
+                    return date.getUTCFullYear() + "-" + ("0" + (date.getUTCMonth() + 1)).slice(-2) + "-" + ("0" + date.getUTCDate()).slice(-2)
                 },
                 onFinish: function (e) {
                     document.getElementById("dateMin").value = e.from;
@@ -258,11 +280,20 @@
             //Next button
             function nextPage() {
                 document.getElementById("page").value = parseInt(document.getElementById("page").value) + 1;
-                grecaptcha.execute();
+                {% if show_captcha %}
+                    grecaptcha.execute();
+                {% else %}
+                    document.getElementById("sfrm").submit()
+                {% endif %}
             }
+
             function prevPage() {
                 document.getElementById("page").value = parseInt(document.getElementById("page").value) - 1;
-                grecaptcha.execute();
+                {% if show_captcha %}
+                    grecaptcha.execute();
+                {% else %}
+                    document.getElementById("sfrm").submit()
+                {% endif %}
             }
 
         </script>
