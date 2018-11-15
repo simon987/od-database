@@ -74,43 +74,25 @@
                 <table class="table table-striped">
                     <thead>
                     <tr>
-                        <th></th>
-                        {% for server in crawl_server_stats %}
-                            <th>{{ server }}</th>
-                        {% endfor %}
+                        <th>Server</th>
+                        <th>Tasks done</th>
+                        <th>Crawl time</th>
+                        <th>Crawl time avg.</th>
+                        <th>Files crawled</th>
+                        <th>Files crawled avg.</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <th>Completed tasks</th>
-                        {% for server in crawl_server_stats %}
+                    {% for server in crawl_server_stats %}
+                        <tr>
+                            <td><b>{{ server }}</b></td>
                             <td>{{ crawl_server_stats[server].task_count }}</td>
-                        {% endfor %}
-                    </tr>
-                    <tr>
-                        <th>Crawl time</th>
-                        {% for server in crawl_server_stats %}
                             <td>{{ crawl_server_stats[server].time|round(2) }}s</td>
-                        {% endfor %}
-                    </tr>
-                    <tr>
-                        <th>Crawl time average</th>
-                        {% for server in crawl_server_stats %}
                             <td>{{ crawl_server_stats[server].time_avg|round(2) }}s</td>
-                        {% endfor %}
-                    </tr>
-                    <tr>
-                        <th>Files crawled</th>
-                        {% for server in crawl_server_stats %}
                             <td>{{ crawl_server_stats[server].file_count }}</td>
-                        {% endfor %}
-                    </tr>
-                    <tr>
-                        <th>Files crawled average</th>
-                        {% for server in crawl_server_stats %}
                             <td>{{ crawl_server_stats[server].file_count_avg | round(2) }}</td>
-                        {% endfor %}
-                    </tr>
+                        </tr>
+                    {% endfor %}
                     </tbody>
                 </table>
             </div>
