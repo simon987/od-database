@@ -7,8 +7,6 @@ import bcrypt
 import uuid
 import tasks
 
-class InvalidQueryException(Exception):
-    pass
 
 
 class BlacklistedWebsite:
@@ -351,13 +349,13 @@ class Database:
 
         return stats
 
-    def log_search(self, remote_addr, forwarded_for, q, exts, page):
+    def log_search(self, remote_addr, forwarded_for, q, exts, page, blocked, results, took):
 
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
 
-            cursor.execute("INSERT INTO SearchLogEntry (remote_addr, forwarded_for, query, extensions, page) VALUES "
-                           "(?,?,?,?,?)", (remote_addr, forwarded_for, q, ",".join(exts), page))
+            cursor.execute("INSERT INTO SearchLogEntry (remote_addr, forwarded_for, query, extensions, page, blocked, results, took) "
+                           "VALUES (?,?,?,?,?,?,?,?)", (remote_addr, forwarded_for, q, ",".join(exts), page, blocked, results, took))
 
             conn.commit()
 

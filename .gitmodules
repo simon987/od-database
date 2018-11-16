@@ -1,0 +1,3 @@
+[submodule "fold_to_ascii"]
+	path = fold_to_ascii
+	url = https://github.com/spanishdict/fold_to_ascii

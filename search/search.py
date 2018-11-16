@@ -5,6 +5,12 @@ import os
 import ujson
 from apscheduler.schedulers.background import BackgroundScheduler
 
+from search.filter import SearchFilter
+
+
+class InvalidQueryException(Exception):
+    pass
+
 
 class IndexingError(Exception):
     pass
@@ -49,6 +55,7 @@ class ElasticSearchEngine(SearchEngine):
         super().__init__()
         self.index_name = index_name
         self.es = elasticsearch.Elasticsearch()
+        self.filter = SearchFilter()
 
         if not self.es.indices.exists(self.index_name):
             self.init()
@@ -164,6 +171,10 @@ class ElasticSearchEngine(SearchEngine):
 
     def search(self, query, page, per_page, sort_order, extensions, size_min, size_max, match_all, fields, date_min,
                date_max) -> {}:
+
+        if self.filter.should_block(query):
+            raise InvalidQueryException("One or more terms in your query is blocked by the search filter. "
+                                        "This incident has been reported.")
 
         filters = []
         if extensions:

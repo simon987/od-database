@@ -45,7 +45,10 @@ CREATE TABLE SearchLogEntry (
   forwarded_for TEXT,
   query TEXT,
   extensions TEXT,
-  page INT
+  page INT,
+  blocked INT DEFAULT 0,
+  results INT DEFAULT 0,
+  took INT DEFAULT 0
 );
 
 CREATE TABLE Queue (

@@ -5,13 +5,13 @@ from urllib.parse import urlparse
 import os
 import time
 import datetime
-from database import Database, Website, InvalidQueryException
+from database import Database, Website
 from flask_recaptcha import ReCaptcha
 import od_util
 import config
 from flask_caching import Cache
 from tasks import TaskManager, Task, TaskResult
-from search.search import ElasticSearchEngine
+from search.search import ElasticSearchEngine, InvalidQueryException
 from callbacks import PostCrawlCallbackFactory
 
 app = Flask(__name__)
@@ -287,11 +287,10 @@ def search():
 
         if len(q) >= 3:
 
+            blocked = False
+            hits = None
             response = request.args.get("g-recaptcha-response", "")
             if not config.CAPTCHA_SEARCH or recaptcha_search.verify(response):
-                db.log_search(request.remote_addr,
-                              request.headers["X-Forwarded-For"] if "X-Forwarded-For" in request.headers else None,
-                              q, extensions, page)
 
                 try:
                     hits = searchEngine.search(q, page, per_page, sort_order,
@@ -299,14 +298,19 @@ def search():
                     hits = db.join_website_on_search_result(hits)
                 except InvalidQueryException as e:
                     flash("<strong>Invalid query:</strong> " + str(e), "warning")
-                    return redirect("/search")
+                    blocked = True
                 except Exception:
                     flash("Query failed, this could mean that the search server is overloaded or is not reachable. "
                           "Please try again later", "danger")
-                    hits = None
+
+                db.log_search(request.remote_addr,
+                              request.headers["X-Forwarded-For"] if "X-Forwarded-For" in request.headers else None,
+                              q, extensions, page, blocked,
+                              hits["hits"]["total"] if hits else -1, hits["took"] if hits else -1)
+                if blocked:
+                    return redirect("/search")
             else:
                 flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
-                hits = None
 
         else:
             hits = None
