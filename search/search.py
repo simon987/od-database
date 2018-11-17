@@ -231,7 +231,7 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": per_page, "from": min(page * per_page, 10000 - per_page)},
-            index=self.index_name, request_timeout=35)
+            index=self.index_name, request_timeout=20)
 
         return page
 
