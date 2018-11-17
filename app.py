@@ -287,10 +287,15 @@ def search():
                 flash("Query failed, this could mean that the search server is overloaded or is not reachable. "
                       "Please try again later", "danger")
 
-            db.log_search(request.remote_addr,
-                          request.headers["X-Forwarded-For"] if "X-Forwarded-For" in request.headers else None,
-                          q, extensions, page, blocked,
-                          hits["hits"]["total"] if hits else -1, hits["took"] if hits else -1)
+            results = hits["hits"]["total"] if hits else -1
+            took = hits["took"] if hits else -1
+            forwarded_for = request.headers["X-Forwarded-For"] if "X-Forwarded-For" in request.headers else None
+
+            logger.info("SEARCH '{}' [res={}, t={}, p={}x{}, ext={}] by {}{}"
+                        .format(q, results, took, page, per_page, str(extensions),
+                                request.remote_addr, "_" + forwarded_for if forwarded_for else ""))
+
+            db.log_search(request.remote_addr, forwarded_for, q, extensions, page, blocked, results, took)
             if blocked:
                 return redirect("/search")
         else:

@@ -177,6 +177,7 @@ class ElasticSearchEngine(SearchEngine):
                date_max) -> {}:
 
         if self.filter.should_block(query):
+            logger.info("Search was blocked")
             raise InvalidQueryException("One or more terms in your query is blocked by the search filter. "
                                         "This incident has been reported.")
 
