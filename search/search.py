@@ -5,6 +5,7 @@ import os
 import ujson
 from apscheduler.schedulers.background import BackgroundScheduler
 
+from search import logger
 from search.filter import SearchFilter
 
 
@@ -66,7 +67,7 @@ class ElasticSearchEngine(SearchEngine):
         scheduler.start()
 
     def init(self):
-        print("Elasticsearch first time setup")
+        logger.info("Elasticsearch first time setup")
         if self.es.indices.exists(self.index_name):
             self.es.indices.delete(index=self.index_name)
         self.es.indices.create(index=self.index_name)
@@ -113,7 +114,7 @@ class ElasticSearchEngine(SearchEngine):
 
         while True:
             try:
-                print("Deleting docs of " + str(website_id))
+                logger.debug("Deleting docs of " + str(website_id))
                 self.es.delete_by_query(body={
                     "query": {
                         "constant_score": {
@@ -125,11 +126,11 @@ class ElasticSearchEngine(SearchEngine):
                 }, index=self.index_name, request_timeout=200)
                 break
             except elasticsearch.exceptions.ConflictError:
-                print("Error: multiple delete tasks at the same time, retrying")
-                time.sleep(10)
+                logger.warning("Error: multiple delete tasks at the same time, retrying in 20s")
+                time.sleep(20)
             except Exception:
-                print("Timeout during delete! Retrying")
-                time.sleep(10)
+                logger.warning("Timeout during delete! Retrying in 20s")
+                time.sleep(20)
 
     def import_json(self, in_lines, website_id: int):
 
@@ -139,12 +140,15 @@ class ElasticSearchEngine(SearchEngine):
         docs = []
 
         for line in in_lines:
-            doc = ujson.loads(line)
-            name, ext = os.path.splitext(doc["name"])
-            doc["ext"] = ext[1:].lower() if ext and len(ext) > 1 else ""
-            doc["name"] = name
-            doc["website_id"] = website_id
-            docs.append(doc)
+            try:
+                doc = ujson.loads(line)
+                name, ext = os.path.splitext(doc["name"])
+                doc["ext"] = ext[1:].lower() if ext and len(ext) > 1 else ""
+                doc["name"] = name
+                doc["website_id"] = website_id
+                docs.append(doc)
+            except Exception as e:
+                logger.error("Error in import_json: " + str(e) + " for line : + \n" + line)
 
             if len(docs) >= import_every:
                 self._index(docs)
@@ -155,12 +159,12 @@ class ElasticSearchEngine(SearchEngine):
             self._index(docs)
 
     def _index(self, docs):
-        print("Indexing " + str(len(docs)) + " docs")
+        logger.debug("Indexing " + str(len(docs)) + " docs")
         bulk_string = ElasticSearchEngine.create_bulk_index_string(docs)
         result = self.es.bulk(body=bulk_string, index=self.index_name, doc_type="file", request_timeout=30)
 
         if result["errors"]:
-            print(result)
+            logger.error("Error in ES bulk index: \n" + result["errors"])
             raise IndexingError
 
     @staticmethod
