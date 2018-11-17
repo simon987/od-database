@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, flash, abort, Response, send_from_directory, session
+from flask import Flask, render_template, redirect, request, flash, abort, Response, session
 from multiprocessing import Pool
 import json
 from urllib.parse import urlparse
@@ -16,10 +16,13 @@ from search.search import ElasticSearchEngine, InvalidQueryException
 from callbacks import PostCrawlCallbackFactory
 
 app = Flask(__name__)
+app.secret_key = config.FLASK_SECRET
 
 # Disable flask logging
 flaskLogger = logging.getLogger('werkzeug')
 flaskLogger.setLevel(logging.ERROR)
+
+logger = logging.getLogger("default")
 
 if config.CAPTCHA_SUBMIT or config.CAPTCHA_LOGIN:
     recaptcha = ReCaptcha(app=app,
@@ -33,7 +36,7 @@ if config.CAPTCHA_SEARCH:
                                  secret_key=config.CAPTCHA_S_SECRET_KEY)
 else:
     recaptcha_search = None
-app.secret_key = config.FLASK_SECRET
+
 db = Database("db.sqlite3")
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 app.jinja_env.globals.update(truncate_path=od_util.truncate_path)
@@ -61,17 +64,19 @@ def from_timestamp(value):
 
 
 @app.route("/dl")
+@cache.cached(120)
 def downloads():
     try:
-        export_file_stats = os.stat("static/out.csv.lzma")
+        export_file_stats = os.stat("static/out.csv.lzm4")
     except FileNotFoundError:
-        print("No export file")
+        logger.warning("No export file to display in /dl")
         export_file_stats = None
 
     return render_template("downloads.html", export_file_stats=export_file_stats)
 
 
 @app.route("/stats")
+@cache.cached(120)
 def stats_page():
     crawl_server_stats = db.get_stats_by_crawler()
     return render_template("stats.html", crawl_server_stats=crawl_server_stats)
@@ -147,18 +152,7 @@ def random_website():
     return redirect("/website/" + str(db.get_random_website_id()))
 
 
-@app.route("/website/redispatch_queued")
-def admin_redispatch_queued():
-    if "username" in session:
-
-        count = taskManager.redispatch_queued()
-        flash("Re-dispatched " + str(count) + " tasks", "success")
-        return redirect("/dashboard")
-
-    else:
-        abort(404)
-
-
+## TODO: move to DB
 def get_empty_websites():
     current_tasks = taskManager.get_queued_tasks()
 
@@ -182,21 +176,6 @@ def admin_delete_empty_website():
             pass
 
         flash("Deleted: " + repr(list(empty_websites)), "success")
-        return redirect("/dashboard")
-
-    else:
-        abort(403)
-
-
-@app.route("/website/queue_empty")
-def admin_queue_empty_websites():
-    if "username" in session:
-
-        for website_id in get_empty_websites():
-            website = db.get_website_by_id(website_id)
-            task = Task(website.id, website.url, 1)
-            taskManager.queue_task(task)
-        flash("Dispatched empty websites", "success")
         return redirect("/dashboard")
 
     else:
@@ -249,93 +228,93 @@ def admin_rescan_website(website_id):
 
 @app.route("/search")
 def search():
+    q = request.args.get("q") if "q" in request.args else ""
+    sort_order = request.args.get("sort_order") if "sort_order" in request.args else "score"
 
-        q = request.args.get("q") if "q" in request.args else ""
-        sort_order = request.args.get("sort_order") if "sort_order" in request.args else "score"
+    page = request.args.get("p") if "p" in request.args else "0"
+    page = int(page) if page.isdigit() else 0
 
-        page = request.args.get("p") if "p" in request.args else "0"
-        page = int(page) if page.isdigit() else 0
+    per_page = request.args.get("per_page") if "per_page" in request.args else "50"
+    per_page = int(per_page) if per_page.isdigit() else "50"
+    per_page = per_page if per_page in config.RESULTS_PER_PAGE else 50
 
-        per_page = request.args.get("per_page") if "per_page" in request.args else "50"
-        per_page = int(per_page) if per_page.isdigit() else "50"
-        per_page = per_page if per_page in config.RESULTS_PER_PAGE else 50
+    extensions = request.args.get("ext") if "ext" in request.args else None
+    extensions = [ext.strip().strip(".").lower() for ext in extensions.split(",")] if extensions else []
 
-        extensions = request.args.get("ext") if "ext" in request.args else None
-        extensions = [ext.strip().strip(".").lower() for ext in extensions.split(",")] if extensions else []
+    size_min = request.args.get("size_min") if "size_min" in request.args else "size_min"
+    size_min = int(size_min) if size_min.isdigit() else 0
+    size_max = request.args.get("size_max") if "size_max" in request.args else "size_max"
+    size_max = int(size_max) if size_max.isdigit() else 0
 
-        size_min = request.args.get("size_min") if "size_min" in request.args else "size_min"
-        size_min = int(size_min) if size_min.isdigit() else 0
-        size_max = request.args.get("size_max") if "size_max" in request.args else "size_max"
-        size_max = int(size_max) if size_max.isdigit() else 0
+    date_min = request.args.get("date_min") if "date_min" in request.args else "date_min"
+    date_min = int(date_min) if date_min.isdigit() else 0
+    date_max = request.args.get("date_max") if "date_max" in request.args else "date_max"
+    date_max = int(date_max) if date_max.isdigit() else 0
 
-        date_min = request.args.get("date_min") if "date_min" in request.args else "date_min"
-        date_min = int(date_min) if date_min.isdigit() else 0
-        date_max = request.args.get("date_max") if "date_max" in request.args else "date_max"
-        date_max = int(date_max) if date_max.isdigit() else 0
+    match_all = "all" in request.args
 
-        match_all = "all" in request.args
+    field_name = "field_name" in request.args
+    field_trigram = "field_trigram" in request.args
+    field_path = "field_path" in request.args
 
-        field_name = "field_name" in request.args
-        field_trigram = "field_trigram" in request.args
-        field_path = "field_path" in request.args
+    if not field_name and not field_trigram and not field_path:
+        # If no fields are selected, search in all
+        field_name = field_path = field_trigram = True
 
-        if not field_name and not field_trigram and not field_path:
-            # If no fields are selected, search in all
-            field_name = field_path = field_trigram = True
+    fields = []
+    if field_path:
+        fields.append("path")
+    if field_name:
+        fields.append("name^5")
+    if field_trigram:
+        fields.append("name.nGram^2")
 
-        fields = []
-        if field_path:
-            fields.append("path")
-        if field_name:
-            fields.append("name^5")
-        if field_trigram:
-            fields.append("name.nGram^2")
+    if len(q) >= 3:
 
-        if len(q) >= 3:
+        blocked = False
+        hits = None
+        response = request.args.get("g-recaptcha-response", "")
+        if not config.CAPTCHA_SEARCH or recaptcha_search.verify(response):
 
-            blocked = False
-            hits = None
-            response = request.args.get("g-recaptcha-response", "")
-            if not config.CAPTCHA_SEARCH or recaptcha_search.verify(response):
+            try:
+                hits = searchEngine.search(q, page, per_page, sort_order,
+                                           extensions, size_min, size_max, match_all, fields, date_min, date_max)
+                hits = db.join_website_on_search_result(hits)
+            except InvalidQueryException as e:
+                flash("<strong>Invalid query:</strong> " + str(e), "warning")
+                blocked = True
+            except:
+                flash("Query failed, this could mean that the search server is overloaded or is not reachable. "
+                      "Please try again later", "danger")
 
-                try:
-                    hits = searchEngine.search(q, page, per_page, sort_order,
-                                               extensions, size_min, size_max, match_all, fields, date_min, date_max)
-                    hits = db.join_website_on_search_result(hits)
-                except InvalidQueryException as e:
-                    flash("<strong>Invalid query:</strong> " + str(e), "warning")
-                    blocked = True
-                except Exception:
-                    flash("Query failed, this could mean that the search server is overloaded or is not reachable. "
-                          "Please try again later", "danger")
-
-                db.log_search(request.remote_addr,
-                              request.headers["X-Forwarded-For"] if "X-Forwarded-For" in request.headers else None,
-                              q, extensions, page, blocked,
-                              hits["hits"]["total"] if hits else -1, hits["took"] if hits else -1)
-                if blocked:
-                    return redirect("/search")
-            else:
-                flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
-
+            db.log_search(request.remote_addr,
+                          request.headers["X-Forwarded-For"] if "X-Forwarded-For" in request.headers else None,
+                          q, extensions, page, blocked,
+                          hits["hits"]["total"] if hits else -1, hits["took"] if hits else -1)
+            if blocked:
+                return redirect("/search")
         else:
-            hits = None
+            flash("<strong>Error:</strong> Invalid captcha please try again", "danger")
 
-        return render_template("search.html",
-                               results=hits,
-                               q=q,
-                               p=page, per_page=per_page,
-                               sort_order=sort_order,
-                               results_set=config.RESULTS_PER_PAGE,
-                               extensions=",".join(extensions),
-                               size_min=size_min, size_max=size_max,
-                               match_all=match_all,
-                               field_trigram=field_trigram, field_path=field_path, field_name=field_name,
-                               date_min=date_min, date_max=date_max,
-                               show_captcha=config.CAPTCHA_SEARCH, recaptcha=recaptcha_search)
+    else:
+        hits = None
+
+    return render_template("search.html",
+                           results=hits,
+                           q=q,
+                           p=page, per_page=per_page,
+                           sort_order=sort_order,
+                           results_set=config.RESULTS_PER_PAGE,
+                           extensions=",".join(extensions),
+                           size_min=size_min, size_max=size_max,
+                           match_all=match_all,
+                           field_trigram=field_trigram, field_path=field_path, field_name=field_name,
+                           date_min=date_min, date_max=date_max,
+                           show_captcha=config.CAPTCHA_SEARCH, recaptcha=recaptcha_search)
 
 
 @app.route("/contribute")
+@cache.cached(600)
 def contribute():
     return render_template("contribute.html")
 
@@ -424,7 +403,7 @@ def enqueue_bulk():
         if urls:
             urls = urls.split()
 
-            if 0 < len(urls) <= 1000:
+            if 0 < len(urls) <= 1000:  # TODO: Load from config & adjust placeholder/messages?
 
                 pool = Pool(processes=6)
                 pool.map(func=check_url, iterable=urls)
@@ -539,6 +518,7 @@ def admin_del_token():
         return abort(403)
 
 
+# TODO: pages scrolling
 @app.route("/logs", methods=["GET"])
 def admin_crawl_logs():
     if "username" in session:
@@ -557,18 +537,23 @@ def api_get_task():
 
     if name:
         task = db.pop_task(name, False)
+        logger.debug("API get task from " + name)
 
         if task:
-            print("Assigning task " + str(task.website_id) + " to " + name)
+            logger.info("Assigning task " + str(task.to_json()) + " to " + name)
         else:
-            print("No queued tasks, creating new rescan task")
+            logger.info("No queued tasks, creating a new one")
 
-            website_id = db.get_oldest_website_id()
-            website = db.get_website_by_id(website_id)
-            task = Task(website_id, website.url)
-            db.put_task(task)
+            try:
+                website_id = db.get_oldest_website_id()
+                website = db.get_website_by_id(website_id)
+                task = Task(website_id, website.url)
+                db.put_task(task)
 
-            task = db.pop_task(name, False)
+                task = db.pop_task(name, False)
+            except:
+                logger.error("Couldn't create new task")
+                abort(404)
 
         return Response(str(task), mimetype="application/json")
     else:
@@ -583,6 +568,7 @@ def api_cancel_task():
     if name:
         website_id = request.form.get("website_id") if "website_id" in request.form else None
         if website_id:
+            logger.debug("API task cancel for " + str(website_id) + " by " + name)
             db.delete_task(website_id)
             return Response("cancelled task")
         else:
@@ -595,14 +581,15 @@ def api_cancel_task():
 @app.route("/api/task/complete", methods=["POST"])
 def api_complete_task():
     token = request.form.get("token")
-    tr = json.loads(request.form.get("result"))
-    print(tr)
-    task_result = TaskResult(tr["status_code"], tr["file_count"], tr["start_time"], tr["end_time"], tr["website_id"])
-
     name = db.check_api_token(token)
 
     if name:
-        print("Task for " + str(task_result.website_id) + " completed by " + name)
+        tr = json.loads(request.form.get("result"))
+        logger.debug("Task result: " + str(tr))
+        task_result = TaskResult(tr["status_code"], tr["file_count"], tr["start_time"], tr["end_time"],
+                                 tr["website_id"])
+
+        logger.info("Task for " + str(task_result.website_id) + " completed by " + name)
         task = db.complete_task(task_result.website_id, name)
 
         if task:
@@ -623,8 +610,8 @@ def api_complete_task():
             return "Successfully logged task result and indexed files"
 
         else:
-            print("ERROR: " + name + " indicated that task for " + str(task_result.website_id) +
-                  " was completed but there is no such task in the database.")
+            logger.error("ERROR: " + name + " indicated that task for " + str(task_result.website_id) +
+                         " was completed but there is no such task in the database.")
             return "No such task"
     return abort(403)
 
@@ -632,23 +619,25 @@ def api_complete_task():
 @app.route("/api/task/upload", methods=["POST"])
 def api_upload():
     token = request.form.get("token")
-    website_id = request.form.get("website_id")
     name = db.check_api_token(token)
 
     if name:
+        website_id = request.form.get("website_id")
+        logger.debug("Result part upload for '" + str(website_id) + "' by " + name)
+
         if "file_list" in request.files:
             file = request.files['file_list']
 
             filename = "./tmp/" + str(website_id) + ".json"
 
             if os.path.exists(filename):
-                print("Appending chunk to existing file...")
+                logger.debug("Appending chunk to existing file...")
                 with open(filename, "ab") as f:
                     f.write(file.stream.read())
             else:
-                print("Saving temp file " + filename + " ...")
+                logger.debug("Saving temp file " + filename + " ...")
                 file.save(filename)
-                print("Done")
+                logger.debug("Done saving temp file")
         return "ok"
     else:
         return abort(403)
@@ -657,11 +646,12 @@ def api_upload():
 @app.route("/api/website/by_url", methods=["GET"])
 def api_website_by_url():
     token = request.args.get("token")
-    url = request.args.get("url")
     name = db.check_api_token(token)
 
     if name:
+        url = request.args.get("url")
         website = db.get_website_by_url(url)
+        logger.info("API get website by url '" + url + "' by " + name)
         if website:
             return str(website.id)
         return abort(404)
@@ -676,6 +666,7 @@ def api_website_is_blacklisted():
     name = db.check_api_token(token)
 
     if name:
+        logger.info("API get website is blacklisted '" + url + "' by " + name)
         return str(db.is_blacklisted(url))
     else:
         return abort(403)
@@ -692,6 +683,7 @@ def api_add_website():
         website_id = db.insert_website(Website(url, str(request.remote_addr + "_" +
                                                         request.headers.get("X-Forwarded-For", "")),
                                                "API_CLIENT_" + name))
+        logger.info("API add website '" + url + "' by " + name + "(" + str(website_id) + ")")
         return str(website_id)
     else:
         return abort(403)
@@ -715,6 +707,9 @@ def api_task_enqueue():
             request.json["callback_type"],
             json.dumps(request.json["callback_args"])
         )
+
+        logger.info("API force enqueue by " + name + "\n(" + str(task.to_json()) + ")")
+
         taskManager.queue_task(task)
         return ""
     else:
@@ -723,17 +718,15 @@ def api_task_enqueue():
 
 @app.route("/api/task/try_enqueue", methods=["POST"])
 def api_task_try_enqueue():
-    try:
-        token = request.form.get("token")
-        url = request.form.get("url")
-    except KeyError:
-        return abort(400)
-
+    token = request.form.get("token")
     name = db.check_api_token(token)
 
     if name:
 
+        url = request.form.get("url")
         message, result = try_enqueue(url)
+
+        logger.info("API try enqueue '" + url + "' by " + name + " (" + message + ")")
 
         return json.dumps({
             "message": message,
@@ -745,15 +738,11 @@ def api_task_try_enqueue():
 
 @app.route("/api/website/random")
 def api_random_website():
-
-    try:
-        token = request.json["token"]
-    except KeyError:
-        return abort(400)
-
+    token = request.json["token"]
     name = db.check_api_token(token)
 
     if name:
+        logger.info("API get random website by " + name)
         return str(db.get_random_website_id())
     else:
         return abort(403)
@@ -761,12 +750,7 @@ def api_random_website():
 
 @app.route("/api/search", methods=["POST"])
 def api_search():
-
-    try:
-        token = request.json["token"]
-    except KeyError:
-        return abort(400)
-
+    token = request.json["token"]
     name = db.check_api_token(token)
 
     if name:
@@ -784,13 +768,14 @@ def api_search():
             )
 
             hits = db.join_website_on_search_result(hits)
+            logger.info("API search '" + request.json["query"] + "' by " + name)
             return json.dumps(hits)
 
         except InvalidQueryException as e:
+            logger.info("API search failed: " + str(e))
             return str(e)
     else:
         return abort(403)
-
 
 
 if __name__ == '__main__':

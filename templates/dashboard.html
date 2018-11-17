@@ -82,40 +82,10 @@
 
                 <a class="btn btn-danger" href="/website/delete_empty">Delete websites with no associated files that are
                     not queued</a>
-                <a class="btn btn-danger" href="/website/redispatch_queued">Re-dispatch queued tasks</a>
-                <a class="btn btn-danger" href="/website/queue_empty">Re-queue websites with no associated files</a>
 
                 <hr>
                 <a class="btn btn-info" href="/logout">Logout</a>
             </div>
         </div>
     </div>
-    <script>
-
-        function changeSlots(id) {
-
-            let slotsElem = document.getElementById("slots-" + id);
-            let parent = slotsElem.parentNode;
-
-            let td = document.createElement("td");
-            let form = document.createElement("form");
-            form.setAttribute("action", "/crawl_server/" + id + "/update");
-            form.setAttribute("method", "post");
-
-            let slotsInput = document.createElement("input");
-            slotsInput.setAttribute("class", "form-control");
-            slotsInput.setAttribute("name", "slots");
-            form.appendChild(slotsInput);
-            td.appendChild(form);
-
-            parent.insertBefore(td, slotsElem);
-            slotsElem.remove();
-
-            slotsInput.focus();
-            slotsInput.addEventListener("focusout", function () {
-                form.submit();
-            });
-        }
-
-    </script>
 {% endblock body %}
