@@ -388,8 +388,8 @@ class Database:
 
             cursor.execute("SELECT id, website_id, url, priority, callback_type, callback_args " +
                            "FROM Queue WHERE assigned_crawler is NULL " +
-                           ("AND url LIKE 'ftp%'" if ftp else "") +
-                           "ORDER BY priority DESC, Queue.id" +
+                           ("AND url LIKE 'ftp%' " if ftp else "") +
+                           "ORDER BY priority DESC, Queue.id " +
                            "ASC LIMIT 1")
             task = cursor.fetchone()
 
