@@ -550,7 +550,7 @@ def api_get_task():
     name = db.check_api_token(token)
 
     if name:
-        task = db.pop_task(name)
+        task = db.pop_task(name, False)
 
         if task:
             print("Assigning task " + str(task.website_id) + " to " + name)
@@ -562,7 +562,7 @@ def api_get_task():
             task = Task(website_id, website.url)
             db.put_task(task)
 
-            task = db.pop_task(name)
+            task = db.pop_task(name, False)
 
         return Response(str(task), mimetype="application/json")
     else:

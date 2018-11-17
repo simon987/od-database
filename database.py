@@ -381,14 +381,16 @@ class Database:
 
             return [Task(t[0], t[1], t[2], t[3], t[4]) for t in db_tasks]
 
-    def pop_task(self, name) -> Task:
+    def pop_task(self, name, ftp: bool) -> Task:
 
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
 
-            cursor.execute("SELECT id, website_id, url, priority, callback_type, callback_args "
-                           "FROM Queue WHERE assigned_crawler is NULL "
-                           "ORDER BY priority DESC, Queue.id ASC LIMIT 1")
+            cursor.execute("SELECT id, website_id, url, priority, callback_type, callback_args " +
+                           "FROM Queue WHERE assigned_crawler is NULL " +
+                           ("AND url LIKE 'ftp%'" if ftp else "") +
+                           "ORDER BY priority DESC, Queue.id" +
+                           "ASC LIMIT 1")
             task = cursor.fetchone()
 
             if task:
