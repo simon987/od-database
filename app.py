@@ -2,6 +2,7 @@ from flask import Flask, render_template, redirect, request, flash, abort, Respo
 from multiprocessing import Pool
 import json
 from urllib.parse import urlparse
+import logging
 import os
 import time
 import datetime
@@ -15,6 +16,11 @@ from search.search import ElasticSearchEngine, InvalidQueryException
 from callbacks import PostCrawlCallbackFactory
 
 app = Flask(__name__)
+
+# Disable flask logging
+flaskLogger = logging.getLogger('werkzeug')
+flaskLogger.setLevel(logging.ERROR)
+
 if config.CAPTCHA_SUBMIT or config.CAPTCHA_LOGIN:
     recaptcha = ReCaptcha(app=app,
                           site_key=config.CAPTCHA_SITE_KEY,

@@ -12,6 +12,3 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.addHandler(StreamHandler(sys.stdout))
 
-# Disable flask logging
-flaskLogger = logging.getLogger('werkzeug')
-flaskLogger.setLevel(logging.ERROR)
