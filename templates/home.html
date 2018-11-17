@@ -13,7 +13,7 @@
                     ~{{ stats["total_size"] | filesizeformat }} from {{ stats["website_count"] }} websites</p>
             {% else %}
                 <p class="lead">We are currently experiencing a high volume of traffic. The search function
-                may be unresponsive.</p>
+                    may be unresponsive.</p>
             {% endif %}
             <p></p>
         </div>
@@ -31,16 +31,30 @@
                         </div>
                         <div class="col-md-1">
                             {% if show_captcha %}
-                                <script>function f(token) {document.getElementById("sfrm").submit();}</script>
+                                <script>function f(token) {
+                                    document.getElementById("sfrm").submit();
+                                }</script>
                                 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-                                <button class="g-recaptcha btn btn-primary btn-shadow" data-sitekey="6LcCXWkUAAAAAJo2NR9_m09Obn5YmDrI97sGrr2f" data-callback="f">Search</button>
+                                <button class="g-recaptcha btn btn-primary btn-shadow"
+                                        data-sitekey="6LcCXWkUAAAAAJo2NR9_m09Obn5YmDrI97sGrr2f" data-callback="f">Search
+                                </button>
                             {% else %}
-                                <input class="btn btn-primary btn-shadow" type="submit" value="Search nocap">
+                                <input class="btn btn-primary btn-shadow" type="submit" value="Search">
                             {% endif %}
                         </div>
                     </div>
 
                 </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">About</div>
+            <div class="card-body">
+                <p>Web frontend and backend by <a href="https://github.com/simon987">simon987</a>,
+                    HTTP crawler by <a href="https://github.com/terorie">terorie</a>,
+                    hosting provided by <a href="https://the-eye.eu/">The eye</a>
+                </p>
             </div>
         </div>
 
