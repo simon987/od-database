@@ -112,12 +112,6 @@ class ElasticSearchEngine(SearchEngine):
     def ping(self):
         return self.es.ping()
 
-    @staticmethod
-    def batch(iterable, n=1):
-        l = len(iterable)
-        for ndx in range(0, l, n):
-            yield iterable[ndx:min(ndx + n, l)]
-
     def delete_docs(self, website_id):
 
         try:
