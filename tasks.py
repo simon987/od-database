@@ -65,23 +65,7 @@ class TaskManager:
         self.search = ElasticSearchEngine("od-database")
         self.db = database.Database("db.sqlite3")
 
-        self.to_index_queue = []
-
-        self.scheduler = BackgroundScheduler()
-        self.scheduler.add_job(self._do_index, "interval", seconds=0.1, max_instances=2)
-        self.scheduler._logger.setLevel("ERROR")
-        self.scheduler.start()
-
-    def complete_task(self, file_list, task, task_result, crawler_name):
-
-        self.to_index_queue.append((file_list, task, task_result, crawler_name))
-        logger.info("Queued tasks: " + str(len(self.to_index_queue)))
-
-    def _do_index(self):
-        if len(self.to_index_queue) == 0:
-            return
-
-        from callbacks import PostCrawlCallbackFactory
+    def complete_task(self, file_list):
 
         file_list, task, task_result, crawler_name = self.to_index_queue.pop()
         self.search.delete_docs(task_result.website_id)
@@ -101,15 +85,8 @@ class TaskManager:
 
         task_result.server_id = crawler_name
 
-        if file_list and os.path.exists(file_list):
-            os.remove(file_list)
-
-        # Handle task callback
-        callback = PostCrawlCallbackFactory.get_callback(task)
-        if callback:
-            callback.run(task_result, self.search)
-
         self.db.log_result(task_result)
+
 
     def queue_task(self, task: Task):
         self.db.put_task(task)

@@ -604,6 +604,14 @@ def api_complete_task():
                 filename = None
             taskManager.complete_task(filename, task, task_result, name)
 
+            if filename and os.path.exists(filename):
+                os.remove(filename)
+
+            # Handle task callback
+            callback = PostCrawlCallbackFactory.get_callback(task)
+            if callback:
+                callback.run(task_result, search)
+
             return "Successfully logged task result and indexed files"
 
         else:
