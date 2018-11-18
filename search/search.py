@@ -114,30 +114,33 @@ class ElasticSearchEngine(SearchEngine):
 
     def delete_docs(self, website_id):
 
-        try:
-            logger.debug("Deleting docs of " + str(website_id))
+        while True:
+            try:
+                logger.debug("Deleting docs of " + str(website_id))
 
-            to_delete = helpers.scan(query={
-                "query": {
-                    "term": {"website_id": website_id}
-                }
-            }, scroll="1m", client=self.es, index=self.index_name, request_timeout=60)
+                to_delete = helpers.scan(query={
+                    "query": {
+                        "term": {"website_id": website_id}
+                    }
+                }, scroll="1m", client=self.es, index=self.index_name, request_timeout=120)
 
-            buf = []
-            counter = 0
-            for doc in to_delete:
-                buf.append(doc)
-                counter += 1
+                buf = []
+                counter = 0
+                for doc in to_delete:
+                    buf.append(doc)
+                    counter += 1
 
-                if counter >= 400:
+                    if counter >= 400:
+                        self._delete(buf)
+                        buf.clear()
+                        counter = 0
+                if counter > 0:
                     self._delete(buf)
-                    buf.clear()
-                    counter = 0
-            if counter > 0:
-                self._delete(buf)
+                break
 
-        except Exception as e:
-            logger.error(str(e))
+            except Exception as e:
+                logger.error("During delete: " + str(e))
+                time.sleep(10)
 
         logger.debug("Done deleting for " + str(website_id))
 
