@@ -65,9 +65,8 @@ class TaskManager:
         self.search = ElasticSearchEngine("od-database")
         self.db = database.Database("db.sqlite3")
 
-    def complete_task(self, file_list):
+    def complete_task(self, file_list, task, task_result, crawler_name):
 
-        file_list, task, task_result, crawler_name = self.to_index_queue.pop()
         self.search.delete_docs(task_result.website_id)
 
         if file_list:
@@ -86,6 +85,7 @@ class TaskManager:
         task_result.server_id = crawler_name
 
         self.db.log_result(task_result)
+
 
     def queue_task(self, task: Task):
         self.db.put_task(task)

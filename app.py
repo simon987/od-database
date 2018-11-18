@@ -602,7 +602,7 @@ def api_complete_task():
             filename = "./tmp/" + str(task_result.website_id) + ".json"
             if not os.path.exists(filename):
                 filename = None
-            taskManager.complete_task(filename)
+            taskManager.complete_task(filename, task, task_result, name)
 
             if filename and os.path.exists(filename):
                 os.remove(filename)
