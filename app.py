@@ -640,7 +640,7 @@ def api_upload():
 
             # Read the file into memory cuz if the request fails
             # no file is corrupted.
-            buf = file.stream.readall()
+            buf = file.stream.read()
 
             # Write to file (create if not exists) when
             # everything read successfully.
