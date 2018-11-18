@@ -139,6 +139,8 @@ class ElasticSearchEngine(SearchEngine):
         except Exception as e:
             logger.error(str(e))
 
+        logger.debug("Done deleting for " + str(website_id))
+
     def _delete(self, docs):
         bulk_string = self.create_bulk_delete_string(docs)
         result = self.es.bulk(body=bulk_string, index=self.index_name, doc_type="file", request_timeout=30)
