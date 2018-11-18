@@ -14,6 +14,9 @@ from flask_caching import Cache
 from tasks import TaskManager, Task, TaskResult
 from search.search import ElasticSearchEngine, InvalidQueryException
 from callbacks import PostCrawlCallbackFactory
+from threading import Lock
+
+uploadLock = Lock()
 
 app = Flask(__name__)
 app.secret_key = config.FLASK_SECRET
@@ -635,14 +638,17 @@ def api_upload():
 
             filename = "./tmp/" + str(website_id) + ".json"
 
-            if os.path.exists(filename):
-                logger.debug("Appending chunk to existing file...")
-                with open(filename, "ab") as f:
-                    f.write(file.stream.read())
-            else:
-                logger.debug("Saving temp file " + filename + " ...")
-                file.save(filename)
-                logger.debug("Done saving temp file")
+            # Read the file into memory cuz if the request fails
+            # no file is corrupted.
+            buf = file.stream.readall()
+
+            # Write to file (create if not exists) when
+            # everything read successfully.
+            with uploadLock:
+                with open(filename, "a+b") as f:
+                    f.write(buf)
+
+            logger.debug("Written chunk to file")
         return "ok"
     else:
         return abort(403)
