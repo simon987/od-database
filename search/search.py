@@ -179,13 +179,15 @@ class ElasticSearchEngine(SearchEngine):
             self._index(docs)
 
     def _index(self, docs):
-        logger.debug("Indexing " + str(len(docs)) + " docs")
-        bulk_string = ElasticSearchEngine.create_bulk_index_string(docs)
-        result = self.es.bulk(body=bulk_string, index=self.index_name, doc_type="file", request_timeout=30)
-
-        if result["errors"]:
-            logger.error("Error in ES bulk index: \n" + result["errors"])
-            raise IndexingError
+        while True:
+            try:
+                logger.debug("Indexing " + str(len(docs)) + " docs")
+                bulk_string = ElasticSearchEngine.create_bulk_index_string(docs)
+                self.es.bulk(body=bulk_string, index=self.index_name, doc_type="file", request_timeout=30)
+                break
+            except Exception as e:
+                logger.error("Error in _index: " + str(e) + ", retrying")
+                time.sleep(10)
 
     @staticmethod
     def create_bulk_index_string(docs: list):
