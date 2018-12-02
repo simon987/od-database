@@ -1,6 +1,9 @@
 import os
 
-from fold_to_ascii.fold_to_ascii import mapping
+try:
+    from fold_to_ascii.fold_to_ascii import mapping
+except:
+    from ..fold_to_ascii.fold_to_ascii import mapping
 
 
 class SearchFilter:
