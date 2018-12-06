@@ -542,9 +542,10 @@ def admin_crawl_logs():
 def api_get_task():
     token = request.form.get("token")
     name = db.check_api_token(token)
+    accept_ftp = request.form.get("accept") == "ftp" if "accept" in request.form else False
 
     if name:
-        task = db.pop_task(name, False)
+        task = db.pop_task(name, accept_ftp)
         logger.debug("API get task from " + name)
 
         if task:
@@ -558,7 +559,7 @@ def api_get_task():
                 task = Task(website_id, website.url)
                 db.put_task(task)
 
-                task = db.pop_task(name, False)
+                task = db.pop_task(name, accept_ftp)
             except:
                 logger.error("Couldn't create new task")
                 abort(404)
