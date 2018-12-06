@@ -71,7 +71,7 @@
                 </table>
 
                 <h4>Crawl server stats</h4>
-                <table class="table table-striped">
+                <table class="table table-striped table-numeric">
                     <thead>
                     <tr>
                         <th>Server</th>
@@ -87,10 +87,10 @@
                         <tr>
                             <td><b>{{ server }}</b></td>
                             <td>{{ crawl_server_stats[server].task_count }}</td>
-                            <td>{{ crawl_server_stats[server].time|round(2) }}s</td>
-                            <td>{{ crawl_server_stats[server].time_avg|round(2) }}s</td>
+                            <td>{{ crawl_server_stats[server].time | duration_format() }}</td>
+                            <td>{{ crawl_server_stats[server].time_avg | duration_format() }}</td>
                             <td>{{ crawl_server_stats[server].file_count }}</td>
-                            <td>{{ crawl_server_stats[server].file_count_avg | round(2) }}</td>
+                            <td>{{ "%.2f" % crawl_server_stats[server].file_count_avg }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>

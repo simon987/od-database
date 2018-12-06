@@ -61,6 +61,19 @@ def datetime_format(value, format='%Y-%m-%d %H:%M:%S'):
     return time.strftime(format, time.gmtime(value))
 
 
+@app.template.filetr("duration_format")
+def duration_format(value):
+    delay = datetime.timedelta(seconds=value)
+    if (delay.days > 0):
+        out = str(delay).replace(" days, ", ":")
+    else:
+        out = "0:" + str(delay)
+    outAr = out.split(':')
+    outAr = ["%02d" % (int(float(x))) for x in outAr]
+    out   = ":".join(outAr)
+    return out
+
+
 @app.template_filter("from_timestamp")
 def from_timestamp(value):
     return datetime.datetime.fromtimestamp(value)
