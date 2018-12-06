@@ -66,6 +66,8 @@ def duration_format(value):
     delay = datetime.timedelta(seconds=value)
     if (delay.days > 0):
         out = str(delay).replace(" days, ", ":")
+    else:
+        out = str(delay)
     outAr = out.split(':')
     outAr = ["%02d" % (int(float(x))) for x in outAr]
     out   = ":".join(outAr)
