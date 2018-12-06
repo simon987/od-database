@@ -19,7 +19,7 @@ a {
 .table td {
     padding: 2px 0;
 }
-.table-numeric td {
+.td-numeric {
     text-align: end;
 }
 
