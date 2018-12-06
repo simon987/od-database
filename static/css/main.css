@@ -21,6 +21,7 @@ a {
 }
 .td-numeric {
     text-align: end;
+    padding-right: 1em;
 }
 
 .bg-application {
