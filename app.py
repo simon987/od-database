@@ -61,7 +61,7 @@ def datetime_format(value, format='%Y-%m-%d %H:%M:%S'):
     return time.strftime(format, time.gmtime(value))
 
 
-@app.template.filetr("duration_format")
+@app.template_filter("duration_format")
 def duration_format(value):
     delay = datetime.timedelta(seconds=value)
     if (delay.days > 0):
