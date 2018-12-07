@@ -348,7 +348,7 @@ class Database:
                 info["file_count_avg"] = info["file_count"] / task_count
                 stats.append((crawler.name, info))
 
-        stats.sort(key=lambda t: t[1]["task_count"], reverse=True)
+        stats.sort(key=lambda t: t[1]["file_count"], reverse=True)
 
         return stats
 
