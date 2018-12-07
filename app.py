@@ -68,9 +68,9 @@ def duration_format(value):
         out = str(delay).replace(" days, ", ":")
     else:
         out = str(delay)
-    outAr = out.split(':')
-    outAr = ["%02d" % (int(float(x))) for x in outAr]
-    out   = ":".join(outAr)
+    out_ar = out.split(':')
+    out_ar = ["%02d" % (int(float(x))) for x in out_ar]
+    out   = ":".join(out_ar)
     return out
 
 
