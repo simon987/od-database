@@ -344,8 +344,8 @@ class Database:
                 info["file_count"] = sum(result.file_count for result in task_results if result.server_name == crawler.name)
                 info["time"] = sum((result.end_time - result.start_time) for result in task_results if result.server_name == crawler.name)
                 info["task_count"] = task_count
-                info["time_avg"] = stats[crawler.name]["time"] / task_count
-                info["file_count_avg"] = stats[crawler.name]["file_count"] / task_count
+                info["time_avg"] = info["time"] / task_count
+                info["file_count_avg"] = info["file_count"] / task_count
                 stats.append((crawler.name, info))
 
         stats.sort(key=lambda t: t["task_count"])
