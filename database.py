@@ -334,18 +334,21 @@ class Database:
         return [tasks.TaskResult(r[1], r[2], r[3], r[4], r[0], str(r[5])) for r in cursor.fetchall()]
 
     def get_stats_by_crawler(self):
-        stats = dict()
+        stats = []
         task_results = self.get_crawl_logs()
 
         for crawler in self.get_tokens():
             task_count = sum(1 for result in task_results if result.server_name == crawler.name)
             if task_count > 0:
-                stats[crawler.name] = dict()
-                stats[crawler.name]["file_count"] = sum(result.file_count for result in task_results if result.server_name == crawler.name)
-                stats[crawler.name]["time"] = sum((result.end_time - result.start_time) for result in task_results if result.server_name == crawler.name)
-                stats[crawler.name]["task_count"] = task_count
-                stats[crawler.name]["time_avg"] = stats[crawler.name]["time"] / task_count
-                stats[crawler.name]["file_count_avg"] = stats[crawler.name]["file_count"] / task_count
+                info = dict()
+                info["file_count"] = sum(result.file_count for result in task_results if result.server_name == crawler.name)
+                info["time"] = sum((result.end_time - result.start_time) for result in task_results if result.server_name == crawler.name)
+                info["task_count"] = task_count
+                info["time_avg"] = stats[crawler.name]["time"] / task_count
+                info["file_count_avg"] = stats[crawler.name]["file_count"] / task_count
+                stats.append((crawler.name, info))
+
+        stats.sort(key=lambda t: t["task_count"])
 
         return stats
 
