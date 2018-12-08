@@ -79,18 +79,6 @@ def from_timestamp(value):
     return datetime.datetime.fromtimestamp(value)
 
 
-@app.route("/dl")
-@cache.cached(120)
-def downloads():
-    try:
-        export_file_stats = os.stat("static/out.csv.lzm4")
-    except FileNotFoundError:
-        logger.warning("No export file to display in /dl")
-        export_file_stats = None
-
-    return render_template("downloads.html", export_file_stats=export_file_stats)
-
-
 @app.route("/stats")
 @cache.cached(120)
 def stats_page():
