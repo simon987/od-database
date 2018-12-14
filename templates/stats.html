@@ -83,14 +83,15 @@
                     </tr>
                     </thead>
                     <tbody>
-                    {% for server in crawl_server_stats %}
+                    {% for entry in crawl_server_stats %}
+                        {% set server, info = entry %}
                         <tr>
                             <td><b>{{ server }}</b></td>
-                            <td>{{ crawl_server_stats[server].task_count }}</td>
-                            <td>{{ crawl_server_stats[server].time|round(2) }}s</td>
-                            <td>{{ crawl_server_stats[server].time_avg|round(2) }}s</td>
-                            <td>{{ crawl_server_stats[server].file_count }}</td>
-                            <td>{{ crawl_server_stats[server].file_count_avg | round(2) }}</td>
+                            <td class="td-numeric">{{ info.task_count }}</td>
+                            <td class="td-numeric">{{ info.time | duration_format() }}</td>
+                            <td class="td-numeric">{{ info.time_avg | duration_format() }}</td>
+                            <td class="td-numeric">{{ info.file_count }}</td>
+                            <td class="td-numeric">{{ "%.2f" % info.file_count_avg }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>

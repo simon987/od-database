@@ -19,6 +19,10 @@ a {
 .table td {
     padding: 2px 0;
 }
+.td-numeric {
+    text-align: end;
+    padding-right: 1em;
+}
 
 .bg-application {
     background: #8FB847;
