@@ -11,6 +11,10 @@
                 <p>Please let me know if you used the database in a project!</p>
                 <p>The entire database is exported to CSV regularly</p>
 
+                {% if not export_file_stats %}
+                <br/>
+                <p><em>No files available.</em></p>
+                {% else %}
                 <table class="table table-striped">
 
                     <thead>
@@ -22,16 +26,17 @@
                     </thead>
 
                     <tbody>
-                    {% if export_file_stats %}
+                    {% for name, path, stat in export_file_stats %}
                     <tr>
-                        <td><a href="static/out.csv.xz">out.csv.xz</a></td>
-                        <td>{{ export_file_stats.st_size |filesizeformat }}</td>
-                        <td>{{ export_file_stats.st_mtime|datetime_format }} UTC</td>
+                        <td><a href="{{ path }}">{{ name }}</a></td>
+                        <td>{{ stat.st_size |filesizeformat }}</td>
+                        <td>{{ stat.st_mtime|datetime_format }} UTC</td>
                     </tr>
-                    {% endif %}
+                    {% endfor %}
                     </tbody>
 
                 </table>
+                {% endif %}
             </div>
         </div>
     </div>

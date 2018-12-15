@@ -82,13 +82,30 @@ def from_timestamp(value):
 @app.route("/dl")
 @cache.cached(120)
 def downloads():
-    try:
-        export_file_stats = os.stat("static/out.csv.lzm4")
-    except FileNotFoundError:
-        logger.warning("No export file to display in /dl")
-        export_file_stats = None
+    # Get content of downloads directory
+    dl_dir = "static/downloads/"
+    dir_content = os.listdir(dl_dir)
 
-    return render_template("downloads.html", export_file_stats=export_file_stats)
+    # Make paths relative to working directory
+    # Only allow csv files
+    files = [
+        (name, os.path.join(dl_dir, name))
+        for name in dir_content
+        if name.find(".csv") != -1
+    ]
+
+    # Stat files
+    # Remove any dirs placed accidentally
+    files = [
+        (f, full, os.stat(full))
+        for f, full in files
+        if os.path.isfile(full)
+    ]
+
+    if len(files) == 0:
+        logger.warning("No export file to display in /dl")
+
+    return render_template("downloads.html", export_file_stats=files)
 
 
 @app.route("/stats")

@@ -1,1 +1,3 @@
 .idea/
+/static/downloads/
+!/static/downloads/README.md
