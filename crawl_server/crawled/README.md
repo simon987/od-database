@@ -1,1 +1,0 @@
-Crawled directories are temporarily stored here

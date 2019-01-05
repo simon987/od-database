@@ -18,6 +18,7 @@ Assuming you have Python 3 and git installed:
 sudo apt install libssl-dev libcurl4-openssl-dev
 git clone https://github.com/simon987/od-database
 cd od-database
+git submodule update --init --recursive
 sudo pip3 install -r requirements.txt
 ```
 Create `/config.py` and fill out the parameters. Sample config:
@@ -34,12 +35,6 @@ CAPTCHA_S_SECRET_KEY = ""
 # Flask secret key for sessions
 FLASK_SECRET = ""
 RESULTS_PER_PAGE = (25, 50, 100, 250, 500, 1000)
-# Headers for http crawler
-HEADERS = {}
-# Number of crawler instances (one per task)
-CRAWL_SERVER_PROCESSES = 3
-# Number of threads per crawler instance
-CRAWL_SERVER_THREADS = 20
 # Allow ftp websites in /submit
 SUBMIT_FTP = False
 # Allow http(s) websites in /submit
@@ -50,19 +45,16 @@ API_TOKEN = "5817926d-f2f9-4422-a411-a98f1bfe4b6c"
 ```
 
 ## Running the crawl server
-```bash
-cd od-database
-export PYTHONPATH=$(pwd)
-cd crawl_server
-python3 run.py
-```
-## Running the web server (development)
+The python crawler that was a part of this project is discontinued,
+[the go implementation](https://github.com/terorie/od-database-crawler) is currently in use.
+
+## Running the web server (debug)
 ```bash
 cd od-database
 python3 app.py
 ```
 
-## Running the web server with nginx (production)
+## Running the web server with Nginx (production)
 * Install dependencies:
 ```bash
 sudo apt install build-essential python-dev
