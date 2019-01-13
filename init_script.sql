@@ -11,7 +11,8 @@ CREATE TABLE Website (
 
 CREATE TABLE Admin (
   username TEXT PRIMARY KEY NOT NULL,
-  password TEXT
+  password TEXT,
+  role TEXT
 );
 
 CREATE TABLE BlacklistedWebsite (

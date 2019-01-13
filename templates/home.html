@@ -30,20 +30,12 @@
                             <input class="form-control" name="q" id="q" placeholder="Query">
                         </div>
                         <div class="col-md-1">
-                            {% if show_captcha %}
-                                <script>function f(token) {
-                                    document.getElementById("sfrm").submit();
-                                }</script>
-                                <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-                                <button class="g-recaptcha btn btn-primary btn-shadow"
-                                        data-sitekey="6LcCXWkUAAAAAJo2NR9_m09Obn5YmDrI97sGrr2f" data-callback="f">Search
-                                </button>
-                            {% else %}
-                                <input class="btn btn-primary btn-shadow" type="submit" value="Search">
-                            {% endif %}
+                            <input class="btn btn-primary btn-shadow" type="submit" value="Search">
                         </div>
                     </div>
-
+                    {% if show_captcha %}
+                        {{ captcha.get_code()|safe }}
+                    {% endif %}
                 </form>
             </div>
         </div>

@@ -8,7 +8,6 @@ import uuid
 import tasks
 
 
-
 class BlacklistedWebsite:
     def __init__(self, blacklist_id, url):
         self.id = blacklist_id
@@ -182,6 +181,18 @@ class Database:
                 return bcrypt.checkpw(password.encode(), db_user[0])
             return False
 
+    def get_user_role(self, username: str):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT role FROM Admin WHERE username=?", (username, ))
+
+            db_user = cursor.fetchone()
+
+            if db_user:
+                return db_user[0]
+            return False
+
     def generate_login(self, username, password) -> None:
 
         with sqlite3.connect(self.db_path) as conn:
@@ -189,7 +200,7 @@ class Database:
 
             hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt(12))
 
-            cursor.execute("INSERT INTO Admin (username, password) VALUES (?,?)", (username, hashed_pw))
+            cursor.execute("INSERT INTO Admin (username, password, role) VALUES (?,?, 'admin')", (username, hashed_pw))
             conn.commit()
 
     def check_api_token(self, token) -> str:

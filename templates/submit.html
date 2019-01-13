@@ -3,15 +3,17 @@
 {% set current_page = "submit" %}
 
 {% block body %}
-    <div class="container" >
+    <div class="container">
         <div class="card">
             <div class="card-header">
                 <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
                     <li class="nav-item">
-                        <a class="nav-link active" id="normal-tab" data-toggle="tab" href="#normal" role="tab" aria-controls="normal" aria-selected="true">Single website</a>
+                        <a class="nav-link active" id="normal-tab" data-toggle="tab" href="#normal" role="tab"
+                           aria-controls="normal" aria-selected="true">Single website</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" id="bulk-tab" data-toggle="tab" href="#bulk" role="tab" aria-controls="bulk" aria-selected="false">Bulk</a>
+                        <a class="nav-link" id="bulk-tab" data-toggle="tab" href="#bulk" role="tab" aria-controls="bulk"
+                           aria-selected="false">Bulk</a>
                     </li>
                 </ul>
             </div>
@@ -24,16 +26,12 @@
                             <div class="form-group">
                                 <input class="form-control" name="url" id="url" placeholder="URL">
                             </div>
-                            <div class="row">
-                                {% if show_captcha %}
-                                    <div class="col">
-                                        {{ recaptcha.get_code()|safe }}
-                                    </div>
-                                {% endif %}
-                                <div class="col">
-                                    <input class="btn btn-primary" type="submit" value="Submit" title="Submit open directory">
+                            {% if show_captcha %}
+                                <div class="form-row">
+                                    {{ captcha.get_code()|safe }}
                                 </div>
-                            </div>
+                            {% endif %}
+                            <input class="btn btn-primary" type="submit" value="Submit" title="Submit open directory">
                         </form>
 
                     </div>
@@ -41,18 +39,17 @@
                         {# Bulk #}
                         <form action="/enqueue_bulk" method="POST">
                             <div class="form-group">
-                                <textarea class="form-control" name="urls" id="urls" rows="10" placeholder="One URL per line, max. 10"></textarea>
+                                <textarea class="form-control" name="urls" id="urls" rows="10"
+                                          placeholder="One URL per line, max. 10"></textarea>
                             </div>
-                            <div class="row">
-                                {% if show_captcha %}
-                                    <div class="col">
-                                        {{ recaptcha.get_code()|safe }}
-                                    </div>
-                                {% endif %}
-                                <div class="col">
-                                    <input class="btn btn-primary" type="submit" value="Submit" title="Submit open directories">
+                            {% if show_captcha %}
+                                <div class="form-row">
+                                    {{ captcha.get_code()|safe }}
                                 </div>
-                            </div>
+                            {% endif %}
+
+                            <input class="btn btn-primary" type="submit" value="Submit"
+                                   title="Submit open directories">
                         </form>
                     </div>
                 </div>
@@ -71,26 +68,26 @@
             <div class="card-header">Queued websites</div>
             <div class="card-body">
 
-               <table class="table table-striped">
-                   <thead>
-                   <tr>
-                       <th>Url</th>
-                       <th>Priority</th>
-                       <th>Task type</th>
-                   </tr>
-                   </thead>
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Url</th>
+                        <th>Priority</th>
+                        <th>Task type</th>
+                    </tr>
+                    </thead>
 
-                  <tbody>
-                  {% for task in queue %}
-                      <tr>
-                          <td title="{{ task.url }}">{{ task.url | truncate(70)}}</td>
-                          <td>{{ task.priority }}</td>
-                          <td>{{ task.callback_type if task.callback_type else "NORMAL" }}</td>
-                      </tr>
-                  {% endfor %}
-                  </tbody>
+                    <tbody>
+                    {% for task in queue %}
+                        <tr>
+                            <td title="{{ task.url }}">{{ task.url | truncate(70) }}</td>
+                            <td>{{ task.priority }}</td>
+                            <td>{{ task.callback_type if task.callback_type else "NORMAL" }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
 
-               </table>
+                </table>
 
             </div>
         </div>

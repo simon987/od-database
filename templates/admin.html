@@ -16,7 +16,7 @@
                     </div>
 
                     {% if show_captcha %}
-                        {{ recaptcha.get_code()|safe }}
+                        {{ captcha.get_code()|safe }}
                     {% endif %}
 
                     <input type="submit" value="Login">

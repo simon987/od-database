@@ -3,7 +3,6 @@ flask_testing
 requests
 bs4
 validators
-flask_recaptcha
 Flask-Caching
 praw
 humanfriendly
@@ -19,3 +18,6 @@ pyOpenSSL
 pybloom-live
 pycurl
 lxml
+pillow
+Wand
+numpy

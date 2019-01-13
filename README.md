@@ -27,10 +27,7 @@ Create `/config.py` and fill out the parameters. Sample config:
 CAPTCHA_LOGIN = False
 CAPTCHA_SUBMIT = False
 CAPTCHA_SEARCH = False
-CAPTCHA_SITE_KEY = ""
-CAPTCHA_SECRET_KEY = ""
-CAPTCHA_S_SITE_KEY = ""
-CAPTCHA_S_SECRET_KEY = ""
+CAPTCHA_EVERY = 10
 
 # Flask secret key for sessions
 FLASK_SECRET = ""

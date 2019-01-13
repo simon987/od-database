@@ -75,12 +75,13 @@ class ElasticSearchEngine(SearchEngine):
         self.es.indices.create(index=self.index_name)
         self.es.indices.close(index=self.index_name)
 
-        # File names and paths
+        # Index settings
         self.es.indices.put_settings(body={
             "analysis": {
                 "tokenizer": {
                     "my_nGram_tokenizer": {
-                        "type": "nGram", "min_gram": 3, "max_gram": 3}
+                        "type": "nGram", "min_gram": 3, "max_gram": 3
+                    }
                 }
             }}, index=self.index_name)
         self.es.indices.put_settings(body={
@@ -93,16 +94,16 @@ class ElasticSearchEngine(SearchEngine):
                 }
             }}, index=self.index_name)
 
-        # Mappings
-        self.es.indices.put_mapping(body={"properties": {
-            "path": {"analyzer": "standard", "type": "text"},
-            "name": {"analyzer": "standard", "type": "text",
-                     "fields": {"nGram": {"type": "text", "analyzer": "my_nGram"}}},
-            "mtime": {"type": "date", "format": "epoch_second"},
-            "size": {"type": "long"},
-            "website_id": {"type": "integer"},
-            "ext": {"type": "keyword"}
-        }}, doc_type="file", index=self.index_name)
+        self.es.indices.put_mapping(body={
+            "properties": {
+                "path": {"analyzer": "standard", "type": "text"},
+                "name": {"analyzer": "standard", "type": "text",
+                         "fields": {"nGram": {"type": "text", "analyzer": "my_nGram"}}},
+                "mtime": {"type": "date", "format": "epoch_second"},
+                "size": {"type": "long"},
+                "website_id": {"type": "integer"},
+                "ext": {"type": "keyword"},
+            }}, doc_type="file", index=self.index_name)
 
         self.es.indices.open(index=self.index_name)
 
@@ -120,9 +121,9 @@ class ElasticSearchEngine(SearchEngine):
 
                 to_delete = helpers.scan(query={
                     "query": {
-                        "term": {"website_id": website_id}
+                        "match_all": {}
                     }
-                }, scroll="1m", client=self.es, index=self.index_name, request_timeout=120)
+                }, scroll="1m", client=self.es, index=self.index_name, request_timeout=120, routing=website_id)
 
                 buf = []
                 counter = 0
@@ -130,12 +131,12 @@ class ElasticSearchEngine(SearchEngine):
                     buf.append(doc)
                     counter += 1
 
-                    if counter >= 400:
-                        self._delete(buf)
+                    if counter >= 10000:
+                        self._delete(buf, website_id)
                         buf.clear()
                         counter = 0
                 if counter > 0:
-                    self._delete(buf)
+                    self._delete(buf, website_id)
                 break
 
             except Exception as e:
@@ -144,9 +145,10 @@ class ElasticSearchEngine(SearchEngine):
 
         logger.debug("Done deleting for " + str(website_id))
 
-    def _delete(self, docs):
+    def _delete(self, docs, website_id):
         bulk_string = self.create_bulk_delete_string(docs)
-        result = self.es.bulk(body=bulk_string, index=self.index_name, doc_type="file", request_timeout=30)
+        result = self.es.bulk(body=bulk_string, index=self.index_name, doc_type="file", request_timeout=30,
+                              routing=website_id)
 
         if result["errors"]:
             logger.error("Error in ES bulk delete: \n" + result["errors"])
@@ -154,7 +156,7 @@ class ElasticSearchEngine(SearchEngine):
 
     def import_json(self, in_lines, website_id: int):
 
-        import_every = 400
+        import_every = 10000
         cooldown_time = 0
 
         docs = []
@@ -183,7 +185,8 @@ class ElasticSearchEngine(SearchEngine):
             try:
                 logger.debug("Indexing " + str(len(docs)) + " docs")
                 bulk_string = ElasticSearchEngine.create_bulk_index_string(docs)
-                self.es.bulk(body=bulk_string, index=self.index_name, doc_type="file", request_timeout=30)
+                self.es.bulk(body=bulk_string, index=self.index_name, doc_type="file", request_timeout=30,
+                             routing=docs[0]["website_id"])
                 break
             except Exception as e:
                 logger.error("Error in _index: " + str(e) + ", retrying")
@@ -293,7 +296,7 @@ class ElasticSearchEngine(SearchEngine):
                 }
             },
             "size": 0
-        }, index=self.index_name, request_timeout=30)
+        }, index=self.index_name, request_timeout=30, routing=website_id)
 
         stats = dict()
         stats["total_size"] = result["aggregations"]["total_size"]["value"]
@@ -311,11 +314,10 @@ class ElasticSearchEngine(SearchEngine):
                                     "includes": ["path", "name", "ext"]
                                 },
                                 "query": {
-                                    "term": {
-                                        "website_id": website_id}
+                                    "match_all": {}
                                 }
                             },
-                            index=self.index_name, request_timeout=20)
+                            index=self.index_name, request_timeout=20, routing=website_id)
         for hit in hits:
             src = hit["_source"]
             yield base_url + src["path"] + ("/" if src["path"] != "" else "") + src["name"] + \
@@ -431,7 +433,7 @@ class ElasticSearchEngine(SearchEngine):
                 "websites": {
                     "terms": {
                         "field": "website_id",
-                        "size": 400  # TODO: Figure out what size is appropriate
+                        "size": 600  # TODO: Figure out what size is appropriate
                     },
                     "aggs": {
                         "size": {
@@ -451,7 +453,8 @@ class ElasticSearchEngine(SearchEngine):
         stats["es_index_size"] = es_stats["indices"][self.index_name]["total"]["store"]["size_in_bytes"]
         stats["es_search_count"] = es_stats["indices"][self.index_name]["total"]["search"]["query_total"]
         stats["es_search_time"] = es_stats["indices"][self.index_name]["total"]["search"]["query_time_in_millis"]
-        stats["es_search_time_avg"] = stats["es_search_time"] / (stats["es_search_count"] if stats["es_search_count"] != 0 else 1)
+        stats["es_search_time_avg"] = stats["es_search_time"] / (
+            stats["es_search_count"] if stats["es_search_count"] != 0 else 1)
 
         stats["total_count"] = total_stats["hits"]["total"]
         stats["total_size"] = total_stats["aggregations"]["file_stats"]["sum"]
@@ -478,35 +481,6 @@ class ElasticSearchEngine(SearchEngine):
                 "match_all": {}
             }
         }, scroll="1m", client=self.es, index=self.index_name, request_timeout=60)
-
-    def are_empty(self, websites):
-        result = self.es.search(body={
-            "query": {
-                "bool": {
-                    "filter": {
-                        "terms": {
-                            "website_id": websites
-                        },
-                    }
-                }
-            },
-            "aggs": {
-                "websites": {
-                    "terms": {
-                        "field": "website_id",
-                        "size": 100000,
-                        "min_doc_count": 1
-                    }
-                }
-            },
-            "size": 0
-        }, index=self.index_name, request_timeout=30)
-
-        non_empty_websites = [bucket["key"] for bucket in result["aggregations"]["websites"]["buckets"]]
-
-        for website in websites:
-            if website not in non_empty_websites:
-                yield website
 
     def refresh(self):
         self.es.indices.refresh(self.index_name)
