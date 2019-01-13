@@ -83,7 +83,7 @@ class ElasticSearchEngine(SearchEngine):
                         "type": "nGram", "min_gram": 3, "max_gram": 3
                     }
                 }
-            }}, index=self.index_name)
+            }}, index=self.index_name, request_timeout=60)
         self.es.indices.put_settings(body={
             "analysis": {
                 "analyzer": {
@@ -103,7 +103,9 @@ class ElasticSearchEngine(SearchEngine):
                 "size": {"type": "long"},
                 "website_id": {"type": "integer"},
                 "ext": {"type": "keyword"},
-            }}, doc_type="file", index=self.index_name)
+            },
+            "_routing": {"required": True}
+        }, doc_type="file", index=self.index_name, request_timeout=60)
 
         self.es.indices.open(index=self.index_name)
 

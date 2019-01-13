@@ -71,6 +71,21 @@ server {
         ...
 }
 ```
+
+* Configure Elasticsearch
+```
+PUT _template/default
+{
+  "index_patterns": ["*"],
+  "order": -1,
+  "settings": {
+    "number_of_shards": "50",
+    "number_of_replicas": "0",
+    "codec" : "best_compression",
+    "routing_partition_size" : 5
+  }
+}
+```
 * Start uwsgi:
 ```bash
 uwsgi od-database.ini
