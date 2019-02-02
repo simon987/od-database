@@ -123,7 +123,9 @@ class ElasticSearchEngine(SearchEngine):
 
                 to_delete = helpers.scan(query={
                     "query": {
-                        "match_all": {}
+                        "term": {
+                            "website_id": website_id
+                        }
                     }
                 }, scroll="1m", client=self.es, index=self.index_name, request_timeout=120, routing=website_id)
 

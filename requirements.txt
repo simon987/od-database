@@ -21,3 +21,4 @@ lxml
 pillow
 Wand
 numpy
+matplotlib
