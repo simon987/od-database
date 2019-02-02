@@ -31,7 +31,7 @@ def setup_api(app):
                 oddb.logger.info("No queued tasks, creating a new one")
 
                 try:
-                    task = oddb.db.make_task_for_oldest()
+                    task = oddb.db.make_task_for_oldest(name)
                 except:
                     oddb.logger.error("Couldn't create new task")
                     abort(404)

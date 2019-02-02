@@ -161,7 +161,7 @@ class Database:
                            "ORDER BY last_modified ASC LIMIT 1", (assigned_crawler, ))
             
             cursor.execute("SELECT id, website_id, url, priority, callback_type, callback_args FROM Queue "
-                           "WHERE id=LAST_INSERT_ID()")
+                           "WHERE id=LAST_INSERT_ROWID()")
             task = cursor.fetchone()
             return Task(task[1], task[2], task[3], task[4], task[5])
 
