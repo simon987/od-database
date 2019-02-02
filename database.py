@@ -153,13 +153,17 @@ class Database:
             website_id = cursor.fetchone()
             return website_id[0] if website_id else None
 
-    def get_oldest_website_id(self):
+    def make_task_for_oldest(self, assigned_crawler):
 
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT Website.id FROM Website WHERE Website.id not in (SELECT website_id FROM Queue) "
-                           "ORDER BY last_modified ASC LIMIT 1")
-            return cursor.fetchone()[0]
+            cursor.execute("INSERT INTO QUEUE (website_id, url, assigned_crawler) SELECT Website.id, Website.url, ? FROM Website WHERE Website.id not in (SELECT website_id FROM Queue) "
+                           "ORDER BY last_modified ASC LIMIT 1", (assigned_crawler, ))
+            
+            cursor.execute("SELECT id, website_id, url, priority, callback_type, callback_args FROM Queue "
+                           "WHERE id=LAST_INSERT_ID()")
+            task = cursor.fetchone()
+            return Task(task[1], task[2], task[3], task[4], task[5])
 
     def delete_website(self, website_id):
 

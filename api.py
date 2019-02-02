@@ -31,10 +31,7 @@ def setup_api(app):
                 oddb.logger.info("No queued tasks, creating a new one")
 
                 try:
-                    website_id = oddb.db.get_oldest_website_id()
-                    website = oddb.db.get_website_by_id(website_id)
-                    task = Task(website_id, website.url)
-                    oddb.db.put_task(task, name)
+                    task = oddb.db.make_task_for_oldest()
                 except:
                     oddb.logger.error("Couldn't create new task")
                     abort(404)
