@@ -34,9 +34,7 @@ def setup_api(app):
                     website_id = oddb.db.get_oldest_website_id()
                     website = oddb.db.get_website_by_id(website_id)
                     task = Task(website_id, website.url)
-                    oddb.db.put_task(task)
-
-                    task = oddb.db.pop_task(name, accept_ftp)
+                    oddb.db.put_task(task, name)
                 except:
                     oddb.logger.error("Couldn't create new task")
                     abort(404)

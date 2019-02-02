@@ -373,15 +373,15 @@ class Database:
 
             conn.commit()
 
-    def put_task(self, task: Task) -> None:
+    def put_task(self, task: Task, assigned_crawler=None) -> None:
 
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
 
-            cursor.execute("INSERT INTO Queue (website_id, url, priority, callback_type, callback_args) "
-                           "VALUES (?,?,?,?,?)",
+            cursor.execute("INSERT INTO Queue (website_id, url, priority, callback_type, callback_args, assigned_crawler) "
+                           "VALUES (?,?,?,?,?,?)",
                            (task.website_id, task.url, task.priority,
-                            task.callback_type, json.dumps(task.callback_args)))
+                            task.callback_type, json.dumps(task.callback_args), assigned_crawler))
             conn.commit()
 
     def get_tasks(self) -> list:
