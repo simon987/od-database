@@ -1,3 +1,4 @@
 .idea/
 /static/downloads/
 !/static/downloads/README.md
+__pycache__/
