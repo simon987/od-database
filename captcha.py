@@ -152,7 +152,7 @@ def horizontal_lines(draw, c, line_par, line_pos, fill):
 def make_captcha():
 
     color_name, color = random.choice(list(cfg["colors"].items()))
-    text = ''.join(random.choices(string.ascii_uppercase + string.digits, k=cfg["text"]["letters"][letter_count]["count"]))
+    text = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(cfg["text"]["letters"][letter_count]["count"]))
 
     path = get_path(text)
 
