@@ -26,6 +26,9 @@ searchEngine = ElasticSearchEngine("od-database")
 searchEngine.start_stats_scheduler()
 db = Database("db.sqlite3")
 
+# temporary hotfix...
+sessionStore = dict()
+
 
 def require_role(role: str):
 

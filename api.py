@@ -1,6 +1,7 @@
 import json
 import os
 from threading import Lock
+from uuid import uuid4
 
 from flask import request, abort, Response, send_file, session
 
@@ -254,7 +255,9 @@ def setup_api(app):
     @app.route("/cap", methods=["GET"])
     def cap():
         word = captcha.make_captcha()
-        session["cap"] = word
+        cap_id = uuid4()
+        session["cap"] = cap_id
+        oddb.sessionStore[cap_id] = word
 
         return send_file(captcha.get_path(word), cache_timeout=0)
 
