@@ -1,11 +1,10 @@
-import sqlite3
 import json
-import datetime
-from urllib.parse import urlparse
 import os
-import bcrypt
+import sqlite3
 import uuid
-import tasks
+from urllib.parse import urlparse
+
+import bcrypt
 
 
 class BlacklistedWebsite:
@@ -155,6 +154,7 @@ class Database:
 
     def make_task_for_oldest(self, assigned_crawler):
 
+        # TODO: task_tracker
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("INSERT INTO QUEUE (website_id, url, assigned_crawler) SELECT Website.id, Website.url, ? FROM Website WHERE Website.id not in (SELECT website_id FROM Queue) "
@@ -326,47 +326,6 @@ class Database:
             cursor.execute("SELECT * FROM BlacklistedWebsite")
             return [BlacklistedWebsite(r[0], r[1]) for r in cursor.fetchall()]
 
-    def log_result(self, result):
-
-        with sqlite3.connect(self.db_path) as conn:
-
-            cursor = conn.cursor()
-
-            cursor.execute("INSERT INTO TaskResult "
-                           "(server, website_id, status_code, file_count, start_time, end_time) "
-                           "VALUES (?,?,?,?,?,?)",
-                           (result.server_id, result.website_id, result.status_code,
-                            result.file_count, result.start_time, result.end_time))
-            conn.commit()
-
-    def get_crawl_logs(self):
-
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-
-            cursor.execute("SELECT website_id, status_code, file_count, start_time, end_time, server "
-                           "FROM TaskResult ORDER BY end_time DESC")
-        return [tasks.TaskResult(r[1], r[2], r[3], r[4], r[0], str(r[5])) for r in cursor.fetchall()]
-
-    def get_stats_by_crawler(self):
-        stats = []
-        task_results = self.get_crawl_logs()
-
-        for crawler in self.get_tokens():
-            task_count = sum(1 for result in task_results if result.server_name == crawler.name)
-            if task_count > 0:
-                info = dict()
-                info["file_count"] = sum(result.file_count for result in task_results if result.server_name == crawler.name)
-                info["time"] = sum((result.end_time - result.start_time) for result in task_results if result.server_name == crawler.name)
-                info["task_count"] = task_count
-                info["time_avg"] = info["time"] / task_count
-                info["file_count_avg"] = info["file_count"] / task_count
-                stats.append((crawler.name, info))
-
-        stats.sort(key=lambda t: t[1]["file_count"], reverse=True)
-
-        return stats
-
     def log_search(self, remote_addr, forwarded_for, q, exts, page, blocked, results, took):
 
         with sqlite3.connect(self.db_path) as conn:
@@ -376,71 +335,3 @@ class Database:
                            "VALUES (?,?,?,?,?,?,?,?)", (remote_addr, forwarded_for, q, ",".join(exts), page, blocked, results, took))
 
             conn.commit()
-
-    def put_task(self, task: Task, assigned_crawler=None) -> None:
-
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-
-            cursor.execute("INSERT INTO Queue (website_id, url, priority, callback_type, callback_args, assigned_crawler) "
-                           "VALUES (?,?,?,?,?,?)",
-                           (task.website_id, task.url, task.priority,
-                            task.callback_type, json.dumps(task.callback_args), assigned_crawler))
-            conn.commit()
-
-    def get_tasks(self) -> list:
-
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-
-            cursor.execute("SELECT website_id, url, priority, callback_type, callback_args FROM Queue "
-                           "WHERE assigned_crawler is NULL ")
-            db_tasks = cursor.fetchall()
-
-            return [Task(t[0], t[1], t[2], t[3], t[4]) for t in db_tasks]
-
-    def pop_task(self, name, ftp: bool) -> Task:
-
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-
-            cursor.execute("SELECT id, website_id, url, priority, callback_type, callback_args " +
-                           "FROM Queue WHERE assigned_crawler is NULL " +
-                           ("AND url LIKE 'ftp%' " if ftp else "AND url LIKE 'http%' ") +
-                           "ORDER BY priority DESC, Queue.id " +
-                           "ASC LIMIT 1")
-            task = cursor.fetchone()
-
-            if task:
-                cursor.execute("UPDATE Queue SET assigned_crawler=? WHERE id=?", (name, task[0],))
-                conn.commit()
-                return Task(task[1], task[2], task[3], task[4], task[5])
-            else:
-                return None
-
-    def delete_task(self, website_id):
-
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM Queue WHERE website_id=?", (website_id, ))
-
-    def complete_task(self, website_id: int, name: str) -> Task:
-
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-
-            cursor.execute("SELECT id, website_id, url, priority, callback_type, callback_args FROM "
-                           "Queue WHERE website_id=?", (website_id, ))
-
-            task = cursor.fetchone()
-
-            if task:
-                cursor.execute("DELETE FROM Queue WHERE website_id=?", (website_id, ))
-                conn.commit()
-                return Task(task[1], task[2], task[3], task[4], task[5])
-            else:
-                return None
-
-
-
-

@@ -48,8 +48,7 @@ def setup_views(app):
     @app.route("/stats")
     @cache.cached(120)
     def stats_page():
-        crawl_server_stats = db.get_stats_by_crawler()
-        return render_template("stats.html", crawl_server_stats=crawl_server_stats)
+        return render_template("stats.html")
 
     @app.route("/stats/json_chart")
     @cache.cached(240)
@@ -254,9 +253,7 @@ def setup_views(app):
 
     @app.route("/submit")
     def submit():
-        queued_websites = taskManager.get_queued_tasks()[:30]
-        return render_template("submit.html", queue=queued_websites, captcha=captcha,
-                               show_captcha=config.CAPTCHA_SUBMIT)
+        return render_template("submit.html", captcha=captcha, show_captcha=config.CAPTCHA_SUBMIT)
 
     def try_enqueue(url):
         url = os.path.join(url, "")
@@ -412,11 +409,3 @@ def setup_views(app):
         db.delete_token(token)
         flash("Deleted API token", "success")
         return redirect("/dashboard")
-
-    # TODO: pages scrolling
-    @app.route("/logs", methods=["GET"])
-    def admin_crawl_logs():
-        require_role("admin")
-        results = db.get_crawl_logs()
-
-        return render_template("crawl_logs.html", logs=results)

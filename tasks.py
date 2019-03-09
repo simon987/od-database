@@ -90,5 +90,3 @@ class TaskManager:
         self.db.put_task(task)
         print("Queued task and made it available to crawlers: " + str(task.website_id))
 
-    def get_queued_tasks(self) -> list:
-        return self.db.get_tasks()

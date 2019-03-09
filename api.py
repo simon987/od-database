@@ -16,50 +16,9 @@ uploadLock = Lock()
 
 
 def setup_api(app):
-    @app.route("/api/task/get", methods=["POST"])
-    def api_get_task():
-        token = request.form.get("token")
-        name = oddb.db.check_api_token(token)
-        accept_ftp = request.form.get("accept") == "ftp" if "accept" in request.form else False
-
-        if name:
-            task = oddb.db.pop_task(name, accept_ftp)
-            oddb.logger.debug("API get task from " + name)
-
-            if task:
-                oddb.logger.info("Assigning task " + str(task.to_json()) + " to " + name)
-            else:
-                oddb.logger.info("No queued tasks, creating a new one")
-
-                try:
-                    task = oddb.db.make_task_for_oldest(name)
-                except:
-                    oddb.logger.error("Couldn't create new task")
-                    abort(404)
-
-            return Response(str(task), mimetype="application/json")
-        else:
-            return abort(403)
-
-    @app.route("/api/task/cancel", methods=["POST"])
-    def api_cancel_task():
-        token = request.form.get("token")
-        name = oddb.db.check_api_token(token)
-
-        if name:
-            website_id = request.form.get("website_id") if "website_id" in request.form else None
-            if website_id:
-                oddb.logger.debug("API task cancel for " + str(website_id) + " by " + name)
-                oddb.db.delete_task(website_id)
-                return Response("cancelled task")
-            else:
-                abort(400)
-
-        else:
-            abort(403)
-
     @app.route("/api/task/complete", methods=["POST"])
     def api_complete_task():
+        # TODO: task_tracker
         token = request.form.get("token")
         name = oddb.db.check_api_token(token)
 
@@ -201,6 +160,7 @@ def setup_api(app):
         if name:
 
             url = request.form.get("url")
+            # TODO: task_tracker
             message, result = oddb.try_enqueue(url)
 
             oddb.logger.info("API try enqueue '" + url + "' by " + name + " (" + message + ")")

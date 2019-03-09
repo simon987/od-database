@@ -62,34 +62,5 @@
                 </p>
             </div>
         </div>
-
-
-        <div class="card">
-            <div class="card-header">Queued websites</div>
-            <div class="card-body">
-
-                <table class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th>Url</th>
-                        <th>Priority</th>
-                        <th>Task type</th>
-                    </tr>
-                    </thead>
-
-                    <tbody>
-                    {% for task in queue %}
-                        <tr>
-                            <td title="{{ task.url }}">{{ task.url | truncate(70) }}</td>
-                            <td>{{ task.priority }}</td>
-                            <td>{{ task.callback_type if task.callback_type else "NORMAL" }}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-
-                </table>
-
-            </div>
-        </div>
     </div>
 {% endblock body %}

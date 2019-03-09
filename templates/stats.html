@@ -69,33 +69,6 @@
                     </tr>
                     </tbody>
                 </table>
-
-                <h4>Crawl server stats</h4>
-                <table class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th>Server</th>
-                        <th>Tasks done</th>
-                        <th>Crawl time</th>
-                        <th>Crawl time avg.</th>
-                        <th>Files crawled</th>
-                        <th>Files crawled avg.</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for entry in crawl_server_stats %}
-                        {% set server, info = entry %}
-                        <tr>
-                            <td><b>{{ server }}</b></td>
-                            <td class="td-numeric">{{ info.task_count }}</td>
-                            <td class="td-numeric">{{ info.time | duration_format() }}</td>
-                            <td class="td-numeric">{{ info.time_avg | duration_format() }}</td>
-                            <td class="td-numeric">{{ info.file_count }}</td>
-                            <td class="td-numeric">{{ "%.2f" % info.file_count_avg }}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
             </div>
         </div>
 
