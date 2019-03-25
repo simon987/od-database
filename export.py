@@ -1,7 +1,8 @@
-from search.search import ElasticSearchEngine
-from database import Database
 import csv
 import os
+
+from database import Database
+from search.search import ElasticSearchEngine
 
 
 def export(outfile="out.csv"):

@@ -1,12 +1,13 @@
+import logging
+import sys
 from logging import FileHandler, StreamHandler
 
-import sys
+import redis as r
+from flask import session, abort
 
 from database import Database
 from search.search import ElasticSearchEngine
 from tasks import TaskManager
-import logging
-from flask import session, abort
 
 # Disable flask logging
 flaskLogger = logging.getLogger('werkzeug')
@@ -26,8 +27,7 @@ searchEngine = ElasticSearchEngine("od-database")
 searchEngine.start_stats_scheduler()
 db = Database("db.sqlite3")
 
-# temporary hotfix...
-sessionStore = dict()
+redis = r.Redis()
 
 
 def require_role(role: str):

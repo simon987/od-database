@@ -6,12 +6,12 @@ from urllib.parse import urlparse
 from flask import render_template, redirect, request, flash, abort, Response, session
 from flask_caching import Cache
 
+import captcha
 import config
 import od_util
 from common import db, taskManager, searchEngine, logger, require_role
 from database import Task, Website
 from search.search import InvalidQueryException
-import captcha
 
 
 def setup_views(app):

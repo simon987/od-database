@@ -4,8 +4,8 @@ import string
 from PIL import Image, ImageDraw, ImageFont
 from flask import request, session
 
-import config
 import common as oddb
+import config
 
 
 def get_code():
@@ -36,9 +36,14 @@ def verify():
         request.args.get("cap") if "cap" in request.args else ""
     )
 
-    if "cap" in session and session["cap"] in oddb.sessionStore and oddb.sessionStore[session["cap"]] == attempt:
-        session["cap_remaining"] = config.CAPTCHA_EVERY
-        return True
+    if "cap" in session:
+        expected = oddb.redis.get(session["cap"]).decode("utf8")
+        oddb.redis.delete(session["cap"])
+
+        if expected == attempt:
+            session["cap_remaining"] = config.CAPTCHA_EVERY
+            return True
+
     return False
 
 

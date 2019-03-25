@@ -1,7 +1,8 @@
 import os
 import time
-import praw
+
 import humanfriendly
+import praw
 
 
 class RedditBot:

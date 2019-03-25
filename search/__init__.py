@@ -1,7 +1,5 @@
 import logging
-from logging import FileHandler, StreamHandler
-
-import sys
+from logging import FileHandler
 
 logger = logging.getLogger("default")
 logger.setLevel(logging.DEBUG)

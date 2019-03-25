@@ -36,9 +36,6 @@ RESULTS_PER_PAGE = (25, 50, 100, 250, 500, 1000)
 SUBMIT_FTP = False
 # Allow http(s) websites in /submit
 SUBMIT_HTTP = True
-
-SERVER_URL = "http://localhost/api"
-API_TOKEN = "5817926d-f2f9-4422-a411-a98f1bfe4b6c"
 ```
 
 ## Running the crawl server
@@ -54,7 +51,7 @@ python3 app.py
 ## Running the web server with Nginx (production)
 * Install dependencies:
 ```bash
-sudo apt install build-essential python-dev
+sudo apt install build-essential python-dev redis-server
 sudo pip install uwsgi
 ```
 * Adjust the path in `od-database.ini`

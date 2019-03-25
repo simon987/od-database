@@ -8,4 +8,6 @@ config.py
 db.sqlite3
 oddb.log
 praw.ini
-tmp/
+env/
+worker.json
+search_blacklist.txt

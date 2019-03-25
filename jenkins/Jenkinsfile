@@ -1,0 +1,24 @@
+def remote = [:]
+remote.name = 'remote'
+remote.host = env.DEPLOY_HOST
+remote.user = env.DEPLOY_USER
+remote.identityFile = '/var/lib/jenkins/.ssh/id_rsa'
+remote.knownHosts = '/var/lib/jenkins/.ssh/known_hosts'
+
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+			steps {
+				sh './jenkins/build.sh'
+				stash includes: 'env/', name: 'env'
+			}
+        }
+        stage('Deploy') {
+            steps {
+				sshPut remote: remote, from: '.', into: 'oddb'
+				sshCommand remote: remote, command: 'chmod +x oddb/deploy.sh && ./oddb/deploy.sh'
+            }
+        }
+   	}
+}

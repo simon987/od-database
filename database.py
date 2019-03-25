@@ -1,4 +1,3 @@
-import json
 import os
 import sqlite3
 import uuid
@@ -28,32 +27,6 @@ class ApiClient:
     def __init__(self, token, name):
         self.token = token
         self.name = name
-
-
-class Task:
-
-    def __init__(self, website_id: int, url: str, priority: int = 1,
-                 callback_type: str = None, callback_args: str = None):
-        self.website_id = website_id
-        self.url = url
-        self.priority = priority
-        self.callback_type = callback_type
-        self.callback_args = json.loads(callback_args) if callback_args else {}
-
-    def to_json(self):
-        return {
-            "website_id": self.website_id,
-            "url": self.url,
-            "priority": self.priority,
-            "callback_type": self.callback_type,
-            "callback_args": json.dumps(self.callback_args)
-        }
-
-    def __str__(self):
-        return json.dumps(self.to_json())
-
-    def __repr__(self):
-        return self.__str__()
 
 
 class Database:
@@ -151,19 +124,6 @@ class Database:
             cursor.execute("SELECT id FROM Website WHERE url = substr(?, 0, length(url) + 1)", (url, ))
             website_id = cursor.fetchone()
             return website_id[0] if website_id else None
-
-    def make_task_for_oldest(self, assigned_crawler):
-
-        # TODO: task_tracker
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute("INSERT INTO QUEUE (website_id, url, assigned_crawler) SELECT Website.id, Website.url, ? FROM Website WHERE Website.id not in (SELECT website_id FROM Queue) "
-                           "ORDER BY last_modified ASC LIMIT 1", (assigned_crawler, ))
-            
-            cursor.execute("SELECT id, website_id, url, priority, callback_type, callback_args FROM Queue "
-                           "WHERE id=LAST_INSERT_ROWID()")
-            task = cursor.fetchone()
-            return Task(task[1], task[2], task[3], task[4], task[5])
 
     def delete_website(self, website_id):
 

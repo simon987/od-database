@@ -22,3 +22,5 @@ pillow
 Wand
 numpy
 matplotlib
+uwsgi
+redis

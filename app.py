@@ -2,8 +2,8 @@ from flask import Flask
 
 import api
 import config
-import views
 import template_filters
+import views
 
 app = Flask(__name__)
 app.secret_key = config.FLASK_SECRET

@@ -1,10 +1,11 @@
-import requests
-from urllib.parse import urljoin, urlparse
-from bs4 import BeautifulSoup
 import os
-import validators
 import re
 from ftplib import FTP
+from urllib.parse import urljoin, urlparse
+
+import requests
+import validators
+from bs4 import BeautifulSoup
 
 # TODO: find a better way to do this
 try:

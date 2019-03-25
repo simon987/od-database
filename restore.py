@@ -1,5 +1,6 @@
-from search.search import ElasticSearchEngine
 import ujson
+
+from search.search import ElasticSearchEngine
 
 es = ElasticSearchEngine("od-database")
 es.reset()

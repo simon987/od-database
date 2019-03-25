@@ -1,11 +1,10 @@
-import itertools
+import os
+import time
+import ujson
 
 import elasticsearch
-import time
-from elasticsearch import helpers
-import os
-import ujson
 from apscheduler.schedulers.background import BackgroundScheduler
+from elasticsearch import helpers
 
 from search import logger
 from search.filter import SearchFilter
@@ -318,8 +317,12 @@ class ElasticSearchEngine(SearchEngine):
                                     "includes": ["path", "name", "ext"]
                                 },
                                 "query": {
-                                    "match_all": {}
-                                }
+                                    "constant_score": {
+                                        "filter": {
+                                            "term": {"website_id": website_id}
+                                        }
+                                    }
+                                },
                             },
                             index=self.index_name, request_timeout=20, routing=website_id)
         for hit in hits:

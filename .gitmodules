@@ -1,3 +1,9 @@
 [submodule "fold_to_ascii"]
 	path = fold_to_ascii
 	url = https://github.com/spanishdict/fold_to_ascii
+[submodule "task_tracker_drone"]
+	path = task_tracker_drone
+	url = https://github.com/simon987/task_tracker_drone
+[submodule "ws_bucket_client"]
+	path = ws_bucket_client
+	url = https://github.com/simon987/ws_bucket_client
