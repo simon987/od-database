@@ -5,5 +5,6 @@ source env/bin/activate
 python --version
 
 pip install -r requirements.txt
+git submodule init
 git submodule update --remote --recursive
 deactivate
