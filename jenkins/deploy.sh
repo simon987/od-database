@@ -2,8 +2,8 @@
 
 export ODDBROOT="od-database"
 
-screen -S oddb -X quit
+screen -S oddb_web -X quit
 echo "starting oddb_web"
-screen -S tt_drone -d -m bash -c "cd ${ODDBROOT} && uwsgi od-database.ini"
+screen -S oddb_web -d -m bash -c "cd ${ODDBROOT} && uwsgi od-database.ini"
 sleep 1
 screen -list

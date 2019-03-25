@@ -11,13 +11,37 @@ pipeline {
         stage('Build') {
 			steps {
 				sh './jenkins/build.sh'
-				stash includes: 'env/', name: 'env'
 			}
         }
         stage('Deploy') {
             steps {
-				sshPut remote: remote, from: '.', into: 'oddb'
-				sshCommand remote: remote, command: 'chmod +x oddb/deploy.sh && ./oddb/deploy.sh'
+				sh 'echo $ODDB_CONFIG > config.py'
+				sshCommand remote: remote, command: "cd od-database && rm -rf env fold_to_ascii search static task_tracker_drone templates ws_bucket_client"
+				sshPut remote: remote, from: 'env', into: 'od-database'
+				sshPut remote: remote, from: 'fold_to_ascii', into: 'od-database'
+				sshPut remote: remote, from: 'search', into: 'od-database'
+				sshPut remote: remote, from: 'static', into: 'od-database'
+				sshPut remote: remote, from: 'task_tracker_drone', into: 'od-database'
+				sshPut remote: remote, from: 'templates', into: 'od-database'
+				sshPut remote: remote, from: 'ws_bucket_client', into: 'od-database'
+				sshPut remote: remote, from: '__init__.py', into: 'od-database'
+				sshPut remote: remote, from: 'api.py', into: 'od-database'
+				sshPut remote: remote, from: 'app.py', into: 'od-database'
+				sshPut remote: remote, from: 'captcha.py', into: 'od-database'
+				sshPut remote: remote, from: 'common.py', into: 'od-database'
+				sshPut remote: remote, from: 'database.py', into: 'od-database'
+				sshPut remote: remote, from: 'export.py', into: 'od-database'
+				sshPut remote: remote, from: 'init_script.sql', into: 'od-database'
+				sshPut remote: remote, from: 'od_util.py', into: 'od-database'
+				sshPut remote: remote, from: 'reddit_bot.py', into: 'od-database'
+				sshPut remote: remote, from: 'tasks.py', into: 'od-database'
+				sshPut remote: remote, from: 'template_filters.py', into: 'od-database'
+				sshPut remote: remote, from: 'uwsgi.py', into: 'od-database'
+				sshPut remote: remote, from: 'views.py', into: 'od-database'
+				sshPut remote: remote, from: 'config.py', into: 'od-database'
+				sshPut remote: remote, from: 'od-database.ini', into: 'od-database'
+				sshPut remote: remote, from: 'jenkins/deploy.sh', into: 'od-database'
+				sshCommand remote: remote, command: 'chmod +x od-database/deploy.sh && ./od-database/deploy.sh'
             }
         }
    	}

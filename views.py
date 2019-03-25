@@ -10,8 +10,9 @@ import captcha
 import config
 import od_util
 from common import db, taskManager, searchEngine, logger, require_role
-from database import Task, Website
+from database import Website
 from search.search import InvalidQueryException
+from tasks import Task
 
 
 def setup_views(app):

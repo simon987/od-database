@@ -51,10 +51,8 @@ python3 app.py
 ## Running the web server with Nginx (production)
 * Install dependencies:
 ```bash
-sudo apt install build-essential python-dev redis-server
-sudo pip install uwsgi
+sudo apt install build-essential python-dev redis-server uwsgi-plugin-python3
 ```
-* Adjust the path in `od-database.ini`
 * Configure nginx (on Debian 9: `/etc/nginx/sites-enabled/default`):
 ```nginx
 server {
