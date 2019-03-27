@@ -8,15 +8,12 @@ praw
 humanfriendly
 apscheduler
 bcrypt
-ftputil
 elasticsearch
 python-dateutil
 flask_httpauth
 ujson
 urllib3
 pyOpenSSL
-pybloom-live
-pycurl
 lxml
 pillow
 Wand
@@ -24,3 +21,4 @@ numpy
 matplotlib
 uwsgi
 redis
+psycopg2-binary

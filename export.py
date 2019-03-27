@@ -1,6 +1,7 @@
 import csv
 import os
 
+import config
 from database import Database
 from search.search import ElasticSearchEngine
 
@@ -9,7 +10,7 @@ def export(outfile="out.csv"):
 
     print("Export started, connecting to databases...")
     es = ElasticSearchEngine("od-database")
-    db = Database("db.sqlite3")
+    db = Database(config.DB_CONN_STR)
     docs = es.stream_all_docs()
     docs_with_website = db.join_website_on_scan(docs)
 

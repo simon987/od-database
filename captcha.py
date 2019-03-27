@@ -37,7 +37,8 @@ def verify():
     )
 
     if "cap" in session:
-        expected = oddb.redis.get(session["cap"]).decode("utf8")
+        expected = oddb.redis.get(session["cap"])
+        expected = expected.decode("utf8") if expected is not None else ""
         oddb.redis.delete(session["cap"])
 
         if expected == attempt:

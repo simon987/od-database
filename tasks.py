@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+from multiprocessing.pool import ThreadPool
 from threading import Thread
 from uuid import uuid4
 
@@ -9,6 +10,7 @@ import urllib3
 
 import config
 import database
+from database import Website
 from search.search import ElasticSearchEngine
 from task_tracker_drone.src.tt_drone.api import TaskTrackerApi, Worker
 from ws_bucket_client.api import WsBucketApi
@@ -59,7 +61,7 @@ class TaskManager:
 
     def __init__(self):
         self.search = ElasticSearchEngine("od-database")
-        self.db = database.Database("db.sqlite3")
+        self.db = database.Database(config.DB_CONN_STR)
         self.tracker = TaskTrackerApi(config.TT_API)
 
         self.worker = Worker.from_file(self.tracker)
@@ -71,25 +73,33 @@ class TaskManager:
 
         self.bucket = WsBucketApi(config.WSB_API, config.WSB_SECRET)
 
-        self._indexer_thread = Thread(target=self._do_indexing)
-        self._indexer_thread.start()
+        self._indexer_threads = list()
+        logger.info("Starting %s indexer threads " % (config.INDEXER_THREADS, ))
+        for _ in range(config.INDEXER_THREADS):
+            t = Thread(target=self._do_indexing)
+            self._indexer_threads.append(t)
+            t.start()
+
+        self._recrawl_thread = Thread(target=self._do_recrawl)
+        self._recrawl_thread.start()
 
     def _do_indexing(self):
 
         while True:
-            logger.debug("Fetching indexing task...")
-            task = self.tracker.fetch_task(worker=self.worker, project_id=config.TT_INDEX_PROJECT)
+            task = self.worker.fetch_task(project_id=config.TT_INDEX_PROJECT)
 
             if task:
                 try:
                     recipe = task.json_recipe()
                     logger.debug("Got indexing task: " + str(recipe))
-                    filename = os.path.join(config.WSB_PATH, format_file_name(recipe["website_id"], recipe["upload_token"]))
+                    filename = os.path.join(config.WSB_PATH,
+                                            format_file_name(recipe["website_id"], recipe["upload_token"]))
+                    self._complete_task(filename, Task(recipe["website_id"], recipe["url"]))
                 except Exception as e:
-                    print(e)
+                    self.worker.release_task(task_id=task.id, result=1, verification=0)
                 finally:
                     try:
-                        self._complete_task(filename, Task(recipe["website_id"], recipe["url"]))
+                        self.worker.release_task(task_id=task.id, result=0, verification=0)
                     except:
                         pass
             else:
@@ -108,28 +118,33 @@ class TaskManager:
                         line = f.readline()
 
             self.search.import_json(iter_lines(), task.website_id)
+            os.remove(file_list)
 
         self.db.update_website_date_if_exists(task.website_id)
 
-    def fetch_indexing_task(self):
+    def _do_recrawl(self):
+        while True:
+            time.sleep(60 * 30)
+            logger.debug("Creating re-crawl tasks")
+            self._generate_crawling_tasks()
 
-        task = self.tracker.fetch_task(worker=self.worker, project_id=config.TT_INDEX_PROJECT)
-        print(task)
+    def _generate_crawling_tasks(self):
+
+        # TODO: Insert more in-depth re-crawl logic here
+        websites_to_crawl = self.db.get_oldest_updated_websites(10000)
+
+        def recrawl(website: Website):
+            crawl_task = Task(website.id, website.url,
+                              priority=(int((time.time() - website.last_modified.timestamp()) / 3600))
+                              )
+            self.queue_task(crawl_task)
+
+        pool = ThreadPool(processes=10)
+        pool.map(func=recrawl, iterable=websites_to_crawl)
 
     def queue_task(self, task: Task):
-
         max_assign_time = 24 * 7 * 3600
         upload_token = uuid4().__str__()
-
-        bucket_response = self.bucket.allocate(upload_token.__str__(),
-                                               21474837499,  # 20Gib
-                                               format_file_name(task.website_id, upload_token),
-                                               to_dispose_date=int(time.time() + max_assign_time),
-                                               upload_hook="")
-        if not bucket_response:
-            return
-
-        print("Allocated upload bucket: %d, t=%s, r=%s" % (task.website_id, upload_token,  bucket_response.text))
 
         task.upload_token = upload_token
         tracker_response = self.worker.submit_task(config.TT_CRAWL_PROJECT,
@@ -140,9 +155,18 @@ class TaskManager:
                                                    verification_count=1,
                                                    max_retries=3
                                                    )
-        print("Queued task and made it available to crawlers: t=%s, r=%s" % (task, tracker_response.text))
+        print(tracker_response.text)
+        logging.info("Queued task and made it available to crawlers: t=%s, r=%s" % (task, tracker_response.text))
+        if not tracker_response.json()["ok"]:
+            return
+
+        bucket_response = self.bucket.allocate(upload_token.__str__(),
+                                               21474837499,  # 20Gib
+                                               format_file_name(task.website_id, upload_token),
+                                               to_dispose_date=int(time.time() + max_assign_time),
+                                               upload_hook="")
+        logging.info("Allocated upload bucket: %d, t=%s, r=%s" % (task.website_id, upload_token, bucket_response.text))
 
 
 def format_file_name(website_id, token):
-    return "%d_%s.NDJSON" % (website_id, token, )
-
+    return "%d_%s.NDJSON" % (website_id, token,)
