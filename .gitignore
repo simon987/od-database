@@ -5,7 +5,6 @@ __pycache__/
 captchas/
 _stats.json
 config.py
-db.sqlite3
 oddb.log
 praw.ini
 env/

@@ -242,7 +242,7 @@ class Database:
 
         return page
 
-    def join_website_on_scan(self, docs: list):
+    def join_website_url(self, docs):
 
         websites = self.get_all_websites()
 

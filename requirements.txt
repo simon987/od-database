@@ -22,3 +22,4 @@ matplotlib
 uwsgi
 redis
 psycopg2-binary
+lz4
