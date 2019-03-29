@@ -141,6 +141,7 @@ class TaskManager:
 
         pool = ThreadPool(processes=10)
         pool.map(func=recrawl, iterable=websites_to_crawl)
+        pool.close()
 
     def queue_task(self, task: Task):
         max_assign_time = 24 * 7 * 3600
