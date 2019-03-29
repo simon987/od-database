@@ -84,7 +84,7 @@ class Database:
                            (url,))
             db_web = cursor.fetchone()
         if db_web:
-            website = Website(db_web[1], db_web[2], db_web[3], db_web[4], int(db_web[0].timestamp()))
+            website = Website(db_web[1], db_web[2], db_web[3], db_web[4], str(db_web[0]))
             return website
         else:
             return None
@@ -98,7 +98,7 @@ class Database:
             db_web = cursor.fetchone()
 
             if db_web:
-                website = Website(db_web[1], db_web[2], db_web[3], int(db_web[4].timestamp()))
+                website = Website(db_web[1], db_web[2], db_web[3], str(db_web[4]))
                 website.id = db_web[0]
                 return website
             else:
@@ -119,8 +119,7 @@ class Database:
 
         with psycopg2.connect(self.db_conn_str) as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                "SELECT id FROM Website WHERE id >= (abs(random()) % (SELECT max(id) FROM Website)) LIMIT 1;")
+            cursor.execute("SELECT id FROM Website ORDER BY random() LIMIT 1")
 
             return cursor.fetchone()[0]
 
@@ -325,4 +324,3 @@ class Database:
                             logged_useragent=None
                             )
                     for r in cursor.fetchall()]
-

@@ -124,9 +124,9 @@ class TaskManager:
 
     def _do_recrawl(self):
         while True:
-            time.sleep(60 * 30)
             logger.debug("Creating re-crawl tasks")
             self._generate_crawling_tasks()
+            time.sleep(60 * 30)
 
     def _generate_crawling_tasks(self):
 
