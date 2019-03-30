@@ -36,6 +36,26 @@ RESULTS_PER_PAGE = (25, 50, 100, 250, 500, 1000)
 SUBMIT_FTP = False
 # Allow http(s) websites in /submit
 SUBMIT_HTTP = True
+
+# Number of re-crawl tasks to keep in the queue
+RECRAWL_POOL_SIZE = 10000
+# task_tracker API url
+TT_API = "http://localhost:3010"
+# task_tracker crawl project id
+TT_CRAWL_PROJECT = 3
+# task_tracker indexing project id
+TT_INDEX_PROJECT = 9
+# Number of threads to use for ES indexing
+INDEXER_THREADS = 4
+
+# ws_bucket API url
+WSB_API = "http://localhost:3020"
+# ws_bucket secret
+WSB_SECRET = "default_secret"
+# ws_bucket data directory
+WSB_PATH = "/mnt/data/github.com/simon987/ws_bucket/data"
+# od-database PostgreSQL connection string
+DB_CONN_STR = "dbname=od-database user=od-database password=xxx"
 ```
 
 ## Running the crawl server

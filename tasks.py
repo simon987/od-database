@@ -77,10 +77,12 @@ class TaskManager:
         logger.info("Starting %s indexer threads " % (config.INDEXER_THREADS, ))
         for _ in range(config.INDEXER_THREADS):
             t = Thread(target=self._do_indexing)
+            t.setDaemon(True)
             self._indexer_threads.append(t)
             t.start()
 
         self._recrawl_thread = Thread(target=self._do_recrawl)
+        self._recrawl_thread.setDaemon(True)
         self._recrawl_thread.start()
 
     def _do_indexing(self):
@@ -131,7 +133,7 @@ class TaskManager:
     def _generate_crawling_tasks(self):
 
         # TODO: Insert more in-depth re-crawl logic here
-        websites_to_crawl = self.db.get_oldest_updated_websites(10000)
+        websites_to_crawl = self.db.get_oldest_updated_websites(config.RECRAWL_POOL_SIZE)
 
         def recrawl(website: Website):
             crawl_task = Task(website.id, website.url,
