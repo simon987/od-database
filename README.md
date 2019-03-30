@@ -1,5 +1,7 @@
 # OD-Database
 
+[![Build Status](https://ci.simon987.net/buildStatus/icon?job=od-database_qa)](https://ci.simon987.net/job/od-database_qa/)
+
 OD-Database is a web-crawling project that aims to index a very large number of file links and their basic metadata from open directories (misconfigured Apache/Nginx/FTP servers, or more often, mirrors of various public services).
 
 Each crawler instance fetches tasks from the central server and pushes the result once completed. A single instance can crawl hundreds of websites at the same time (Both FTP and HTTP(S)) and the central server is capable of ingesting thousands of new documents per second. 
