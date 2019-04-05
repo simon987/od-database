@@ -17,7 +17,10 @@ pipeline {
             steps {
 				sh 'echo $ODDB_CONFIG > config.py'
 				sshCommand remote: remote, command: "cd od-database && rm -rf env fold_to_ascii search static task_tracker_drone templates ws_bucket_client"
-				sshPut remote: remote, from: 'env', into: 'od-database'
+				sh 'tar -czf env.tar.gz env'
+				sshPut remote: remote, from: 'env.tar.gz', into: 'od-database'
+				sshCommand remote: remote, command: 'tar -xzf od-database/env.tar.gz -C od-database && rm od-database/env.tar.gz'
+				sshPut remote: remote, from: 'jenkins/deploy.sh', into: 'od-database'
 				sshPut remote: remote, from: 'fold_to_ascii', into: 'od-database'
 				sshPut remote: remote, from: 'search', into: 'od-database'
 				sshPut remote: remote, from: 'static', into: 'od-database'
