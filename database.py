@@ -309,14 +309,15 @@ class Database:
 
             conn.commit()
 
-    def get_oldest_updated_websites(self, size: int):
+    def get_oldest_updated_websites(self, size: int, prefix: str):
 
         with psycopg2.connect(self.db_conn_str) as conn:
             cursor = conn.cursor()
 
             cursor.execute("SELECT id, url, last_modified FROM website "
+                           "WHERE url LIKE %s "
                            "ORDER BY last_modified ASC LIMIT %s",
-                           (size,))
+                           (prefix + "%", size, ))
             return [Website(url=r[1],
                             website_id=r[0],
                             last_modified=r[2],

@@ -133,7 +133,7 @@ class TaskManager:
     def _generate_crawling_tasks(self):
 
         # TODO: Insert more in-depth re-crawl logic here
-        websites_to_crawl = self.db.get_oldest_updated_websites(config.RECRAWL_POOL_SIZE)
+        websites_to_crawl = self.db.get_oldest_updated_websites(config.RECRAWL_POOL_SIZE, prefix="http")
 
         def recrawl(website: Website):
             crawl_task = Task(website.id, website.url,
@@ -141,7 +141,7 @@ class TaskManager:
                               )
             self.queue_task(crawl_task)
 
-        pool = ThreadPool(processes=10)
+        pool = ThreadPool(processes=3)
         pool.map(func=recrawl, iterable=websites_to_crawl)
         pool.close()
 
