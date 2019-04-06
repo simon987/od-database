@@ -39,6 +39,7 @@ pipeline {
 				sshPut remote: remote, from: 'uwsgi.py', into: 'od-database'
 				sshPut remote: remote, from: 'views.py', into: 'od-database'
 				sshPut remote: remote, from: 'config.py', into: 'od-database'
+				sshPut remote: remote, from: 'do_recrawl.py', into: 'od-database'
 				sshPut remote: remote, from: 'od-database.ini', into: 'od-database'
 				sshPut remote: remote, from: 'jenkins/deploy.sh', into: 'od-database'
 				sshCommand remote: remote, command: 'chmod +x od-database/deploy.sh && ./od-database/deploy.sh'

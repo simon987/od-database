@@ -140,7 +140,7 @@ class TaskManager:
         pool.close()
 
     def queue_task(self, task: Task):
-        max_assign_time = 24 * 7 * 3600
+        max_assign_time = 24 * 4 * 3600
         upload_token = uuid4().__str__()
 
         task.upload_token = upload_token
