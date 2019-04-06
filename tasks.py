@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+from multiprocessing.pool import ThreadPool
 from threading import Thread
 from uuid import uuid4
 
@@ -71,18 +72,15 @@ class TaskManager:
             self.worker.request_access(config.TT_INDEX_PROJECT, True, False)
 
         self.bucket = WsBucketApi(config.WSB_API, config.WSB_SECRET)
-
         self._indexer_threads = list()
+
+    def start_indexer_threads(self):
         logger.info("Starting %s indexer threads " % (config.INDEXER_THREADS, ))
         for _ in range(config.INDEXER_THREADS):
             t = Thread(target=self._do_indexing)
             t.setDaemon(True)
             self._indexer_threads.append(t)
             t.start()
-
-        self._recrawl_thread = Thread(target=self._do_recrawl)
-        self._recrawl_thread.setDaemon(True)
-        self._recrawl_thread.start()
 
     def _do_indexing(self):
 
@@ -123,11 +121,9 @@ class TaskManager:
 
         self.db.update_website_date_if_exists(task.website_id)
 
-    def _do_recrawl(self):
-        while True:
-            logger.debug("Creating re-crawl tasks")
-            self._generate_crawling_tasks()
-            time.sleep(60 * 30)
+    def do_recrawl(self):
+        logger.debug("Creating re-crawl tasks")
+        self._generate_crawling_tasks()
 
     def _generate_crawling_tasks(self):
 
@@ -136,12 +132,12 @@ class TaskManager:
 
         def recrawl(website: Website):
             crawl_task = Task(website.id, website.url,
-                              priority=(int((time.time() - website.last_modified.timestamp()) / 3600))
-                              )
+                              priority=(int((time.time() - website.last_modified.timestamp()) / 3600)))
             self.queue_task(crawl_task)
 
-        for w in websites_to_crawl:
-            recrawl(w)
+        pool = ThreadPool(processes=30)
+        pool.map(func=recrawl, iterable=websites_to_crawl)
+        pool.close()
 
     def queue_task(self, task: Task):
         max_assign_time = 24 * 7 * 3600
