@@ -18,7 +18,7 @@ screen -list
 
 echo "Installing crontab"
 absolute_dir=$(cd ${ODDBROOT} && pwd)
-command="cd '${absolute_dir}' && source env/bin/activate && python do_recrawl.py >> recrawl_logs.txt"
+command="bash -c \"cd '${absolute_dir}' && source env/bin/activate && python do_recrawl.py >> recrawl_logs.txt\""
 job="*/10 * * * * \"$command\""
 echo "$job"
-cat <(fgrep -i -v \""$command"\" <(crontab -l)) <(echo "$job") | crontab -
+cat <(fgrep -i -v "$command" <(crontab -l)) <(echo "$job") | crontab -
