@@ -16,9 +16,17 @@ screen -S oddb_web -d -m bash -c "cd ${ODDBROOT} && source env/bin/activate && u
 sleep 1
 screen -list
 
-echo "Installing crontab"
+echo "Installing crontabs"
 absolute_dir=$(cd ${ODDBROOT} && pwd)
+
+# Re-crawl dirs
 command="bash -c \"cd '${absolute_dir}' && source env/bin/activate && python do_recrawl.py >> recrawl_logs.txt\""
-job="*/10 * * * * \"$command\""
+job="*/10 * * * * $command"
+echo "$job"
+cat <(fgrep -i -v "$command" <(crontab -l)) <(echo "$job") | crontab -
+
+# Cleanup captchas
+command="bash -c \"cd '${absolute_dir}' && rm captchas/*.png\""
+job="*/60 * * * * $command"
 echo "$job"
 cat <(fgrep -i -v "$command" <(crontab -l)) <(echo "$job") | crontab -

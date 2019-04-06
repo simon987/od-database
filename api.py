@@ -5,11 +5,13 @@ from flask import request, abort, send_file, session
 
 import captcha
 import common as oddb
+from common import taskManager
 from database import Website
 from search.search import InvalidQueryException
 
 
 def setup_api(app):
+    taskManager.start_indexer_threads()
 
     @app.route("/api/website/by_url", methods=["GET"])
     def api_website_by_url():
