@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import time
-from multiprocessing.pool import ThreadPool
 from threading import Thread
 from uuid import uuid4
 
@@ -141,9 +140,8 @@ class TaskManager:
                               )
             self.queue_task(crawl_task)
 
-        pool = ThreadPool(processes=3)
-        pool.map(func=recrawl, iterable=websites_to_crawl)
-        pool.close()
+        for w in websites_to_crawl:
+            recrawl(w)
 
     def queue_task(self, task: Task):
         max_assign_time = 24 * 7 * 3600
