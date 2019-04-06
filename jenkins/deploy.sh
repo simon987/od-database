@@ -9,9 +9,16 @@ pip install -r ${ODDBROOT}/requirements.txt
 screen -S oddb_web -X quit
 killall -9 uwsgi
 
-sleep 15
+sleep 5
 
 echo "starting oddb_web"
 screen -S oddb_web -d -m bash -c "cd ${ODDBROOT} && source env/bin/activate && uwsgi od-database.ini 2> stderr.txt"
 sleep 1
 screen -list
+
+echo "Installing crontab"
+absolute_dir=$(cd ${ODDBROOT} && pwd)
+command="cd \"${absolute_dir}\" && source env/bin/activate && python do_recrawl.py >> recrawl_logs.txt"
+job="*/10 * * * * \"$command\""
+echo "$job"
+cat <(fgrep -i -v \""$command"\" <(crontab -l)) <(echo "$job") | crontab -
