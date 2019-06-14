@@ -1,5 +1,7 @@
 import os
 import time
+from urllib.parse import urljoin
+
 import ujson
 
 import elasticsearch
@@ -82,7 +84,7 @@ class ElasticSearchEngine(SearchEngine):
                         "type": "nGram", "min_gram": 3, "max_gram": 3
                     }
                 }
-            }}, index=self.index_name, request_timeout=60)
+            }}, index=self.index_name)
         self.es.indices.put_settings(body={
             "analysis": {
                 "analyzer": {
@@ -104,7 +106,7 @@ class ElasticSearchEngine(SearchEngine):
                 "ext": {"type": "keyword"},
             },
             "_routing": {"required": True}
-        }, doc_type="file", index=self.index_name, request_timeout=60)
+        }, doc_type="file", index=self.index_name, include_type_name=True)
 
         self.es.indices.open(index=self.index_name)
 
@@ -327,7 +329,7 @@ class ElasticSearchEngine(SearchEngine):
                             index=self.index_name, request_timeout=20, routing=website_id)
         for hit in hits:
             src = hit["_source"]
-            yield base_url + src["path"] + ("/" if src["path"] != "" else "") + src["name"] + \
+            yield urljoin(base_url, "/") + src["path"] + ("/" if src["path"] != "" else "") + src["name"] + \
                   ("." if src["ext"] != "" else "") + src["ext"]
 
     def get_global_stats(self):

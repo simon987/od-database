@@ -1,6 +1,7 @@
+import os
 import time
 import uuid
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 import bcrypt
 import psycopg2
@@ -66,9 +67,8 @@ class Database:
 
         with psycopg2.connect(self.db_conn_str) as conn:
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO Website (url, logged_ip, logged_useragent) VALUES (%s,%s,%s)",
+            cursor.execute("INSERT INTO Website (url, logged_ip, logged_useragent) VALUES (%s,%s,%s) RETURNING id",
                            (website.url, str(website.logged_ip), str(website.logged_useragent)))
-            cursor.execute("SELECT LAST_INSERT_ROWID()")
 
             website_id = cursor.fetchone()[0]
             conn.commit()
@@ -235,7 +235,7 @@ class Database:
 
         for hit in page["hits"]["hits"]:
             if hit["_source"]["website_id"] in websites:
-                hit["_source"]["website_url"] = websites[hit["_source"]["website_id"]]
+                hit["_source"]["website_url"] = urljoin(websites[hit["_source"]["website_id"]], "/")
             else:
                 hit["_source"]["website_url"] = "[DELETED]"
 
@@ -247,7 +247,7 @@ class Database:
 
         for doc in docs:
             if doc["_source"]["website_id"] in websites:
-                doc["_source"]["website_url"] = websites[doc["_source"]["website_id"]]
+                doc["_source"]["website_url"] = urljoin(websites[doc["_source"]["website_id"]], "/")
             else:
                 doc["_source"]["website_url"] = "[DELETED]"
 

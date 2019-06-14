@@ -3,14 +3,13 @@ import os
 from multiprocessing.pool import Pool
 from urllib.parse import urlparse
 
-from flask import render_template, redirect, request, flash, abort, Response, session
-from flask_caching import Cache
-
 import captcha
 import config
 import od_util
 from common import db, taskManager, searchEngine, logger, require_role
 from database import Website
+from flask import render_template, redirect, request, flash, abort, Response, session
+from flask_caching import Cache
 from search.search import InvalidQueryException
 from tasks import Task
 
@@ -149,6 +148,7 @@ def setup_views(app):
 
     @app.route("/search")
     def search():
+        results = 0
         q = request.args.get("q") if "q" in request.args else ""
         sort_order = request.args.get("sort_order") if "sort_order" in request.args else "score"
 
@@ -207,7 +207,7 @@ def setup_views(app):
                     flash("Query failed, this could mean that the search server is overloaded or is not reachable. "
                           "Please try again later", "danger")
 
-                results = hits["hits"]["total"] if hits else -1
+                results = hits["hits"]["total"]["value"] if not isinstance(hits["hits"]["total"], int) else hits["hits"]["total"] if hits else -1
                 took = hits["took"] if hits else -1
                 forwarded_for = request.headers["X-Forwarded-For"] if "X-Forwarded-For" in request.headers else None
 
@@ -225,6 +225,7 @@ def setup_views(app):
             hits = None
 
         return render_template("search.html",
+                               count=results,
                                results=hits,
                                q=q,
                                p=page, per_page=per_page,

@@ -122,11 +122,11 @@
             </div>
         </div>
 
-        {% if results and results["hits"]["total"] > 0 %}
+        {% if count > 0 %}
             <div class="card">
                 <div class="card-body">
 
-                    <span class="text-muted">{{ results["hits"]["total"] }} result(s) in {{ results["took"] }}ms</span>
+                    <span class="text-muted">{{ count }} result(s) in {{ results["took"] }}ms</span>
 
                     <div class="table-responsive">
                         <table class="table">
@@ -147,7 +147,7 @@
                                 <tr>
                                     <td>
                                         {% set category = get_mime(src["ext"]) %}
-                                        {% set url = src["website_url"] + src["path"] + "/" + src["name"] + ("." if src["ext"] != "" else "") + src["ext"] %}
+                                        {% set url = src["website_url"] + "/" + src["path"] + "/" +  src["name"] + ("." if src["ext"] != "" else "") + src["ext"] %}
                                         {# Preview #}
                                         {% if category == "image" %}
                                             <i class="fas fa-eye prev-icon" data-toggle="popover" tabindex="-1"
@@ -164,7 +164,7 @@
                                         {# File path #}
                                         <div class="text-muted" title="{{ path }}" style="font-size: 10px;">
                                             <a title="See files from this website"
-                                               href="/website/{{ src["website_id"] }}">{{ src["website_url"] }}</a>{{ hl_path|safe }}
+                                               href="/website/{{ src["website_id"] }}">{{ src["website_url"] }}/</a>{{ hl_path|safe }}
                                         </div>
                                     </td>
                                     {# File size & date #}
@@ -177,7 +177,7 @@
                             </tbody>
                         </table>
                     </div>
-                    {% if results["hits"]["total"] > (p + 1) * per_page %}
+                    {% if count > (p + 1) * per_page %}
                         <button class="btn btn-primary" onclick="nextPage()" style="float: right">Next</button>
                     {% endif %}
                     {% if p > 0 %}
@@ -282,5 +282,6 @@
 
         </script>
     </div>
+    <!-- test -->
 
 {% endblock body %}

@@ -257,7 +257,7 @@ function drawChart(rData) {
 function fillWebsiteTable(rData) {
 
     document.getElementById("baseUrl").innerHTML = rData["base_url"];
-    document.getElementById("fileCount").innerHTML = rData["total_count"];
+    document.getElementById("fileCount").innerHTML = rData["total_count"].hasOwnProperty("value") ? rData["total_count"]["value"] : rData["total_count"];
     document.getElementById("totalSize").innerHTML = humanFileSize(rData["total_size"]);
     document.getElementById("reportTime").innerHTML = rData["report_time"] + " UTC";
 
