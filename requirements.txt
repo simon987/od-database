@@ -18,7 +18,6 @@ lxml
 pillow
 Wand
 numpy
-matplotlib
 uwsgi
 redis
 psycopg2-binary

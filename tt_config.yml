@@ -1,0 +1,24 @@
+server:
+  address: "0.0.0.0:3010"
+
+database:
+  conn_str: "postgres://task_tracker:changeme@tt_db/task_tracker?sslmode=disable"
+  log_levels: ["error", "info", "warn"]
+
+git:
+  webhook_hash: "sha256"
+  webhook_sig_header: "X-Gogs-Signature"
+
+log:
+  level: "trace"
+
+session:
+  cookie_name: "tt"
+  expiration: "48h"
+
+monitoring:
+  snapshot_interval: "120s"
+  history_length: "1800h"
+
+maintenance:
+  reset_timed_out_tasks_interval: "10m"

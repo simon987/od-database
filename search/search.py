@@ -20,32 +20,7 @@ class IndexingError(Exception):
     pass
 
 
-class SearchEngine:
-
-    def __init__(self):
-        pass
-
-    def import_json(self, in_str: str, website_id: int):
-        raise NotImplementedError
-
-    def search(self, query, page, per_page, sort_order, extension, size_min, size_max, match_all, fields, date_min,
-               date_max) -> {}:
-        raise NotImplementedError
-
-    def reset(self):
-        raise NotImplementedError
-
-    def ping(self):
-        raise NotImplementedError
-
-    def get_stats(self, website_id: int, subdir: str = None):
-        raise NotImplementedError
-
-    def refresh(self):
-        raise NotImplementedError
-
-
-class ElasticSearchEngine(SearchEngine):
+class ElasticSearchEngine:
     SORT_ORDERS = {
         "score": ["_score"],
         "size_asc": [{"size": {"order": "asc"}}],
@@ -55,10 +30,11 @@ class ElasticSearchEngine(SearchEngine):
         "none": []
     }
 
-    def __init__(self, index_name):
+    def __init__(self, url, index_name):
         super().__init__()
         self.index_name = index_name
-        self.es = elasticsearch.Elasticsearch()
+        logger.info("Connecting to ES @ %s" % url)
+        self.es = elasticsearch.Elasticsearch(hosts=[url])
         self.filter = SearchFilter()
 
         if not self.es.indices.exists(self.index_name):
@@ -78,23 +54,25 @@ class ElasticSearchEngine(SearchEngine):
 
         # Index settings
         self.es.indices.put_settings(body={
-            "analysis": {
-                "tokenizer": {
-                    "my_nGram_tokenizer": {
-                        "type": "nGram", "min_gram": 3, "max_gram": 3
-                    }
-                }
-            }}, index=self.index_name)
-        self.es.indices.put_settings(body={
+            "index": {
+                "refresh_interval": "30s",
+                "codec": "best_compression"
+            },
             "analysis": {
                 "analyzer": {
                     "my_nGram": {
                         "tokenizer": "my_nGram_tokenizer",
                         "filter": ["lowercase", "asciifolding"]
                     }
+                },
+                "tokenizer": {
+                    "my_nGram_tokenizer": {
+                        "type": "nGram", "min_gram": 3, "max_gram": 3
+                    }
                 }
             }}, index=self.index_name)
 
+        # Index Mappings
         self.es.indices.put_mapping(body={
             "properties": {
                 "path": {"analyzer": "standard", "type": "text"},
@@ -109,12 +87,6 @@ class ElasticSearchEngine(SearchEngine):
         }, doc_type="file", index=self.index_name, include_type_name=True)
 
         self.es.indices.open(index=self.index_name)
-
-    def reset(self):
-        self.init()
-
-    def ping(self):
-        return self.es.ping()
 
     def delete_docs(self, website_id):
 
@@ -332,7 +304,8 @@ class ElasticSearchEngine(SearchEngine):
             yield urljoin(base_url, "/") + src["path"] + ("/" if src["path"] != "" else "") + src["name"] + \
                   ("." if src["ext"] != "" else "") + src["ext"]
 
-    def get_global_stats(self):
+    @staticmethod
+    def get_global_stats():
 
         if os.path.exists("_stats.json"):
             with open("_stats.json", "r") as f:
@@ -489,7 +462,7 @@ class ElasticSearchEngine(SearchEngine):
             "query": {
                 "match_all": {}
             }
-        }, scroll="1m", client=self.es, index=self.index_name, request_timeout=60)
+        }, scroll="30s", client=self.es, index=self.index_name, request_timeout=30)
 
     def refresh(self):
         self.es.indices.refresh(self.index_name)

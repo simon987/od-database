@@ -26,14 +26,13 @@ logger.addHandler(file_handler)
 logger.addHandler(StreamHandler(sys.stdout))
 
 taskManager = TaskManager()
-searchEngine = ElasticSearchEngine("od-database")
+searchEngine = ElasticSearchEngine(config.ES_URL, config.ES_INDEX)
 searchEngine.start_stats_scheduler()
 db = Database(config.DB_CONN_STR)
 
-redis = r.Redis()
+redis = r.Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
 
 
 def require_role(role: str):
-
     if db.get_user_role(session.get("username", None)) != role:
         abort(403)

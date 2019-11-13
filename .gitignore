@@ -4,9 +4,9 @@
 __pycache__/
 captchas/
 _stats.json
-config.py
 oddb.log
 praw.ini
 env/
 worker.json
 search_blacklist.txt
+*.iml

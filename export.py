@@ -28,7 +28,7 @@ for file in os.listdir(dldir):
 print("Export started, connecting to databases...")
 
 db = Database(config.DB_CONN_STR)
-es = ElasticSearchEngine("od-database")
+es = ElasticSearchEngine(config.ES_URL, config.ES_INDEX)
 
 docs_with_url = db.join_website_url(es.stream_all_docs())
 

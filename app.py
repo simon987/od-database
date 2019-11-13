@@ -1,3 +1,6 @@
+import time
+time.sleep(60)
+
 from flask import Flask
 
 import api
@@ -14,4 +17,4 @@ views.setup_views(app)
 api.setup_api(app)
 
 if __name__ == '__main__':
-    app.run("0.0.0.0", port=12345, threaded=True)
+    app.run("0.0.0.0", port=80, threaded=True)
