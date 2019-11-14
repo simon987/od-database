@@ -26,12 +26,8 @@
                 <form action="/search" id="sfrm">
 
                     <div class="form-row">
-                        <div class="col-md-11">
-                            <input class="form-control" name="q" id="q" placeholder="Query">
-                        </div>
-                        <div class="col-md-1">
-                            <input class="btn btn-primary btn-shadow" type="submit" value="Search">
-                        </div>
+                        <input class="form-control" style="max-width: calc(100% - 80px);" name="q" id="q" placeholder="Query">
+                        <input class="btn btn-primary btn-shadow" type="submit" value="Search" style="margin-left: 3px">
                     </div>
                     {% if show_captcha %}
                         {{ captcha.get_code()|safe }}

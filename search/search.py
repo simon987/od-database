@@ -2,9 +2,8 @@ import os
 import time
 from urllib.parse import urljoin
 
-import ujson
-
 import elasticsearch
+import ujson
 from apscheduler.schedulers.background import BackgroundScheduler
 from elasticsearch import helpers
 
@@ -49,28 +48,29 @@ class ElasticSearchEngine:
         logger.info("Elasticsearch first time setup")
         if self.es.indices.exists(self.index_name):
             self.es.indices.delete(index=self.index_name)
-        self.es.indices.create(index=self.index_name)
-        self.es.indices.close(index=self.index_name)
-
-        # Index settings
-        self.es.indices.put_settings(body={
-            "index": {
-                "refresh_interval": "30s",
-                "codec": "best_compression"
-            },
-            "analysis": {
-                "analyzer": {
-                    "my_nGram": {
-                        "tokenizer": "my_nGram_tokenizer",
-                        "filter": ["lowercase", "asciifolding"]
-                    }
+        self.es.indices.create(index=self.index_name, body={
+            "settings": {
+                "index": {
+                    "number_of_shards": 50,
+                    "number_of_replicas": 0,
+                    "refresh_interval": "30s",
+                    "codec": "best_compression"
                 },
-                "tokenizer": {
-                    "my_nGram_tokenizer": {
-                        "type": "nGram", "min_gram": 3, "max_gram": 3
+                "analysis": {
+                    "analyzer": {
+                        "my_nGram": {
+                            "tokenizer": "my_nGram_tokenizer",
+                            "filter": ["lowercase", "asciifolding"]
+                        }
+                    },
+                    "tokenizer": {
+                        "my_nGram_tokenizer": {
+                            "type": "nGram", "min_gram": 3, "max_gram": 3
+                        }
                     }
                 }
-            }}, index=self.index_name)
+            }
+        })
 
         # Index Mappings
         self.es.indices.put_mapping(body={

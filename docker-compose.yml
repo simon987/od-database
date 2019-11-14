@@ -1,4 +1,4 @@
-version: "3"
+version: "2.1"
 services:
   oddb:
     image: simon987/od-database
@@ -23,9 +23,14 @@ services:
       - "RECRAWL_POOL_SIZE=10000"
       - "INDEXER_THREADS=2"
     depends_on:
-      - wsb
-      - tt
-      - es
+      wsb:
+        condition: service_started
+      tt:
+        condition: service_started
+      oddb_db:
+        condition: service_healthy
+      es:
+        condition: service_healthy
     restart: always
   oddb_db:
     image: postgres
@@ -71,22 +76,20 @@ services:
     ports:
       - 3010:80
     depends_on:
-      - tt_db
+      tt_db:
+          condition: service_healthy
   es:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.4.2
     environment:
-#      - bootstrap.memory_lock=true
       - discovery.type=single-node
-#      - index.number_of_shards=50
-#      - index.number_of_replicas=0
-#      - "ES_JAVA_OPTS=-Xms1G -Xmx10G"
+      - "ES_JAVA_OPTS=-Xms1G -Xmx10G"
     volumes:
       - /usr/share/elasticsearch/data
     healthcheck:
       test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
-      interval: 30s
-      timeout: 30s
-      retries: 3
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 
 
