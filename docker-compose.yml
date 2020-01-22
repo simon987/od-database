@@ -1,0 +1,101 @@
+version: "2.1"
+services:
+  oddb:
+    image: simon987/od-database
+    ports:
+      - 5020:80
+    environment:
+      - "CAPTCHA_LOGIN=True"
+      - "CAPTCHA_SUBMIT=True"
+      - "CAPTCHA_SEARCH=True"
+      - "CAPTCHA_EVERY=10"
+      - "FLASK_SECRET=changeme"
+      - "SUBMIT_FTP=False"
+      - "SUBMIT_HTTP=True"
+      - "TT_API=http://tt:3010"
+      - "TT_CRAWL_PROJECT=1"
+      - "TT_INDEX_PROJECT=2"
+      - "WSB_API=http://wsb:3020"
+      - "WSB_SECRET=changeme"
+      - "REDIS_HOST=oddb_redis"
+      - "ES_URL=es:9200"
+      - "DB_CONN_STR=postgres://od_database:changeme@oddb_db/od_database?sslmode=disable"
+      - "RECRAWL_POOL_SIZE=10000"
+      - "INDEXER_THREADS=2"
+    depends_on:
+      wsb:
+        condition: service_started
+      tt:
+        condition: service_started
+      oddb_db:
+        condition: service_healthy
+      es:
+        condition: service_healthy
+    restart: always
+  oddb_db:
+    image: postgres
+    volumes:
+      - ./oddb_pg_data:/var/lib/postgresql/data
+    environment:
+      - "POSTGRES_USER=od_database"
+      - "POSTGRES_PASSWORD=changeme"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U od_database"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  oddb_redis:
+    image: redis
+  wsb:
+    image: simon987/wsb_bucket
+    volumes:
+      - ./wsb_data:/data
+    environment:
+      - "WS_BUCKET_SECRET=changeme"
+    ports:
+      - 3020:3020
+  tt_db:
+    image: postgres
+    volumes:
+      - ./tt_pg_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: task_tracker
+      POSTGRES_PASSWORD: changeme
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U task_tracker"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  tt:
+    image: simon987/task_tracker
+    volumes:
+      - ./tt_pg_data:/var/lib/postgresql/data
+      - ./tt_config.yml:/root/config.yml
+    ports:
+      - 3010:80
+    depends_on:
+      tt_db:
+        condition: service_healthy
+  es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.2
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms1G -Xmx10G"
+    volumes:
+      - ./es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  # (Optional)
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.4.2
+    environment:
+      - ELASTICSEARCH_HOSTS=http://es:9200
+      - xpack.monitoring.collection.enabled=true
+    ports:
+      - 5021:5601
+    depends_on:
+      es:
+        condition: service_healthy

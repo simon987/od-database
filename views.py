@@ -3,19 +3,24 @@ import os
 from multiprocessing.pool import Pool
 from urllib.parse import urlparse
 
+from flask import render_template, redirect, request, flash, abort, Response, session
+from flask_caching import Cache
+
 import captcha
 import config
 import od_util
 from common import db, taskManager, searchEngine, logger, require_role
 from database import Website
-from flask import render_template, redirect, request, flash, abort, Response, session
-from flask_caching import Cache
 from search.search import InvalidQueryException
 from tasks import Task
 
 
 def setup_views(app):
-    cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+    cache = Cache(app, config={
+        "CACHE_TYPE": "redis",
+        "CACHE_REDIS_HOST": config.REDIS_HOST,
+        "CACHE_REDIS_PORT": config.REDIS_PORT,
+    })
 
     @app.route("/dl")
     @cache.cached(120)
@@ -207,7 +212,8 @@ def setup_views(app):
                     flash("Query failed, this could mean that the search server is overloaded or is not reachable. "
                           "Please try again later", "danger")
 
-                results = hits["hits"]["total"]["value"] if not isinstance(hits["hits"]["total"], int) else hits["hits"]["total"] if hits else -1
+                results = hits["hits"]["total"]["value"] if not isinstance(hits["hits"]["total"], int) else \
+                    hits["hits"]["total"] if hits else -1
                 took = hits["took"] if hits else -1
                 forwarded_for = request.headers["X-Forwarded-For"] if "X-Forwarded-For" in request.headers else None
 
