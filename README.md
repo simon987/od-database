@@ -16,6 +16,7 @@ Suggestions/concerns/PRs are welcome
 ```bash
 git clone https://github.com/simon987/od-database
 cd od-database
+mkdir oddb_pg_data/ tt_pg_data/ es_data/ wsb_data/
 docker-compose up
 ```
 
@@ -26,17 +27,3 @@ docker-compose up
 ## Running the crawl server
 The python crawler that was a part of this project is discontinued,
 [the go implementation](https://github.com/terorie/od-database-crawler) is currently in use.
-
-### Configure Elasticsearch
-```
-PUT _template/default
-{
-  "index_patterns": ["*"],
-  "order": -1,
-  "settings": {
-    "number_of_shards": "50",
-    "number_of_replicas": "0",
-    "codec" : "best_compression",
-    "routing_partition_size" : 5
-  }
-}

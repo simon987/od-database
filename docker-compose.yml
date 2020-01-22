@@ -77,10 +77,10 @@ services:
       tt_db:
         condition: service_healthy
   es:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.2
     environment:
       - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms1G -Xmx10G"
+      - "ES_JAVA_OPTS=-Xms1G -Xmx4G"
     volumes:
       - ./es_data:/usr/share/elasticsearch/data
     healthcheck:
@@ -90,10 +90,9 @@ services:
       retries: 5
   # (Optional)
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.4.2
+    image: docker.elastic.co/kibana/kibana:7.5.2
     environment:
       - ELASTICSEARCH_HOSTS=http://es:9200
-      - xpack.monitoring.collection.enabled=true
     ports:
       - 5021:5601
     depends_on:
