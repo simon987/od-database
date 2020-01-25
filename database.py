@@ -121,7 +121,9 @@ class Database:
             cursor = conn.cursor()
             cursor.execute("SELECT id FROM Website ORDER BY random() LIMIT 1")
 
-            return cursor.fetchone()[0]
+            if cursor.fetchone():
+                return cursor.fetchone()[0]
+            return None
 
     def website_exists(self, url):
         """Check if an url or the parent directory of an url already exists"""

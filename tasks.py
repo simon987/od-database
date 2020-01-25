@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+import traceback
 from multiprocessing.pool import ThreadPool
 from tempfile import NamedTemporaryFile
 from threading import Thread
@@ -10,6 +11,7 @@ from uuid import uuid4
 import requests
 import urllib3
 
+import common
 import config
 import database
 from database import Website
@@ -66,15 +68,19 @@ class TaskManager:
         self.db = database.Database(config.DB_CONN_STR)
         self.tracker = TaskTrackerApi(config.TT_API)
 
+        self.bucket = WsBucketApi(config.WSB_API, config.WSB_SECRET)
+        self._indexer_threads = list()
+
         self.worker = Worker.from_file(self.tracker)
         if not self.worker:
             self.worker = self.tracker.make_worker("$oddb_master")
+            if not self.worker:
+                common.logger.error("Could not create worker: %s" % traceback.format_exc())
+                return
             self.worker.dump_to_file()
             self.worker.request_access(config.TT_CRAWL_PROJECT, False, True)
             self.worker.request_access(config.TT_INDEX_PROJECT, True, False)
 
-        self.bucket = WsBucketApi(config.WSB_API, config.WSB_SECRET)
-        self._indexer_threads = list()
 
     def start_indexer_threads(self):
         logger.info("Starting %s indexer threads " % (config.INDEXER_THREADS, ))

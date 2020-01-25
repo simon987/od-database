@@ -22,6 +22,8 @@ services:
       - "DB_CONN_STR=postgres://od_database:changeme@oddb_db/od_database?sslmode=disable"
       - "RECRAWL_POOL_SIZE=10000"
       - "INDEXER_THREADS=2"
+      - "ODDB_USER=admin"
+      - "ODDB_PASSWORD=changeme"
     depends_on:
       wsb:
         condition: service_started
@@ -73,10 +75,10 @@ services:
   tt_db:
     image: postgres
     volumes:
-      - ./tt_db_data:/var/lib/postgresql/data
+      - ./tt_pg_data:/var/lib/postgresql/data
     environment:
       - "POSTGRES_USER=task_tracker"
-      - "POSTGRES_PASSWORD=task_tracker"
+      - "POSTGRES_PASSWORD=changeme"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U task_tracker"]
       interval: 3s

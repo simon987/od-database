@@ -117,7 +117,10 @@ def setup_views(app):
 
     @app.route("/website/random")
     def random_website():
-        return redirect("/website/" + str(db.get_random_website_id()))
+        rand_id = db.get_random_website_id()
+        if rand_id:
+            return redirect("/website/" + str())
+        return redirect("/website/")
 
     @app.route("/website/<int:website_id>/clear")
     def admin_clear_website(website_id):
