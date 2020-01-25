@@ -1,7 +1,7 @@
 version: "2.1"
 services:
   oddb:
-    image: simon987/od-database
+    build: .
     ports:
       - 5020:80
     environment:
@@ -54,28 +54,34 @@ services:
       - "WS_BUCKET_SECRET=changeme"
     ports:
       - 3020:3020
-  tt_db:
-    image: postgres
-    volumes:
-      - ./tt_pg_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: task_tracker
-      POSTGRES_PASSWORD: changeme
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U task_tracker"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
   tt:
     image: simon987/task_tracker
     volumes:
-      - ./tt_pg_data:/var/lib/postgresql/data
       - ./tt_config.yml:/root/config.yml
     ports:
       - 3010:80
     depends_on:
       tt_db:
         condition: service_healthy
+  tt_web:
+    image: simon987/task_tracker_web
+    ports:
+      - 3011:80
+    depends_on:
+      tt:
+        condition: service_started
+  tt_db:
+    image: postgres
+    volumes:
+      - ./tt_db_data:/var/lib/postgresql/data
+    environment:
+      - "POSTGRES_USER=task_tracker"
+      - "POSTGRES_PASSWORD=task_tracker"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U task_tracker"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
   es:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.5.2
     environment:
