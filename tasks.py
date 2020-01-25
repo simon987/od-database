@@ -11,7 +11,6 @@ from uuid import uuid4
 import requests
 import urllib3
 
-import common
 import config
 import database
 from database import Website
@@ -75,12 +74,11 @@ class TaskManager:
         if not self.worker:
             self.worker = self.tracker.make_worker("$oddb_master")
             if not self.worker:
-                common.logger.error("Could not create worker: %s" % traceback.format_exc())
+                print("Could not create worker: %s" % traceback.format_exc())
                 return
             self.worker.dump_to_file()
             self.worker.request_access(config.TT_CRAWL_PROJECT, False, True)
             self.worker.request_access(config.TT_INDEX_PROJECT, True, False)
-
 
     def start_indexer_threads(self):
         logger.info("Starting %s indexer threads " % (config.INDEXER_THREADS, ))

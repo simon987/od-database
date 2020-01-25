@@ -121,8 +121,9 @@ class Database:
             cursor = conn.cursor()
             cursor.execute("SELECT id FROM Website ORDER BY random() LIMIT 1")
 
-            if cursor.fetchone():
-                return cursor.fetchone()[0]
+            row = cursor.fetchone()
+            if row:
+                return row[0]
             return None
 
     def website_exists(self, url):

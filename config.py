@@ -16,7 +16,7 @@ TT_CRAWL_PROJECT = int(environ.get("TT_CRAWL_PROJECT", 3))
 TT_INDEX_PROJECT = int(environ.get("TT_INDEX_PROJECT", 9))
 
 WSB_API = environ.get("WSB_API", "http://localhost:3020")
-WSB_SECRET = environ.get("WSB_API", "default_secret")
+WSB_SECRET = environ.get("WSB_SECRET", "default_secret")
 
 ES_URL = environ.get("ES_URL", "http://localhost:9200")
 ES_INDEX = environ.get("ES_INDEX", "od-database")

@@ -18,8 +18,11 @@ api.setup_api(app)
 if os.environ.get("ODDB_USER", False) and os.environ.get("ODDB_PASSWORD", False):
     user = os.environ["ODDB_USER"]
     password = os.environ["ODDB_PASSWORD"]
-    common.db.generate_login(user, password)
-    print("Generated user %s" % user)
+    try:
+        common.db.generate_login(user, password)
+        print("Generated user %s" % user)
+    except:
+        pass
 
 if __name__ == '__main__':
     app.run("0.0.0.0", port=80, threaded=True)
