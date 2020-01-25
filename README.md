@@ -14,7 +14,7 @@ Suggestions/concerns/PRs are welcome
 
 ## Installation (Docker)
 ```bash
-git clone https://github.com/simon987/od-database
+git clone --recursive https://github.com/simon987/od-database
 cd od-database
 mkdir oddb_pg_data/ tt_pg_data/ es_data/ wsb_data/
 docker-compose up
