@@ -438,7 +438,7 @@ class ElasticSearchEngine:
         stats["es_search_time_avg"] = stats["es_search_time"] / (
             stats["es_search_count"] if stats["es_search_count"] != 0 else 1)
 
-        stats["total_count"] = total_stats["hits"]["total"]
+        stats["total_count"] = total_stats["aggregations"]["file_stats"]["count"]
         stats["total_size"] = total_stats["aggregations"]["file_stats"]["sum"]
         stats["size_avg"] = total_stats["aggregations"]["file_stats"]["avg"]
         stats["size_std_deviation"] = total_stats["aggregations"]["file_stats"]["std_deviation"]
